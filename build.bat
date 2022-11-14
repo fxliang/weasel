@@ -110,7 +110,7 @@ if %build_rime% == 1 (
 
   cd %WEASEL_ROOT%\librime
   if not exist librime\thirdparty\lib\opencc.lib (
-    call build.bat thirdparty %rime_build_variant%
+    call build.bat deps %rime_build_variant%
     if errorlevel 1 goto error
   )
   call build.bat %rime_build_variant%
@@ -224,7 +224,7 @@ exit /b
 :build_opencc_data
 if not exist %WEASEL_ROOT%\librime\thirdparty\share\opencc\TSCharacters.ocd (
   cd %WEASEL_ROOT%\librime
-  call build.bat thirdparty %rime_build_variant%
+  call build.bat deps %rime_build_variant%
   if errorlevel 1 goto error
 )
 cd %WEASEL_ROOT%

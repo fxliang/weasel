@@ -44,32 +44,35 @@ jobs:
       - name: Check submodules
         run: git submodule > submodule-status
 
-      #- name: Cache dependencies
-      #  id: cache-deps
-      #  uses: actions/cache@v3
-      #  with:
-      #    path: |
-      #      bin
-      #      include
-      #      lib
-      #      share
-      #    key: ${{ runner.os }}-deps-${{ hashFiles('submodule-status') }}
+      - name: Cache dependencies
+        id: cache-deps
+        uses: actions/cache@v3
+        with:
+          path: |
+            librime
+            plum
+          key: ${{ runner.os }}-deps-${{ hashFiles('submodule-status') }}
+
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v1.1.3
 
-      #- name: Build dependencies
-      #  if: steps.cache-deps.outputs.cache-hit != 'true'
-      #  run: .\build.bat deps
+      - name: Build dependencies
+        if: steps.cache-deps.outputs.cache-hit != 'true'
+        # run: .\build.bat deps
+        run: .\build.bat opencc
+
 
       #- name: Install Rime plugins
       #  run: .\action-install-plugins-windows.bat
+
+      - name: Copy Rime files
+        run: .\ci.install.bat
 
       - name: Build Weasel
         id: build_weasel
         run: |
           .\build.bat data
           .\build.bat hant
-          mkdir output\archives
           .\build.bat installer
 
       #- name: Create distributable
