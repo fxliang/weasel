@@ -3,8 +3,9 @@
 #include <WeaselCommon.h>
 #include <WeaselUI.h>
 #include "fontClasses.h"
-#define MARK_WIDTH	4
-#define MARK_GAP	(MARK_WIDTH + 4)
+//#define MARK_WIDTH	4
+//#define MARK_GAP	(MARK_WIDTH + 4)
+//#define MARK_GAP	32
 namespace weasel
 {
 	class Layout
@@ -34,6 +35,8 @@ namespace weasel
 		virtual std::wstring Layout::ConvertCRLF(std::wstring strString, std::wstring strCRLF) const = 0;
 		int offsetX = 0;
 		int offsetY = 0;
+		int MARK_WIDTH = 4;
+		int MARK_GAP = 8;
 	protected:
 		const UIStyle &_style;
 		const Context &_context;

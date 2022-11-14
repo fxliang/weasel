@@ -763,6 +763,12 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 	{
 		style.label_text_format = utf8towcs(label_text_format);
 	}
+	char mark_text[128] = { 0 };
+	if (RimeConfigGetString(config, "style/mark_text", mark_text, sizeof(mark_text) - 1))
+	{
+		style.mark_text = utf8towcs(mark_text);
+	}
+	//else style.mark_text = L"";
 	// layout (alternative to style/horizontal)
 	char layout_type[256] = {0};
 	if (RimeConfigGetString(config, "style/layout/type", layout_type, sizeof(layout_type) - 1))

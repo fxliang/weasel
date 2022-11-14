@@ -284,12 +284,20 @@ void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORRE
 	// draw hilited mark
 	if (highlighted && (m_style.hilited_mark_color & 0xff000000))
 	{
-		int topm = (rc.Height() - ((double)rc.Height() - (double)max(m_style.hilite_padding, m_style.round_corner) * 2) * 0.7) / 2;
-		CRect hlRc(rc.left + (MARK_GAP - MARK_WIDTH) / 2 + 1, rc.top + topm, rc.left + (MARK_GAP + MARK_WIDTH) / 2 + 1, rc.bottom - topm);
-		GraphicsRoundRectPath hlp(hlRc, 4);
-		Gdiplus::Color hlcl = Gdiplus::Color::MakeARGB(0xff, GetRValue(m_style.hilited_mark_color), GetGValue(m_style.hilited_mark_color), GetBValue(m_style.hilited_mark_color));
-		Gdiplus::SolidBrush hl_brush(hlcl);
-		g_back.FillPath(&hl_brush, &hlp);
+		if (m_style.mark_text.empty())
+		{
+			int topm = (rc.Height() - ((double)rc.Height() - (double)max(m_style.hilite_padding, m_style.round_corner) * 2) * 0.7) / 2;
+			CRect hlRc(rc.left + (m_layout->MARK_GAP - m_layout->MARK_WIDTH) / 2 + 1, rc.top + topm, rc.left + (m_layout->MARK_GAP + m_layout->MARK_WIDTH) / 2 + 1, rc.bottom - topm);
+			GraphicsRoundRectPath hlp(hlRc, 4);
+			Gdiplus::Color hlcl = Gdiplus::Color::MakeARGB(0xff, GetRValue(m_style.hilited_mark_color), GetGValue(m_style.hilited_mark_color), GetBValue(m_style.hilited_mark_color));
+			Gdiplus::SolidBrush hl_brush(hlcl);
+			g_back.FillPath(&hl_brush, &hlp);
+		}
+		else
+		{
+			CRect hlRc(rc.left + (m_layout->MARK_GAP - m_layout->MARK_WIDTH) / 2 + 1, rc.top, rc.left + (m_layout->MARK_GAP + m_layout->MARK_WIDTH) / 2 + 1, rc.bottom);
+			_TextOut(dc, hlRc, m_style.mark_text.c_str(), m_style.mark_text.length(), &pFonts->m_TextFont, m_style.hilited_mark_color, pDWR->pTextFormat);
+		}
 	}
 	// draw border
 	if (type == BackType::BACKGROUND && m_style.border != 0 && (m_style.border_color & 0xff000000)) {
@@ -343,7 +351,7 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 			}
 			{
 				// zzz[yyy]
-				int base_offset = (m_style.hilited_mark_color & 0xff000000) ? MARK_GAP : 0;
+				int base_offset = (m_style.hilited_mark_color & 0xff000000) ? m_layout->MARK_GAP : 0;
 				std::wstring str_highlight(t.substr(range.start, range.end - range.start));
 				CRect rc_hi(x, rc.top, x + (selEnd.cx - selStart.cx), rc.bottom);
 				CRect rct = rc_hi;
@@ -502,6 +510,7 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	HBITMAP memBitmap = ::CreateCompatibleBitmap(hdc, rc.Width(), rc.Height());
 	::SelectObject(memDC, memBitmap);
 	ReleaseDC(hdc);
+	bool drawn = false;
 	if (!hide_candidates) //  && (!(m_style.inline_preedit && (m_ctx.cinfo.candies.size() == 0)))) {
 	{
 		CRect trc(rc);
@@ -513,7 +522,6 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 			_HighlightText(memDC, trc, m_style.back_color, m_style.shadow_color, m_style.round_corner_ex + m_style.border / 2, BackType::BACKGROUND);
 		}
 		// background end
-		bool drawn = false;
 		// draw auxiliary string
 		drawn |= _DrawPreedit(m_ctx.aux, memDC, m_layout->GetAuxiliaryRect());
 		// draw preedit string
@@ -529,11 +537,12 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 			memDC.DrawIconEx(iconRect.left, iconRect.top, icon, 0, 0);
 			drawn = true;
 		}
-		/* Nothing drawn, hide candidate window */
-		if (!drawn)
-			ShowWindow(SW_HIDE);
 	}
-	_LayerUpdate(rc, memDC);
+	/* Nothing drawn, hide candidate window */
+	if (!drawn)
+		ShowWindow(SW_HIDE);
+	else
+		_LayerUpdate(rc, memDC);
 	::DeleteDC(memDC);
 	::DeleteObject(memBitmap);
 }

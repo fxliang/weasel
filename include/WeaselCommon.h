@@ -273,6 +273,7 @@ namespace weasel
 		bool display_tray_icon;
 		CaptureType capture_type;
 		std::wstring label_text_format;
+		std::wstring mark_text;
 		// layout
 		int min_width;
 		int min_height;
@@ -323,6 +324,7 @@ namespace weasel
 			display_tray_icon(false),
 			capture_type(UIStyle::CaptureType::NONE),
 			label_text_format(L"%s."),
+			mark_text(),
 			layout_type(LAYOUT_VERTICAL),
 			min_width(0),
 			min_height(0),
@@ -373,6 +375,7 @@ namespace weasel
 				 color_font != st.color_font ||
 				 display_tray_icon != st.display_tray_icon ||
 				 label_text_format != st.label_text_format ||
+				 mark_text != st.mark_text ||
 				 min_width != st.min_width ||
 				 min_height != st.min_height ||
 				 border != st.border ||
@@ -427,6 +430,7 @@ namespace boost {
 			ar & s.display_tray_icon;
 			ar & s.capture_type;
 			ar & s.label_text_format;
+			ar & s.mark_text;
 			// layout
 			ar & s.layout_type;
 			ar & s.min_width;
