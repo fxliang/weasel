@@ -1,7 +1,8 @@
 rem Customize your build environment and save the modified copy to env.bat
+set WEASEL_ROOT=%CD%
 
 rem REQUIRED: path to Boost source directory
-set BOOST_ROOT=C:\Libraries\boost_1_76_0
+if not defined BOOST_ROOT set BOOST_ROOT=%WEASEL_ROOT%\deps\boost_1_78_0
 
 rem OPTIONAL: Visual Studio version and platform toolset
 set BJAM_TOOLSET=msvc-14.2
