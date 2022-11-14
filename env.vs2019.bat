@@ -1,10 +1,14 @@
 rem Customize your build environment and save the modified copy to env.bat
 
-rem REQUIRED: path to Boost source directory
-set BOOST_ROOT=C:\Libraries\boost_1_76_0
+set WEASEL_ROOT=%CD%
 
-rem OPTIONAL: Visual Studio version and platform toolset
+rem REQUIRED: path to Boost source directory
+if not defined BOOST_ROOT set BOOST_ROOT=%WEASEL_ROOT%\deps\boost_1_78_0
+
+rem OPTIONAL: architecture, Visual Studio version and platform toolset
+rem set ARCH=Win32
 set BJAM_TOOLSET=msvc-14.2
+set CMAKE_GENERATOR="Visual Studio 16 2019"
 set PLATFORM_TOOLSET=v142
 
 rem OPTIONAL: path to additional build tools

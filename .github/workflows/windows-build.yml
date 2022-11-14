@@ -25,7 +25,7 @@ jobs:
 
       - name: Configure build environment
         run: |
-          copy env.vs2019_ci.bat env.bat
+          copy env.vs2019.bat env.bat
           $git_ref_name = git describe --always
           echo "git_ref_name=$git_ref_name" >> $env:GITHUB_ENV
 
@@ -58,15 +58,11 @@ jobs:
 
       - name: Build dependencies
         if: steps.cache-deps.outputs.cache-hit != 'true'
-        # run: .\build.bat deps
         run: .\build.bat opencc
 
-
-      #- name: Install Rime plugins
-      #  run: .\action-install-plugins-windows.bat
-
       - name: Copy Rime files
-        run: .\ci.install.bat
+        run: .\github.install.bat
+
 
       - name: Build Weasel
         id: build_weasel
@@ -75,19 +71,9 @@ jobs:
           .\build.bat hant
           .\build.bat installer
 
-      #- name: Create distributable
-      #  if: steps.build_weasel.outputs.cache-hit == 'true'
-      #  run: |
-      #    7z a weasel-${{ env.git_ref_name }}-${{ runner.os }}.7z output\archives\
-          #dist version-info.txt
-          #7z a -x'!*/.placeholder' rime-deps-${{ env.git_ref_name }}-${{ runner.os }}.7z `
-          #bin include lib share
-
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
         with:
           if-no-files-found: error
           path: |
             .\output\archives\weasel*.exe
-            #weasel-${{ env.git_ref_name }}-${{ runner.os }}.7z
-            #rime-deps-${{ env.git_ref_name }}-${{ runner.os }}.7z
