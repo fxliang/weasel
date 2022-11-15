@@ -26,6 +26,7 @@ style:
   preedit_type: composition
   display_tray_icon: false
   label_format: "%s."
+  mark_text: ""
   layout:
     align_type: bottom
     min_width: 160

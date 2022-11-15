@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include <WeaselUI.h>
+#include <VersionHelpers.hpp>
 #include "WeaselPanel.h"
 
 using namespace weasel;
@@ -185,9 +186,21 @@ void UI::Refresh()
 
 void UI::UpdateInputPosition(RECT const& rc)
 {
+	RECT rrc(rc);
+	if (IsWindows8Point10OrGreaterEx())
+	{
+		using PPTLPFPMDPI = BOOL (WINAPI *)(HWND, LPPOINT);
+		PPTLPFPMDPI PhysicalToLogicalPointForPerMonitorDPI = (PPTLPFPMDPI)::GetProcAddress(m_hUser32Module, "PhysicalToLogicalPointForPerMonitorDPI");
+		POINT lt = { rc.left, rc.top };
+		POINT rb = { rc.right, rc.bottom };
+		PhysicalToLogicalPointForPerMonitorDPI(NULL, &lt);
+		PhysicalToLogicalPointForPerMonitorDPI(NULL, &rb);
+		rrc = { lt.x, lt.y, rb.x, rb.y };
+	}
 	if (pimpl_ && pimpl_->panel.IsWindow())
 	{
-		pimpl_->panel.MoveTo(rc);
+		//pimpl_->panel.MoveTo(rc);
+		pimpl_->panel.MoveTo(rrc);
 	}
 }
 
