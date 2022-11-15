@@ -41,6 +41,16 @@ void weasel::FullScreenLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWr
 			m_layout->DoLayout(dc, pFonts, pDWR);
 		else
 			m_layout->DoLayout(dc, pFonts);
+		if (!_style.mark_text.empty())
+		{
+			CSize sg;
+			if (_style.color_font)
+				GetTextSizeDW(_style.mark_text, _style.mark_text.length(), pDWR->pTextFormat, pDWR->pDWFactory, &sg);
+			else
+				GetTextExtentDCMultiline(dc, _style.mark_text, _style.mark_text.length(), &sg);
+			MARK_WIDTH = sg.cx;
+			MARK_GAP = MARK_WIDTH + 4;
+		}
 	}
 	while (AdjustFontPoint(dc, workArea, pFonts, step, pDWR));
 

@@ -287,7 +287,8 @@ void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORRE
 		if (m_style.mark_text.empty())
 		{
 			int topm = (rc.Height() - ((double)rc.Height() - (double)max(m_style.hilite_padding, m_style.round_corner) * 2) * 0.7) / 2;
-			CRect hlRc(rc.left + (m_layout->MARK_GAP - m_layout->MARK_WIDTH) / 2 + 1, rc.top + topm, rc.left + (m_layout->MARK_GAP + m_layout->MARK_WIDTH) / 2 + 1, rc.bottom - topm);
+			CRect hlRc(rc.left + m_style.hilite_padding + (m_layout->MARK_GAP - m_layout->MARK_WIDTH) / 2 + 1, rc.top + topm, 
+				rc.left + m_style.hilite_padding + (m_layout->MARK_GAP + m_layout->MARK_WIDTH) / 2 + 1, rc.bottom - topm);
 			GraphicsRoundRectPath hlp(hlRc, 4);
 			Gdiplus::Color hlcl = Gdiplus::Color::MakeARGB(0xff, GetRValue(m_style.hilited_mark_color), GetGValue(m_style.hilited_mark_color), GetBValue(m_style.hilited_mark_color));
 			Gdiplus::SolidBrush hl_brush(hlcl);
@@ -295,7 +296,8 @@ void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORRE
 		}
 		else
 		{
-			CRect hlRc(rc.left + (m_layout->MARK_GAP - m_layout->MARK_WIDTH) / 2 + 1, rc.top, rc.left + (m_layout->MARK_GAP + m_layout->MARK_WIDTH) / 2 + 1, rc.bottom);
+			CRect hlRc(rc.left + m_style.hilite_padding + (m_layout->MARK_GAP - m_layout->MARK_WIDTH) / 2 + 1, rc.top, 
+				rc.left + m_style.hilite_padding + (m_layout->MARK_GAP + m_layout->MARK_WIDTH) / 2 + 1, rc.bottom);
 			_TextOut(dc, hlRc, m_style.mark_text.c_str(), m_style.mark_text.length(), &pFonts->m_TextFont, m_style.hilited_mark_color, pDWR->pTextFormat);
 		}
 	}
@@ -351,12 +353,10 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 			}
 			{
 				// zzz[yyy]
-				int base_offset = (m_style.hilited_mark_color & 0xff000000) ? m_layout->MARK_GAP : 0;
 				std::wstring str_highlight(t.substr(range.start, range.end - range.start));
 				CRect rc_hi(x, rc.top, x + (selEnd.cx - selStart.cx), rc.bottom);
 				CRect rct = rc_hi;
 				rc_hi.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
-				rc_hi.left -= base_offset;
 				_HighlightText(dc, rc_hi, m_style.hilited_back_color, m_style.hilited_shadow_color, m_style.round_corner);
 				_TextOut(dc, rct, str_highlight.c_str(), str_highlight.length(), &pFonts->m_TextFont, m_style.hilited_text_color, txtFormat);
 				x += (selEnd.cx - selStart.cx);
@@ -511,7 +511,7 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	::SelectObject(memDC, memBitmap);
 	ReleaseDC(hdc);
 	bool drawn = false;
-	if (!hide_candidates) //  && (!(m_style.inline_preedit && (m_ctx.cinfo.candies.size() == 0)))) {
+	if (!hide_candidates) 
 	{
 		CRect trc(rc);
 		// background start
@@ -537,12 +537,11 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 			memDC.DrawIconEx(iconRect.left, iconRect.top, icon, 0, 0);
 			drawn = true;
 		}
+		/* Nothing drawn, hide candidate window */
+		if (!drawn)
+			ShowWindow(SW_HIDE);
 	}
-	/* Nothing drawn, hide candidate window */
-	if (!drawn)
-		ShowWindow(SW_HIDE);
-	else
-		_LayerUpdate(rc, memDC);
+	_LayerUpdate(rc, memDC);
 	::DeleteDC(memDC);
 	::DeleteObject(memBitmap);
 }

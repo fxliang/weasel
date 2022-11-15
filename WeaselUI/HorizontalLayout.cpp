@@ -13,6 +13,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 	const std::vector<Text> &candidates(_context.cinfo.candies);
 	const std::vector<Text> &comments(_context.cinfo.comments);
 	const std::vector<Text> &labels(_context.cinfo.labels);
+	int id = _context.cinfo.highlighted;
 	CSize size;
 	//dc.GetTextExtent(L"\x4e2d", 1, &size);
 	//const int space = size.cx / 4;
@@ -54,12 +55,12 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 		if(STATUS_ICON_SIZE/ 2 >= (height + size.cy / 2) && ShouldDisplayStatusIcon())
 		{
 			height += (STATUS_ICON_SIZE - size.cy) / 2;
-			_preeditRect.SetRect(real_margin_x + base_offset, height, real_margin_x + base_offset + size.cx, height + size.cy);
+			_preeditRect.SetRect(real_margin_x , height, real_margin_x  + size.cx, height + size.cy);
 			height += size.cy + (STATUS_ICON_SIZE - size.cy) / 2 + _style.spacing;
 		}
 		else
 		{
-			_preeditRect.SetRect(real_margin_x + base_offset, height, real_margin_x + base_offset + size.cx, height + size.cy);
+			_preeditRect.SetRect(real_margin_x , height, real_margin_x  + size.cx, height + size.cy);
 			height += size.cy + _style.spacing;
 		}
 		_preeditRect.OffsetRect(offsetX, offsetY);
@@ -76,12 +77,12 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 		if(STATUS_ICON_SIZE/ 2 >= (height + size.cy / 2) && ShouldDisplayStatusIcon())
 		{
 			height += (STATUS_ICON_SIZE - size.cy) / 2 ;
-			_auxiliaryRect.SetRect(real_margin_x + base_offset, height, real_margin_x + base_offset + size.cx, height + size.cy);
+			_auxiliaryRect.SetRect(real_margin_x , height, real_margin_x  + size.cx, height + size.cy);
 			height += size.cy + (STATUS_ICON_SIZE - size.cy) / 2 + _style.spacing;
 		}
 		else
 		{
-			_auxiliaryRect.SetRect(real_margin_x + base_offset, height, real_margin_x + base_offset + size.cx, height + size.cy);
+			_auxiliaryRect.SetRect(real_margin_x , height, real_margin_x  + size.cx, height + size.cy);
 			height += size.cy + _style.spacing;
 		}
 		_auxiliaryRect.OffsetRect(offsetX, offsetY);
@@ -89,9 +90,11 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 	}
 
 	/* Candidates */
-	int w = real_margin_x + base_offset, h = 0;
+	int w = real_margin_x, h = 0;
 	for (size_t i = 0; i < candidates.size() && i < MAX_CANDIDATES_COUNT; ++i)
 	{
+		if (i == id)
+			w += base_offset;
 		if (i > 0)
 			w += _style.candidate_spacing - 1;
 
@@ -144,8 +147,6 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 			_candidateCommentRects[i].SetRect(w, height, w, height + size.cy);
 		}
 		_candidateCommentRects[i].OffsetRect(offsetX, offsetY);
-		if (_style.hilited_mark_color & 0xff000000 && i < (candidates.size()-1))
-			w += MARK_GAP;
 	}
 	if(!_style.color_font)
 		dc.SelectFont(oldFont);
@@ -185,7 +186,6 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 	w += real_margin_x;
 
 	/* Highlighted Candidate */
-	int id = _context.cinfo.highlighted;
 	for (size_t i = 0; i < candidates.size() && i < MAX_CANDIDATES_COUNT; ++i)
 	{
 		int hlTop = _candidateTextRects[i].top;
@@ -203,7 +203,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 		}
 		hlTop = min(mintop, hlTop);
 		hlBot = max(maxbot, hlBot);
-		int gap = (_style.hilited_mark_color & 0xff000000)!=0 ? MARK_GAP : 0;
+		int gap = (_style.hilited_mark_color & 0xff000000)!=0 && id == i ? base_offset : 0;
 		_candidateRects[i].SetRect(_candidateLabelRects[i].left - gap, hlTop, _candidateCommentRects[i].right, hlBot);
 	}
 

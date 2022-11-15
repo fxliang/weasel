@@ -122,6 +122,11 @@ void UI::Destroy()
 			pimpl_->panel.CaptureWindow();
 			pimpl_->panel.DestroyWindow();
 		}
+		if (style().layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN || style().layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN)
+		{
+			delete pimpl_;
+			pimpl_ = 0;
+		}
 	}
 }
 // for ending of app, destroy pimpl_

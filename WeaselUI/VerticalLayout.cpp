@@ -43,7 +43,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWrit
 		MARK_WIDTH = sg.cx;
 		MARK_GAP = MARK_WIDTH + 4;
 	}
-	if (_style.hilited_mark_color & 0xff000000) real_margin_x += MARK_GAP;
+
 	int base_offset =  (_style.hilited_mark_color & 0xff000000) ? MARK_GAP : 0;
 	/* Preedit */
 	if (!IsInlinePreedit() && !_context.preedit.str.empty())
@@ -98,7 +98,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWrit
 		if (i > 0 )
 			height += _style.candidate_spacing;
 
-		int w = real_margin_x, h = 0;
+		int w = real_margin_x + base_offset, h = 0;
 		int candidate_width = 0, comment_width = 0;
 		/* Label */
 		std::wstring label = GetLabelText(labels, i, _style.label_text_format.c_str());
@@ -176,7 +176,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWrit
 	/* comments are left-aligned to the right of the longest candidate who has a comment */
 	int max_content_width = max(max_candidate_width, comment_shift_width + max_comment_width);
 	width = max(width, max_content_width + 2 * real_margin_x);
-
+	width += base_offset;
 	/* Align comments */
 	for (size_t i = 0; i < candidates.size() && i < MAX_CANDIDATES_COUNT; ++i)
 		_candidateCommentRects[i].OffsetRect(real_margin_x + comment_shift_width, 0);
@@ -215,8 +215,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWrit
 			hlBot = max(hlBot, _candidateCommentRects[i].bottom);
 		}
 
-		int gap =  (_style.hilited_mark_color & 0xff000000) ? MARK_GAP :0;
-		_candidateRects[i].SetRect(real_margin_x + offsetX - gap, hlTop, width - real_margin_x + offsetX + gap, hlBot);
+		_candidateRects[i].SetRect(real_margin_x + offsetX, hlTop, width - real_margin_x + offsetX, hlBot);
 	}
 	if (_style.hilited_mark_color & 0xff000000)
 		width -= MARK_GAP;
