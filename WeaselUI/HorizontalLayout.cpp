@@ -34,7 +34,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 		commentFont.CreateFontW(hcmmt, 0, 0, 0, pFonts->m_CommentFont.m_FontWeight, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, pFonts->m_CommentFont.m_FontFace.c_str());
 		oldFont = dc.SelectFont(textFont);
 	}
-	if (!_style.mark_text.empty())
+	if (!_style.mark_text.empty() && (_style.hilited_mark_color & 0xff000000))
 	{
 		CSize sg;
 		if (_style.color_font)
@@ -42,6 +42,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 		else
 			GetTextExtentDCMultiline(dc, _style.mark_text, _style.mark_text.length(), &sg);
 		MARK_WIDTH = sg.cx;
+		MARK_HEIGHT = sg.cy;
 		MARK_GAP = MARK_WIDTH + 4;
 	}
 	int base_offset =  (_style.hilited_mark_color & 0xff000000) ? MARK_GAP : 0;

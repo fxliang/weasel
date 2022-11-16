@@ -37,6 +37,7 @@ namespace weasel
 		int offsetY = 0;
 		int MARK_WIDTH = 4;
 		int MARK_GAP = 8;
+		int MARK_HEIGHT = 0;
 	protected:
 		const UIStyle &_style;
 		const Context &_context;

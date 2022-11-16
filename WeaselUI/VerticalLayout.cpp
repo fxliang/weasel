@@ -33,7 +33,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWrit
 		oldFont = dc.SelectFont(textFont);
 	}
 
-	if (!_style.mark_text.empty())
+	if (!_style.mark_text.empty() && (_style.hilited_mark_color & 0xff000000))
 	{
 		CSize sg;
 		if (_style.color_font)
@@ -41,6 +41,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWrit
 		else
 			GetTextExtentDCMultiline(dc, _style.mark_text, _style.mark_text.length(), &sg);
 		MARK_WIDTH = sg.cx;
+		MARK_HEIGHT = sg.cy;
 		MARK_GAP = MARK_WIDTH + 4;
 	}
 

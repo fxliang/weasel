@@ -41,7 +41,7 @@ void weasel::FullScreenLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWr
 			m_layout->DoLayout(dc, pFonts, pDWR);
 		else
 			m_layout->DoLayout(dc, pFonts);
-		if (!_style.mark_text.empty())
+		if (!_style.mark_text.empty() && (_style.hilited_mark_color & 0xff000000))
 		{
 			CSize sg;
 			if (_style.color_font)
@@ -49,6 +49,7 @@ void weasel::FullScreenLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWr
 			else
 				GetTextExtentDCMultiline(dc, _style.mark_text, _style.mark_text.length(), &sg);
 			MARK_WIDTH = sg.cx;
+			MARK_HEIGHT = sg.cy;
 			MARK_GAP = MARK_WIDTH + 4;
 		}
 	}
