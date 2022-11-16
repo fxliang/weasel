@@ -520,7 +520,9 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 		if (!m_ctx.empty()) {
 			bgRc = rc;
 			bgRc.DeflateRect(m_layout->offsetX + 1, m_layout->offsetY + 1);
-			trc.DeflateRect(m_layout->offsetX - m_style.border, m_layout->offsetY - m_style.border);
+			int offsetx = m_style.border == 0 ? m_layout->offsetX - m_style.border : m_layout->offsetX - m_style.border + 1;
+			int offsety = m_style.border == 0 ? m_layout->offsetY - m_style.border : m_layout->offsetY - m_style.border + 1;
+			trc.DeflateRect(offsetx, offsety);
 			_HighlightText(memDC, trc, m_style.back_color, m_style.shadow_color, m_style.round_corner_ex + m_style.border / 2, BackType::BACKGROUND);
 		}
 		// background end
@@ -628,7 +630,7 @@ void WeaselPanel::_RepositionWindow(bool adj)
 	rcWorkArea.bottom -= height;
 	int x = m_inputPos.left;
 	int y = m_inputPos.bottom;
-	if (m_style.shadow_color & 0xff000000 && m_style.shadow_radius > 0) {
+	if (m_style.shadow_radius > 0) {
 		// round shadow
 		if (m_style.shadow_offset_x == 0 && m_style.shadow_offset_y == 0) {
 			x -= m_style.shadow_radius / 2;
