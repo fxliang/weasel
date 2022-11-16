@@ -634,6 +634,13 @@ void WeaselPanel::_RepositionWindow(bool adj)
 	int x = m_inputPos.left;
 	int y = m_inputPos.bottom;
 	if (m_style.shadow_radius > 0) {
+		x -= (m_style.shadow_offset_x >= 0) ? m_layout->offsetX : ((m_style.shadow_color & 0xff000000)? 0 : (m_style.margin_x - m_style.hilite_padding));
+		if(adj)
+		{
+			y -= (m_style.shadow_offset_y >= 0) ? m_layout->offsetY : ((m_style.shadow_color & 0xff000000)? 0 : (m_style.margin_y - m_style.hilite_padding));
+			y -= m_style.shadow_radius / 2;
+		}
+#if 0
 		// round shadow
 		if (m_style.shadow_offset_x == 0 && m_style.shadow_offset_y == 0) {
 			x -= m_style.shadow_radius / 2;
@@ -646,6 +653,7 @@ void WeaselPanel::_RepositionWindow(bool adj)
 			if (adj)
 				y -= m_style.shadow_offset_y >= 0 ? m_style.shadow_offset_y + (int)(1.5 * m_style.shadow_radius) : m_style.shadow_radius / 2;
 		}
+#endif
 	}
 	if (x > rcWorkArea.right)
 		x = rcWorkArea.right;
