@@ -8,6 +8,7 @@
 #include <math.h>
 #include <regex>
 #include <rime_api.h>
+#include <codecvt>
 
 static inline BOOL IsThemeLight()
 {
@@ -486,6 +487,18 @@ bool RimeWithWeaselHandler::_ShowMessage(weasel::Context& ctx, weasel::Status& s
 	m_ui->ShowWithTimeout(1200 + 200 * tips.length());
 	return true;
 }
+inline std::string to_byte_string(const std::wstring& input)
+{
+	//std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+	std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+	return converter.to_bytes(input);
+}
+inline std::string _GetLabelText(const std::vector<weasel::Text> &labels, int id, const wchar_t *format)
+{
+	wchar_t buffer[128];
+	swprintf_s<128>(buffer, format, labels.at(id).str.c_str());
+	return to_byte_string(std::wstring(buffer));
+}
 
 bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
 {
@@ -543,11 +556,16 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
 				}
 				break;
 			case weasel::UIStyle::PREVIEW_ALL:
+				weasel::CandidateInfo cinfo;
+				_GetCandidateInfo(cinfo, ctx);
 				std::string topush = std::string("ctx.preedit=") + ctx.composition.preedit + "  [";
 				for (auto i = 0; i < ctx.menu.num_candidates; i++)
 				{
-					std::string prefix = (i != ctx.menu.highlighted_candidate_index) ? "" : "*";
-					topush += " " + prefix + std::to_string(i+1) + "." + std::string(ctx.menu.candidates[i].text);
+					std::string label = m_ui->style().label_font_point > 0 ? _GetLabelText(cinfo.labels, i, m_ui->style().label_text_format.c_str()) : "";
+					std::string comment = m_ui->style().comment_font_point > 0 ? to_byte_string(cinfo.comments.at(i).str) : "";
+					std::string mark_text = m_ui->style().mark_text.empty() ? "*" : to_byte_string(m_ui->style().mark_text);
+					std::string prefix = (i != ctx.menu.highlighted_candidate_index) ? "" : mark_text;
+					topush += " " + prefix + label + std::string(ctx.menu.candidates[i].text) + " " + comment;
 				}
 				messages.push_back(topush + " ]\n");
 				//messages.push_back(std::string("ctx.preedit=") + ctx.composition.preedit + '\n');
@@ -768,7 +786,6 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 	{
 		style.mark_text = utf8towcs(mark_text);
 	}
-	//else style.mark_text = L"";
 	// layout (alternative to style/horizontal)
 	char layout_type[256] = {0};
 	if (RimeConfigGetString(config, "style/layout/type", layout_type, sizeof(layout_type) - 1))
@@ -843,7 +860,7 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 		}
 		if (!RimeConfigGetColor32b(config, (prefix + "/candidate_back_color").c_str(), &style.candidate_back_color))
 		{
-			style.candidate_back_color = style.back_color;
+			style.candidate_back_color = style.back_color & 0x00ffffff;
 		}
 
 		if (!RimeConfigGetColor32b(config, (prefix + "/border_color").c_str(), &style.border_color))
@@ -868,15 +885,15 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 		}
 		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_candidate_shadow_color").c_str(), &style.hilited_candidate_shadow_color))
 		{
-			style.hilited_candidate_shadow_color = 0x00000000;
+			style.hilited_candidate_shadow_color = style.shadow_color  & 0x00ffffff;
 		}
 		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_shadow_color").c_str(), &style.hilited_shadow_color))
 		{
-			style.hilited_shadow_color = 0x00000000;
+			style.hilited_shadow_color = style.shadow_color  & 0x00ffffff;
 		}
 		if (!RimeConfigGetColor32b(config, (prefix + "/candidate_shadow_color").c_str(), &style.candidate_shadow_color))
 		{
-			style.candidate_shadow_color = 0x00000000;
+			style.candidate_shadow_color = style.shadow_color & 0x00ffffff;
 		}
 		if (!RimeConfigGetColor32b(config, (prefix + "/label_color").c_str(), &style.label_text_color))
 		{
@@ -921,7 +938,7 @@ static bool _UpdateUIStyleColor(RimeConfig* config, weasel::UIStyle& style, bool
 		}
 		if (!RimeConfigGetColor32b(config, (prefix + "/candidate_back_color").c_str(), &style.candidate_back_color))
 		{
-			style.candidate_back_color = style.back_color;
+			style.candidate_back_color = style.back_color & 0x00ffffff;
 		}
 
 		if (!RimeConfigGetColor32b(config, (prefix + "/border_color").c_str(), &style.border_color))
@@ -946,15 +963,15 @@ static bool _UpdateUIStyleColor(RimeConfig* config, weasel::UIStyle& style, bool
 		}
 		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_candidate_shadow_color").c_str(), &style.hilited_candidate_shadow_color))
 		{
-			style.hilited_candidate_shadow_color = 0x00000000;
+			style.hilited_candidate_shadow_color = style.shadow_color  & 0x00ffffff;
 		}
 		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_shadow_color").c_str(), &style.hilited_shadow_color))
 		{
-			style.hilited_shadow_color = 0x00000000;
+			style.hilited_shadow_color = style.shadow_color  & 0x00ffffff;
 		}
 		if (!RimeConfigGetColor32b(config, (prefix + "/candidate_shadow_color").c_str(), &style.candidate_shadow_color))
 		{
-			style.candidate_shadow_color = 0x00000000;
+			style.candidate_shadow_color = style.shadow_color  & 0x00ffffff;
 		}
 		if (!RimeConfigGetColor32b(config, (prefix + "/label_color").c_str(), &style.label_text_color))
 		{
