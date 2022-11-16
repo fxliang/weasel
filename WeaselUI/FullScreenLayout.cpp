@@ -55,24 +55,24 @@ void weasel::FullScreenLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWr
 	}
 	while (AdjustFontPoint(dc, workArea, pFonts, step, pDWR));
 
-	int offsetX = (workArea.Width() - m_layout->GetContentSize().cx) / 2;
-	int offsetY = (workArea.Height() - m_layout->GetContentSize().cy) / 2;
+	int offsetx = (workArea.Width() - m_layout->GetContentSize().cx) / 2;
+	int offsety = (workArea.Height() - m_layout->GetContentSize().cy) / 2;
 	_preeditRect = m_layout->GetPreeditRect();
-	_preeditRect.OffsetRect(offsetX, offsetY);
+	_preeditRect.OffsetRect(offsetx, offsety);
 	_auxiliaryRect = m_layout->GetAuxiliaryRect();
-	_auxiliaryRect.OffsetRect(offsetX, offsetY);
+	_auxiliaryRect.OffsetRect(offsetx, offsety);
 	_highlightRect = m_layout->GetHighlightRect();
-	_highlightRect.OffsetRect(offsetX, offsetY);
+	_highlightRect.OffsetRect(offsetx, offsety);
 	for (int i = 0, n = (int)_context.cinfo.candies.size(); i < n && i < MAX_CANDIDATES_COUNT; ++i)
 	{
 		_candidateLabelRects[i] = m_layout->GetCandidateLabelRect(i);
-		_candidateLabelRects[i].OffsetRect(offsetX, offsetY);
+		_candidateLabelRects[i].OffsetRect(offsetx, offsety);
 		_candidateTextRects[i] = m_layout->GetCandidateTextRect(i);
-		_candidateTextRects[i].OffsetRect(offsetX, offsetY);
+		_candidateTextRects[i].OffsetRect(offsetx, offsety);
 		_candidateCommentRects[i] = m_layout->GetCandidateCommentRect(i);
-		_candidateCommentRects[i].OffsetRect(offsetX, offsetY);
+		_candidateCommentRects[i].OffsetRect(offsetx, offsety);
 		_candidateRects[i] = m_layout->GetCandidateRect(i);
-		_candidateRects[i].OffsetRect(offsetX, offsetY);
+		_candidateRects[i].OffsetRect(offsetx, offsety);
 	}
 	_statusIconRect = m_layout->GetStatusIconRect();
 

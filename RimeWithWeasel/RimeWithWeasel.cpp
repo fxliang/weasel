@@ -817,6 +817,7 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 	// negative shadow radius not allow
 	if(style.shadow_radius < 0)
 		style.shadow_radius = - style.shadow_radius;
+	style.shadow_radius *= (!fullscreen);
 	RimeConfigGetInt(config, "style/layout/shadow_offset_x", &style.shadow_offset_x);
 	RimeConfigGetInt(config, "style/layout/shadow_offset_y", &style.shadow_offset_y);
 	// round_corner as alias of hilited_corner_radius
