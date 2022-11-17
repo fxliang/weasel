@@ -44,7 +44,7 @@ public:
 
 	void MoveTo(RECT const& rc);
 	void Refresh();
-	bool InitFontRes(void);
+	void InitFontRes(void);
 	void DoPaint(CDCHandle dc);
 	void CleanUp();
 	void CaptureWindow();

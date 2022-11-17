@@ -30,8 +30,8 @@ WeaselPanel::WeaselPanel(weasel::UI& ui)
 	m_iconFull.LoadIconW(IDI_FULL_SHAPE, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
 	m_iconHalf.LoadIconW(IDI_HALF_SHAPE, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
 	GdiplusStartup(&_m_gdiplusToken, &_m_gdiplusStartupInput, NULL);
-	m_ostyle = m_style;
 	InitFontRes();
+	m_ostyle = m_style;
 }
 
 WeaselPanel::~WeaselPanel()
@@ -107,7 +107,7 @@ void WeaselPanel::Refresh()
 	}
 }
 
-bool WeaselPanel::InitFontRes(void)
+void WeaselPanel::InitFontRes(void)
 {
 	if (m_style.color_font)
 	{
@@ -119,15 +119,13 @@ bool WeaselPanel::InitFontRes(void)
 
 		if(pBrush == NULL)
 			pDWR->pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(1.0, 1.0, 1.0, 1.0), &pBrush);
-		m_ostyle = m_style;
 	}
-	else if((pFonts == NULL || m_style != m_ostyle))
+	else
 	{
-		m_ostyle = m_style;
 		delete pFonts;
 		pFonts = new GDIFonts(m_style);
 	}
-	return (pFonts != NULL) && (m_style.color_font ? pDWR != NULL : 1);
+	m_ostyle = m_style;
 }
 
 void WeaselPanel::CleanUp()

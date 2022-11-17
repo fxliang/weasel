@@ -64,7 +64,6 @@ void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, int nCount, 
 {
 	D2D1_SIZE_F sz;
 	HRESULT hr = S_OK;
-	//SafeRelease(&pDWR->pTextLayout);
 	pDWR->pTextLayout = NULL;
 
 	IDWriteTextLayout* tmpLayout = NULL;
@@ -103,40 +102,6 @@ void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, int nCount, 
 	SafeRelease(&tmpLayout);
 	SafeRelease(&pDWR->pTextLayout);
 }
-#if 0
-CSize StandardLayout::GetPreeditSize(CDCHandle dc, const weasel::Text& text, IDWriteTextFormat* pTextFormat, IDWriteFactory* pDWFactory) const
-{
-	const std::wstring& preedit = text.str;
-	const std::vector<weasel::TextAttribute> &attrs = text.attributes;
-	CSize size(0, 0);
-	if (!preedit.empty())
-	{
-		if(pTextFormat == NULL && pDWFactory == NULL)
-			GetTextExtentDCMultiline(dc, preedit, preedit.length(), &size);
-		else
-			GetTextSizeDW(preedit, preedit.length(), pTextFormat, pDWFactory, &size);
-		for (size_t i = 0; i < attrs.size(); i++)
-		{
-			if (attrs[i].type == weasel::HIGHLIGHTED)
-			{
-				const weasel::TextRange &range = attrs[i].range;
-				if (range.start < range.end)
-				{
-					if (range.start > 0)
-						size.cx += _style.hilite_spacing;
-					else
-						size.cx += _style.hilite_padding;
-					if (range.end < static_cast<int>(preedit.length()))
-						size.cx += _style.hilite_spacing;
-					else
-						size.cx += _style.hilite_padding;
-				}
-			}
-		}
-	}
-	return size;
-}
-#endif
 
 CSize StandardLayout::GetPreeditSize(CDCHandle dc, const weasel::Text& text, IDWriteTextFormat* pTextFormat, DirectWriteResources* pDWR) const
 {

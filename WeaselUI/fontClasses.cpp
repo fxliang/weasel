@@ -61,8 +61,7 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 	std::wstring mainFontFace;
 	DWRITE_FONT_WEIGHT fontWeight = DWRITE_FONT_WEIGHT_NORMAL;
 	DWRITE_FONT_STYLE fontStyle = DWRITE_FONT_STYLE_NORMAL;
-	_ParseFontFace(fontFaceStrVector[0], mainFontFace, fontWeight, fontStyle, TextFontInfo);
-	TextFontInfo.m_FontPoint = font_point;
+	_ParseFontFace(fontFaceStrVector[0], mainFontFace, fontWeight, fontStyle);
 	hResult = pDWFactory->CreateTextFormat(mainFontFace.c_str(), NULL,
 			fontWeight, fontStyle, DWRITE_FONT_STRETCH_NORMAL,
 			font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(&pTextFormat));
@@ -80,8 +79,7 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 	boost::algorithm::split(fontFaceStrVector, label_font_face, boost::algorithm::is_any_of(L","));
 	fontWeight = DWRITE_FONT_WEIGHT_NORMAL;
 	fontStyle = DWRITE_FONT_STYLE_NORMAL;
-	_ParseFontFace(fontFaceStrVector[0], mainFontFace, fontWeight, fontStyle, LabelTextFontInfo);
-	LabelTextFontInfo.m_FontPoint = label_font_point;
+	_ParseFontFace(fontFaceStrVector[0], mainFontFace, fontWeight, fontStyle);
 	hResult = pDWFactory->CreateTextFormat(mainFontFace.c_str(), NULL,
 			fontWeight, fontStyle, DWRITE_FONT_STRETCH_NORMAL,
 			label_font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(&pLabelTextFormat));
@@ -99,8 +97,7 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 	boost::algorithm::split(fontFaceStrVector, comment_font_face, boost::algorithm::is_any_of(L","));
 	fontWeight = DWRITE_FONT_WEIGHT_NORMAL;
 	fontStyle = DWRITE_FONT_STYLE_NORMAL;
-	_ParseFontFace(fontFaceStrVector[0], mainFontFace, fontWeight, fontStyle, CommentTextFontInfo);
-	CommentTextFontInfo.m_FontPoint = comment_font_point;
+	_ParseFontFace(fontFaceStrVector[0], mainFontFace, fontWeight, fontStyle);
 	hResult = pDWFactory->CreateTextFormat(mainFontFace.c_str(), NULL,
 			fontWeight, fontStyle, DWRITE_FONT_STRETCH_NORMAL,
 			comment_font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(&pCommentTextFormat));
@@ -120,7 +117,9 @@ HRESULT DirectWriteResources::InitResources(const UIStyle& style)
 {
 	// prepare d2d1 resources
 	HRESULT hResult = S_OK;
-
+	SafeRelease(&pTextFormat);
+	SafeRelease(&pLabelTextFormat);
+	SafeRelease(&pCommentTextFormat);
 	std::vector<std::wstring> fontFaceStrVector;
 	// text font text format set up
 	boost::algorithm::split(fontFaceStrVector, style.font_face, boost::algorithm::is_any_of(L","));
@@ -128,7 +127,7 @@ HRESULT DirectWriteResources::InitResources(const UIStyle& style)
 	DWRITE_FONT_WEIGHT fontWeight = DWRITE_FONT_WEIGHT_NORMAL;
 
 	DWRITE_FONT_STYLE fontStyle = DWRITE_FONT_STYLE_NORMAL;
-	_ParseFontFace(fontFaceStrVector[0], mainFontFace, fontWeight, fontStyle, LabelTextFontInfo);
+	_ParseFontFace(fontFaceStrVector[0], mainFontFace, fontWeight, fontStyle);
 	hResult = pDWFactory->CreateTextFormat(mainFontFace.c_str(), NULL,
 			fontWeight, fontStyle, DWRITE_FONT_STRETCH_NORMAL,
 			style.font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(&pTextFormat));
@@ -147,7 +146,7 @@ HRESULT DirectWriteResources::InitResources(const UIStyle& style)
 	boost::algorithm::split(fontFaceStrVector, style.label_font_face, boost::algorithm::is_any_of(L","));
 	fontWeight = DWRITE_FONT_WEIGHT_NORMAL;
 	fontStyle = DWRITE_FONT_STYLE_NORMAL;
-	_ParseFontFace(fontFaceStrVector[0], mainFontFace, fontWeight, fontStyle, TextFontInfo);
+	_ParseFontFace(fontFaceStrVector[0], mainFontFace, fontWeight, fontStyle);
 	hResult = pDWFactory->CreateTextFormat(mainFontFace.c_str(), NULL,
 			fontWeight, fontStyle, DWRITE_FONT_STRETCH_NORMAL,
 			style.label_font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(&pLabelTextFormat));
@@ -165,7 +164,7 @@ HRESULT DirectWriteResources::InitResources(const UIStyle& style)
 	boost::algorithm::split(fontFaceStrVector, style.comment_font_face, boost::algorithm::is_any_of(L","));
 	fontWeight = DWRITE_FONT_WEIGHT_NORMAL;
 	fontStyle = DWRITE_FONT_STYLE_NORMAL;
-	_ParseFontFace(fontFaceStrVector[0], mainFontFace, fontWeight, fontStyle, CommentTextFontInfo);
+	_ParseFontFace(fontFaceStrVector[0], mainFontFace, fontWeight, fontStyle);
 	hResult = pDWFactory->CreateTextFormat(mainFontFace.c_str(), NULL,
 			fontWeight, fontStyle, DWRITE_FONT_STRETCH_NORMAL,
 			style.comment_font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(&pCommentTextFormat));
@@ -183,10 +182,8 @@ HRESULT DirectWriteResources::InitResources(const UIStyle& style)
 }
 
 void DirectWriteResources::_ParseFontFace(const std::wstring fontFaceStr,
-		std::wstring& fontFace, DWRITE_FONT_WEIGHT& fontWeight, DWRITE_FONT_STYLE& fontStyle,
-		FontInfo& fontInfo)
+		std::wstring& fontFace, DWRITE_FONT_WEIGHT& fontWeight, DWRITE_FONT_STYLE& fontStyle)
 {
-	fontInfo.m_FontFace = fontFaceStr;
 	std::vector<std::wstring> parsedStrV; 
 	boost::algorithm::split(parsedStrV, fontFaceStr, boost::algorithm::is_any_of(L":"));
 	fontFace = parsedStrV[0];
@@ -296,6 +293,25 @@ void DirectWriteResources::_SetFontFallback(IDWriteTextFormat1* pTextFormat, std
 
 
 GDIFonts::GDIFonts(const UIStyle& style) 
+{
+	std::vector<std::wstring> fontFaceStrVector;
+	boost::algorithm::split(fontFaceStrVector, style.label_font_face, boost::algorithm::is_any_of(L","));
+	_ParseFontFace(fontFaceStrVector[0], m_LabelFont.m_FontFace, m_LabelFont.m_FontWeight);
+	m_LabelFont.m_FontPoint = style.label_font_point;
+	fontFaceStrVector.swap(std::vector<std::wstring>());
+
+	boost::algorithm::split(fontFaceStrVector, style.font_face, boost::algorithm::is_any_of(L","));
+	_ParseFontFace(fontFaceStrVector[0], m_TextFont.m_FontFace, m_TextFont.m_FontWeight);
+	m_TextFont.m_FontPoint = style.font_point;
+	fontFaceStrVector.swap(std::vector<std::wstring>());
+
+	boost::algorithm::split(fontFaceStrVector, style.comment_font_face, boost::algorithm::is_any_of(L","));
+	_ParseFontFace(fontFaceStrVector[0], m_CommentFont.m_FontFace, m_CommentFont.m_FontWeight);
+	m_CommentFont.m_FontPoint = style.comment_font_point;
+	fontFaceStrVector.swap(std::vector<std::wstring>());
+}
+
+void GDIFonts::InitResources(const UIStyle& style) 
 {
 	std::vector<std::wstring> fontFaceStrVector;
 	boost::algorithm::split(fontFaceStrVector, style.label_font_face, boost::algorithm::is_any_of(L","));
