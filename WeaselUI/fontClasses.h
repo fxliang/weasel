@@ -46,6 +46,7 @@ namespace weasel
 		IDWriteTextFormat1* pTextFormat;
 		IDWriteTextFormat1* pLabelTextFormat;
 		IDWriteTextFormat1* pCommentTextFormat;
+		IDWriteTextLayout* pTextLayout;
 		FontInfo TextFontInfo;
 		FontInfo LabelTextFontInfo;
 		FontInfo CommentTextFontInfo;

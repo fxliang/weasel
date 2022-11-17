@@ -59,11 +59,15 @@ void weasel::StandardLayout::GetTextExtentDCMultiline(CDCHandle dc, std::wstring
 	lpSize->cx = TextArea.right - TextArea.left;
 	lpSize->cy = TextArea.bottom - TextArea.top;
 }
-void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, int nCount, IDWriteTextFormat* pTextFormat, IDWriteFactory* pDWFactory, LPSIZE lpSize) const
+
+void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, int nCount, IDWriteTextFormat* pTextFormat, DirectWriteResources* pDWR,  LPSIZE lpSize) const
 {
 	D2D1_SIZE_F sz;
 	HRESULT hr = S_OK;
-	IDWriteTextLayout* pTextLayout = NULL;
+	//SafeRelease(&pDWR->pTextLayout);
+	pDWR->pTextLayout = NULL;
+
+	IDWriteTextLayout* tmpLayout = NULL;
 	if (pTextFormat == NULL)
 	{
 		lpSize->cx = 0;
@@ -73,19 +77,20 @@ void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, int nCount, 
 
 	// 创建文本布局 
 	if (pTextFormat != NULL)
-		hr = pDWFactory->CreateTextLayout(text.c_str(), nCount, pTextFormat, 0, 0, &pTextLayout);
+		hr = pDWR->pDWFactory->CreateTextLayout(text.c_str(), nCount, pTextFormat, 0, 0, &tmpLayout);
 	if (SUCCEEDED(hr))
 	{
 		// 获取文本尺寸  
 		DWRITE_TEXT_METRICS textMetrics;
-		hr = pTextLayout->GetMetrics(&textMetrics);
+		hr = tmpLayout->GetMetrics(&textMetrics);
 		sz = D2D1::SizeF(ceil(textMetrics.width), ceil(textMetrics.height));
 		lpSize->cx = (int)sz.width;
 		lpSize->cy = (int)sz.height;
-		
-		hr = pDWFactory->CreateTextLayout(text.c_str(), nCount, pTextFormat, textMetrics.widthIncludingTrailingWhitespace, textMetrics.height, &pTextLayout);
+
+		pDWR->pTextLayout = NULL;
+		hr = pDWR->pDWFactory->CreateTextLayout(text.c_str(), nCount, pTextFormat, textMetrics.widthIncludingTrailingWhitespace, textMetrics.height, &pDWR->pTextLayout);
 		DWRITE_OVERHANG_METRICS overhangMetrics;
-		hr = pTextLayout->GetOverhangMetrics(&overhangMetrics);
+		hr = pDWR->pTextLayout->GetOverhangMetrics(&overhangMetrics);
 		if (overhangMetrics.left > 0)
 			lpSize->cx += overhangMetrics.left + 1;
 		if (overhangMetrics.right > 0)
@@ -95,9 +100,10 @@ void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, int nCount, 
 		if (overhangMetrics.bottom > 0)
 			lpSize->cy += overhangMetrics.bottom + 1;
 	}
-	SafeRelease(&pTextLayout);
+	SafeRelease(&tmpLayout);
+	SafeRelease(&pDWR->pTextLayout);
 }
-
+#if 0
 CSize StandardLayout::GetPreeditSize(CDCHandle dc, const weasel::Text& text, IDWriteTextFormat* pTextFormat, IDWriteFactory* pDWFactory) const
 {
 	const std::wstring& preedit = text.str;
@@ -130,7 +136,40 @@ CSize StandardLayout::GetPreeditSize(CDCHandle dc, const weasel::Text& text, IDW
 	}
 	return size;
 }
+#endif
 
+CSize StandardLayout::GetPreeditSize(CDCHandle dc, const weasel::Text& text, IDWriteTextFormat* pTextFormat, DirectWriteResources* pDWR) const
+{
+	const std::wstring& preedit = text.str;
+	const std::vector<weasel::TextAttribute> &attrs = text.attributes;
+	CSize size(0, 0);
+	if (!preedit.empty())
+	{
+		if(pTextFormat == NULL && pDWR->pDWFactory == NULL)
+			GetTextExtentDCMultiline(dc, preedit, preedit.length(), &size);
+		else
+			GetTextSizeDW(preedit, preedit.length(), pTextFormat, pDWR, &size);
+		for (size_t i = 0; i < attrs.size(); i++)
+		{
+			if (attrs[i].type == weasel::HIGHLIGHTED)
+			{
+				const weasel::TextRange &range = attrs[i].range;
+				if (range.start < range.end)
+				{
+					if (range.start > 0)
+						size.cx += _style.hilite_spacing;
+					else
+						size.cx += _style.hilite_padding;
+					if (range.end < static_cast<int>(preedit.length()))
+						size.cx += _style.hilite_spacing;
+					else
+						size.cx += _style.hilite_padding;
+				}
+			}
+		}
+	}
+	return size;
+}
 void StandardLayout::UpdateStatusIconLayout(int* width, int* height)
 {
 	// rule 1. status icon is middle-aligned with preedit text or auxiliary text, whichever comes first

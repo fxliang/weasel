@@ -45,6 +45,7 @@ DirectWriteResources::~DirectWriteResources()
 	SafeRelease(&pRenderTarget);
 	SafeRelease(&pDWFactory);
 	SafeRelease(&pD2d1Factory);
+	SafeRelease(&pTextLayout);
 }
 
 HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int label_font_point,

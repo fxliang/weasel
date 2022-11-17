@@ -213,6 +213,7 @@ void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORRE
 		m_blurer->DoGaussianBlur(pBitmapDropShadow, (float)m_style.shadow_radius, (float)m_style.shadow_radius);
 		g_back.DrawImage(pBitmapDropShadow, rc.left - blurMarginX, rc.top - blurMarginY);
 		delete pBitmapDropShadow;
+		pBitmapDropShadow = NULL;
 	}
 	// 必须back_color非完全透明才绘制
 	if (color & 0xff000000)	{
@@ -280,6 +281,7 @@ void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORRE
 			hiliteBackPath = new GraphicsRoundRectPath(rc, radius);
 		g_back.FillPath(&back_brush, hiliteBackPath);
 		delete hiliteBackPath;
+		hiliteBackPath = NULL;
 	}
 	// draw hilited mark
 	if (highlighted && (m_style.hilited_mark_color & 0xff000000))
@@ -329,8 +331,8 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 		if (range.start < range.end) {
 			CSize selStart, selEnd;
 			if (m_style.color_font) {
-				m_layout->GetTextSizeDW(t, range.start, pDWR->pTextFormat, pDWR->pDWFactory, &selStart);
-				m_layout->GetTextSizeDW(t, range.end, pDWR->pTextFormat, pDWR->pDWFactory, &selEnd);
+				m_layout->GetTextSizeDW(t, range.start, pDWR->pTextFormat, pDWR, &selStart);
+				m_layout->GetTextSizeDW(t, range.end, pDWR->pTextFormat, pDWR, &selEnd);
 			}
 			else {
 				long height = -MulDiv(pFonts->m_TextFont.m_FontPoint, dc.GetDeviceCaps(LOGPIXELSY), 72);
@@ -787,24 +789,23 @@ bool WeaselPanel::_TextOutWithFallbackDW (CDCHandle dc, CRect const rc, std::wst
 	pBrush->SetColor(D2D1::ColorF(r, g, b, alpha));
 
 	if (NULL != pBrush && NULL != pDWR->pTextFormat) {
-		IDWriteTextLayout* pTextLayout = NULL;
-		pDWR->pDWFactory->CreateTextLayout( psz.c_str(), (UINT32)psz.size(), pTextFormat, (float)rc.Width(), (float)rc.Height(), &pTextLayout);
+		pDWR->pDWFactory->CreateTextLayout( psz.c_str(), (UINT32)psz.size(), pTextFormat, (float)rc.Width(), (float)rc.Height(), &pDWR->pTextLayout);
 		// offsetx for font glyph over left
 		float offsetx = 0.0f;
 		float offsety = 0.0f;
 		DWRITE_OVERHANG_METRICS omt;
-		pTextLayout->GetOverhangMetrics(&omt);
+		pDWR->pTextLayout->GetOverhangMetrics(&omt);
 		if (omt.left > 0)
 			offsetx += omt.left;
 		pDWR->pRenderTarget->BindDC(dc, &rc);
 		pDWR->pRenderTarget->BeginDraw();
-		if (pTextLayout != NULL)
-			pDWR->pRenderTarget->DrawTextLayout({ offsetx, offsety}, pTextLayout, pBrush, D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT);
+		if (pDWR->pTextLayout != NULL)
+			pDWR->pRenderTarget->DrawTextLayout({ offsetx, offsety}, pDWR->pTextLayout, pBrush, D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT);
 		// for rect checking
 		//D2D1_RECT_F rectf{ 0,0, rc.Width(), rc.Height() };
 		//pDWR->pRenderTarget->DrawRectangle(&rectf, pBrush);
 		pDWR->pRenderTarget->EndDraw();
-		SafeRelease(&pTextLayout);
+		SafeRelease(&pDWR->pTextLayout);
 	}
 	else
 		return false;

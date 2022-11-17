@@ -33,11 +33,11 @@ namespace weasel
 
 		std::wstring StandardLayout::ConvertCRLF(std::wstring strString, std::wstring strCRLF) const;
 		void GetTextExtentDCMultiline(CDCHandle dc, std::wstring wszString, int nCount, LPSIZE lpSize) const;
-		void GetTextSizeDW(const std::wstring text, int nCount, IDWriteTextFormat* pTextFormat, IDWriteFactory* pDWFactory, LPSIZE lpSize) const;
+		void GetTextSizeDW(const std::wstring text, int nCount, IDWriteTextFormat* pTextFormat, DirectWriteResources* pDWR, LPSIZE lpSize) const;
 
 	protected:
 		/* Utility functions */
-		CSize GetPreeditSize(CDCHandle dc, const weasel::Text& text, IDWriteTextFormat* pTextFormat = NULL, IDWriteFactory* pDWFactory = NULL) const;
+		CSize GetPreeditSize(CDCHandle dc, const weasel::Text& text, IDWriteTextFormat* pTextFormat = NULL, DirectWriteResources* pDWR = NULL) const;
 
 		void UpdateStatusIconLayout(int* width, int* height);
 

@@ -3,9 +3,7 @@
 #include <WeaselCommon.h>
 #include <WeaselUI.h>
 #include "fontClasses.h"
-//#define MARK_WIDTH	4
-//#define MARK_GAP	(MARK_WIDTH + 4)
-//#define MARK_GAP	32
+
 namespace weasel
 {
 	class Layout
@@ -30,7 +28,7 @@ namespace weasel
 		virtual bool IsInlinePreedit() const = 0;
 		virtual bool ShouldDisplayStatusIcon() const = 0;
 		virtual void GetTextExtentDCMultiline(CDCHandle dc, std::wstring wszString, int nCount, LPSIZE lpSize) const = 0;
-		virtual void GetTextSizeDW(const std::wstring text, int nCount, IDWriteTextFormat* pTextFormat, IDWriteFactory* pDWFactaory,  LPSIZE lpSize) const = 0;
+		virtual void GetTextSizeDW(const std::wstring text, int nCount, IDWriteTextFormat* pTextFormat, DirectWriteResources* pDWR,  LPSIZE lpSize) const = 0;
 		
 		virtual std::wstring Layout::ConvertCRLF(std::wstring strString, std::wstring strCRLF) const = 0;
 		int offsetX = 0;
