@@ -30,8 +30,8 @@ WeaselPanel::WeaselPanel(weasel::UI& ui)
 	m_iconFull.LoadIconW(IDI_FULL_SHAPE, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
 	m_iconHalf.LoadIconW(IDI_HALF_SHAPE, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
 	GdiplusStartup(&_m_gdiplusToken, &_m_gdiplusStartupInput, NULL);
-	m_ostyle = m_style;
 	InitFontRes();
+	m_ostyle = m_style;
 }
 
 WeaselPanel::~WeaselPanel()
@@ -95,19 +95,19 @@ void WeaselPanel::Refresh()
 
 	_CreateLayout();
 
+	InitFontRes();
+	CDCHandle dc = GetDC();
+	m_layout->DoLayout(dc, pFonts, pDWR);
+	ReleaseDC(dc);
+	_ResizeWindow();
+	_RepositionWindow();
 	if(!hide_candidates)
 	{ 
-		InitFontRes();
-		CDCHandle dc = GetDC();
-		m_layout->DoLayout(dc, pFonts, pDWR);
-		ReleaseDC(dc);
-		_ResizeWindow();
-		_RepositionWindow();
 		RedrawWindow();
 	}
 }
 
-bool WeaselPanel::InitFontRes(void)
+void WeaselPanel::InitFontRes(void)
 {
 	if (m_style.color_font)
 	{
@@ -119,15 +119,13 @@ bool WeaselPanel::InitFontRes(void)
 
 		if(pBrush == NULL)
 			pDWR->pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(1.0, 1.0, 1.0, 1.0), &pBrush);
-		m_ostyle = m_style;
 	}
-	else if((pFonts == NULL || m_style != m_ostyle))
+	else
 	{
-		m_ostyle = m_style;
 		delete pFonts;
 		pFonts = new GDIFonts(m_style);
 	}
-	return (pFonts != NULL) && (m_style.color_font ? pDWR != NULL : 1);
+	m_ostyle = m_style;
 }
 
 void WeaselPanel::CleanUp()
@@ -213,6 +211,7 @@ void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORRE
 		m_blurer->DoGaussianBlur(pBitmapDropShadow, (float)m_style.shadow_radius, (float)m_style.shadow_radius);
 		g_back.DrawImage(pBitmapDropShadow, rc.left - blurMarginX, rc.top - blurMarginY);
 		delete pBitmapDropShadow;
+		pBitmapDropShadow = NULL;
 	}
 	// 必须back_color非完全透明才绘制
 	if (color & 0xff000000)	{
@@ -272,7 +271,7 @@ void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORRE
 			bool IsBottomRightNeedToRound	= is_to_round_corner[m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL][m_style.inline_preedit][static_cast<int>(type)][3];
 			int real_margin_x = (abs(m_style.margin_x) > m_style.hilite_padding) ? abs(m_style.margin_x) : m_style.hilite_padding;
 			int real_margin_y = (abs(m_style.margin_y) > m_style.hilite_padding) ? abs(m_style.margin_y) : m_style.hilite_padding;
-			int rr = m_style.round_corner_ex - m_style.border / 2  + (!!m_style.border);
+			int rr = m_style.round_corner_ex - m_style.border / 2 + (!!m_style.border) * 2;
 			hiliteBackPath = new GraphicsRoundRectPath(rc, rr, IsTopLeftNeedToRound, IsTopRightNeedToRound, IsBottomRightNeedToRound, IsBottomLeftNeedToRound);
 		}
 		// background or current candidate background not out of window background
@@ -280,6 +279,7 @@ void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORRE
 			hiliteBackPath = new GraphicsRoundRectPath(rc, radius);
 		g_back.FillPath(&back_brush, hiliteBackPath);
 		delete hiliteBackPath;
+		hiliteBackPath = NULL;
 	}
 	// draw hilited mark
 	if (highlighted && (m_style.hilited_mark_color & 0xff000000))
@@ -329,8 +329,8 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 		if (range.start < range.end) {
 			CSize selStart, selEnd;
 			if (m_style.color_font) {
-				m_layout->GetTextSizeDW(t, range.start, pDWR->pTextFormat, pDWR->pDWFactory, &selStart);
-				m_layout->GetTextSizeDW(t, range.end, pDWR->pTextFormat, pDWR->pDWFactory, &selEnd);
+				m_layout->GetTextSizeDW(t, range.start, pDWR->pTextFormat, pDWR, &selStart);
+				m_layout->GetTextSizeDW(t, range.end, pDWR->pTextFormat, pDWR, &selEnd);
 			}
 			else {
 				long height = -MulDiv(pFonts->m_TextFont.m_FontPoint, dc.GetDeviceCaps(LOGPIXELSY), 72);
@@ -787,24 +787,23 @@ bool WeaselPanel::_TextOutWithFallbackDW (CDCHandle dc, CRect const rc, std::wst
 	pBrush->SetColor(D2D1::ColorF(r, g, b, alpha));
 
 	if (NULL != pBrush && NULL != pDWR->pTextFormat) {
-		IDWriteTextLayout* pTextLayout = NULL;
-		pDWR->pDWFactory->CreateTextLayout( psz.c_str(), (UINT32)psz.size(), pTextFormat, (float)rc.Width(), (float)rc.Height(), &pTextLayout);
+		pDWR->pDWFactory->CreateTextLayout( psz.c_str(), (UINT32)psz.size(), pTextFormat, (float)rc.Width(), (float)rc.Height(), &pDWR->pTextLayout);
 		// offsetx for font glyph over left
 		float offsetx = 0.0f;
 		float offsety = 0.0f;
 		DWRITE_OVERHANG_METRICS omt;
-		pTextLayout->GetOverhangMetrics(&omt);
+		pDWR->pTextLayout->GetOverhangMetrics(&omt);
 		if (omt.left > 0)
 			offsetx += omt.left;
 		pDWR->pRenderTarget->BindDC(dc, &rc);
 		pDWR->pRenderTarget->BeginDraw();
-		if (pTextLayout != NULL)
-			pDWR->pRenderTarget->DrawTextLayout({ offsetx, offsety}, pTextLayout, pBrush, D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT);
+		if (pDWR->pTextLayout != NULL)
+			pDWR->pRenderTarget->DrawTextLayout({ offsetx, offsety}, pDWR->pTextLayout, pBrush, D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT);
 		// for rect checking
 		//D2D1_RECT_F rectf{ 0,0, rc.Width(), rc.Height() };
 		//pDWR->pRenderTarget->DrawRectangle(&rectf, pBrush);
 		pDWR->pRenderTarget->EndDraw();
-		SafeRelease(&pTextLayout);
+		SafeRelease(&pDWR->pTextLayout);
 	}
 	else
 		return false;

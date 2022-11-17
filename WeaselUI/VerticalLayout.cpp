@@ -37,7 +37,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWrit
 	{
 		CSize sg;
 		if (_style.color_font)
-			GetTextSizeDW(_style.mark_text, _style.mark_text.length(), pDWR->pTextFormat, pDWR->pDWFactory, &sg);
+			GetTextSizeDW(_style.mark_text, _style.mark_text.length(), pDWR->pTextFormat, pDWR, &sg);
 		else
 			GetTextExtentDCMultiline(dc, _style.mark_text, _style.mark_text.length(), &sg);
 		MARK_WIDTH = sg.cx;
@@ -50,7 +50,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWrit
 	if (!IsInlinePreedit() && !_context.preedit.str.empty())
 	{
 		if (_style.color_font)
-			size = GetPreeditSize(dc, _context.preedit, pDWR->pTextFormat, pDWR->pDWFactory);
+			size = GetPreeditSize(dc, _context.preedit, pDWR->pTextFormat, pDWR);
 		else
 			size = GetPreeditSize(dc, _context.preedit);
 		if(STATUS_ICON_SIZE/ 2 >= (height + size.cy / 2) && ShouldDisplayStatusIcon())
@@ -72,7 +72,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWrit
 	if (!_context.aux.str.empty())
 	{
 		if (_style.color_font)
-			size = GetPreeditSize(dc, _context.aux, pDWR->pTextFormat, pDWR->pDWFactory);
+			size = GetPreeditSize(dc, _context.aux, pDWR->pTextFormat, pDWR);
 		else
 			size = GetPreeditSize(dc, _context.aux);
 		if(STATUS_ICON_SIZE/ 2 >= (height + size.cy / 2) && ShouldDisplayStatusIcon())
@@ -104,7 +104,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWrit
 		/* Label */
 		std::wstring label = GetLabelText(labels, i, _style.label_text_format.c_str());
 		if (_style.color_font)
-		GetTextSizeDW(label, label.length(), pDWR->pLabelTextFormat, pDWR->pDWFactory, &size);
+		GetTextSizeDW(label, label.length(), pDWR->pLabelTextFormat, pDWR, &size);
 		else
 		{
 			oldFont = dc.SelectFont(labelFont);
@@ -118,7 +118,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWrit
 		/* Text */
 		const std::wstring& text = candidates.at(i).str;
 		if (_style.color_font)
-			GetTextSizeDW(text, text.length(), pDWR->pTextFormat, pDWR->pDWFactory, &size);
+			GetTextSizeDW(text, text.length(), pDWR->pTextFormat, pDWR, &size);
 		else
 		{
 			oldFont = dc.SelectFont(textFont);
@@ -139,7 +139,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWrit
 
 			const std::wstring& comment = comments.at(i).str;
 			if (_style.color_font)
-				GetTextSizeDW(comment, comment.length(), pDWR->pCommentTextFormat, pDWR->pDWFactory, &size);
+				GetTextSizeDW(comment, comment.length(), pDWR->pCommentTextFormat, pDWR, &size);
 			else
 			{
 				oldFont = dc.SelectFont(commentFont);

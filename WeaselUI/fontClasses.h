@@ -46,11 +46,9 @@ namespace weasel
 		IDWriteTextFormat1* pTextFormat;
 		IDWriteTextFormat1* pLabelTextFormat;
 		IDWriteTextFormat1* pCommentTextFormat;
-		FontInfo TextFontInfo;
-		FontInfo LabelTextFontInfo;
-		FontInfo CommentTextFontInfo;
+		IDWriteTextLayout* pTextLayout;
 	private:
-		void _ParseFontFace(const std::wstring fontFaceStr, std::wstring& fontFace, DWRITE_FONT_WEIGHT& fontWeight, DWRITE_FONT_STYLE& fontStyle, FontInfo& fontInfo);
+		void _ParseFontFace(const std::wstring fontFaceStr, std::wstring& fontFace, DWRITE_FONT_WEIGHT& fontWeight, DWRITE_FONT_STYLE& fontStyle);
 		void _SetFontFallback(IDWriteTextFormat1* pTextFormat, std::vector<std::wstring> fontVector);
 	};
 	class GDIFonts
@@ -59,6 +57,7 @@ namespace weasel
 		~GDIFonts() {}
 		//GDIFonts(wstring labelFontFace, int labelFontPoint, std::wstring textFontFace, int textFontPoint, std::wstring commentFontFace, int commentFontPoint);
 		GDIFonts(const UIStyle& style);
+		void InitResources(const UIStyle& style);
 		void _ParseFontFace(const std::wstring fontFaceStr, std::wstring& fontFace, int& fontWeight);
 		FontInfo m_LabelFont;
 		FontInfo m_TextFont;

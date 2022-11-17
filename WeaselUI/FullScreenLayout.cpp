@@ -45,7 +45,7 @@ void weasel::FullScreenLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWr
 		{
 			CSize sg;
 			if (_style.color_font)
-				GetTextSizeDW(_style.mark_text, _style.mark_text.length(), pDWR->pTextFormat, pDWR->pDWFactory, &sg);
+				GetTextSizeDW(_style.mark_text, _style.mark_text.length(), pDWR->pTextFormat, pDWR, &sg);
 			else
 				GetTextExtentDCMultiline(dc, _style.mark_text, _style.mark_text.length(), &sg);
 			MARK_WIDTH = sg.cx;
