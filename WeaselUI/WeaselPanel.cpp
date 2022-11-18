@@ -410,6 +410,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 			drawn = true;
 		}
 	// draw non highlighted candidates, without shadow
+	bkType = BackType::FIRST_CAND;
 	for (size_t i = 0; i < candidates.size() && i < MAX_CANDIDATES_COUNT; ++i)
 	{
 		CRect rect;
