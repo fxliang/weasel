@@ -53,6 +53,9 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 	std::wstring comment_font_face, int comment_font_point) 
 {
 	// prepare d2d1 resources
+	SafeRelease(&pTextFormat);
+	SafeRelease(&pLabelTextFormat);
+	SafeRelease(&pCommentTextFormat);
 
 	HRESULT hResult = S_OK;
 	std::vector<std::wstring> fontFaceStrVector;
@@ -115,70 +118,7 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 
 HRESULT DirectWriteResources::InitResources(const UIStyle& style)
 {
-	// prepare d2d1 resources
-	HRESULT hResult = S_OK;
-	SafeRelease(&pTextFormat);
-	SafeRelease(&pLabelTextFormat);
-	SafeRelease(&pCommentTextFormat);
-	std::vector<std::wstring> fontFaceStrVector;
-	// text font text format set up
-	boost::algorithm::split(fontFaceStrVector, style.font_face, boost::algorithm::is_any_of(L","));
-	std::wstring mainFontFace;
-	DWRITE_FONT_WEIGHT fontWeight = DWRITE_FONT_WEIGHT_NORMAL;
-
-	DWRITE_FONT_STYLE fontStyle = DWRITE_FONT_STYLE_NORMAL;
-	_ParseFontFace(fontFaceStrVector[0], mainFontFace, fontWeight, fontStyle);
-	hResult = pDWFactory->CreateTextFormat(mainFontFace.c_str(), NULL,
-			fontWeight, fontStyle, DWRITE_FONT_STRETCH_NORMAL,
-			style.font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(&pTextFormat));
-	if( pTextFormat != NULL)
-	{
-		pTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
-		// candidate text always center vertical
-		pTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
-		pTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
-		if (fontFaceStrVector.size() > 1)
-			_SetFontFallback(pTextFormat, fontFaceStrVector);
-	}
-	fontFaceStrVector.swap(std::vector<std::wstring>());
-
-	// label font text format set up
-	boost::algorithm::split(fontFaceStrVector, style.label_font_face, boost::algorithm::is_any_of(L","));
-	fontWeight = DWRITE_FONT_WEIGHT_NORMAL;
-	fontStyle = DWRITE_FONT_STYLE_NORMAL;
-	_ParseFontFace(fontFaceStrVector[0], mainFontFace, fontWeight, fontStyle);
-	hResult = pDWFactory->CreateTextFormat(mainFontFace.c_str(), NULL,
-			fontWeight, fontStyle, DWRITE_FONT_STRETCH_NORMAL,
-			style.label_font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(&pLabelTextFormat));
-	if( pLabelTextFormat != NULL)
-	{
-		pLabelTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
-		pLabelTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
-		pLabelTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
-		if (fontFaceStrVector.size() > 1)
-			_SetFontFallback(pLabelTextFormat, fontFaceStrVector);
-	}
-	fontFaceStrVector.swap(std::vector<std::wstring>());
-
-	// comment font text format set up
-	boost::algorithm::split(fontFaceStrVector, style.comment_font_face, boost::algorithm::is_any_of(L","));
-	fontWeight = DWRITE_FONT_WEIGHT_NORMAL;
-	fontStyle = DWRITE_FONT_STYLE_NORMAL;
-	_ParseFontFace(fontFaceStrVector[0], mainFontFace, fontWeight, fontStyle);
-	hResult = pDWFactory->CreateTextFormat(mainFontFace.c_str(), NULL,
-			fontWeight, fontStyle, DWRITE_FONT_STRETCH_NORMAL,
-			style.comment_font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(&pCommentTextFormat));
-	if( pCommentTextFormat != NULL)
-	{
-		pCommentTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
-		pCommentTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
-		pCommentTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
-		if (fontFaceStrVector.size() > 1)
-			_SetFontFallback(pCommentTextFormat, fontFaceStrVector);
-	}
-	fontFaceStrVector.swap(std::vector<std::wstring>());
-
-	return hResult;
+	return InitResources(style.label_font_face, style.label_font_point, style.font_face, style.font_point, style.comment_font_face, style.comment_font_point);
 }
 
 void DirectWriteResources::_ParseFontFace(const std::wstring fontFaceStr,
@@ -229,7 +169,7 @@ void DirectWriteResources::_ParseFontFace(const std::wstring fontFaceStr,
 		fontStyle = DWRITE_FONT_STYLE_NORMAL;
 }
 
-void DirectWriteResources::_SetFontFallback(IDWriteTextFormat1* pTextFormat, std::vector<std::wstring> fontVector)
+void DirectWriteResources::_SetFontFallback(IDWriteTextFormat1* textFormat, std::vector<std::wstring> fontVector)
 {
 	IDWriteFontFallback* pSysFallback;
 	pDWFactory->GetSystemFontFallback(&pSysFallback);
@@ -285,12 +225,12 @@ void DirectWriteResources::_SetFontFallback(IDWriteTextFormat1* pTextFormat, std
 	}
 	pFontFallbackBuilder->AddMappings(pSysFallback);
 	pFontFallbackBuilder->CreateFontFallback(&pFontFallback);
-	pTextFormat->SetFontFallback(pFontFallback);
+	textFormat->SetFontFallback(pFontFallback);
+	fallbackFontsVector.swap(std::vector<std::wstring>());
 	SafeRelease(&pFontFallback);
 	SafeRelease(&pSysFallback);
 	SafeRelease(&pFontFallbackBuilder);
 }
-
 
 GDIFonts::GDIFonts(const UIStyle& style) 
 {
