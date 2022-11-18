@@ -607,6 +607,7 @@ LRESULT WeaselPanel::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
 void WeaselPanel::MoveTo(RECT const& rc)
 {
 	m_inputPos = rc;
+	if (m_style.shadow_offset_y >= 0)	m_inputPos.OffsetRect(0, 10);
 	_RepositionWindow(true);
 	RedrawWindow();
 }
