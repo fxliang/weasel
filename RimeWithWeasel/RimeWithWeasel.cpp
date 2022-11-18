@@ -489,8 +489,8 @@ bool RimeWithWeaselHandler::_ShowMessage(weasel::Context& ctx, weasel::Status& s
 }
 inline std::string to_byte_string(const std::wstring& input)
 {
-	//std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-	std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+	//std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
 	return converter.to_bytes(input);
 }
 inline std::string _GetLabelText(const std::vector<weasel::Text> &labels, int id, const wchar_t *format)
