@@ -110,7 +110,8 @@ CSize StandardLayout::GetPreeditSize(CDCHandle dc, const weasel::Text& text, IDW
 	CSize size(0, 0);
 	if (!preedit.empty())
 	{
-		if(pTextFormat == NULL && pDWR->pDWFactory == NULL)
+		//if(pTextFormat == NULL && pDWR->pDWFactory == NULL)
+		if(!_style.color_font)// && pTextFormat == NULL && pDWR->pDWFactory == NULL)
 			GetTextExtentDCMultiline(dc, preedit, preedit.length(), &size);
 		else
 			GetTextSizeDW(preedit, preedit.length(), pTextFormat, pDWR, &size);
