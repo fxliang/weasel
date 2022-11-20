@@ -271,7 +271,7 @@ void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORRE
 			bool IsBottomRightNeedToRound	= is_to_round_corner[m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL][m_style.inline_preedit][static_cast<int>(type)][3];
 			int real_margin_x = (abs(m_style.margin_x) > m_style.hilite_padding) ? abs(m_style.margin_x) : m_style.hilite_padding;
 			int real_margin_y = (abs(m_style.margin_y) > m_style.hilite_padding) ? abs(m_style.margin_y) : m_style.hilite_padding;
-			int rr = m_style.round_corner_ex - m_style.border / 2 + (!!m_style.border) * 2;
+			int rr = m_style.round_corner_ex - m_style.border + (m_style.border != 0);
 			hiliteBackPath = new GraphicsRoundRectPath(rc, rr, IsTopLeftNeedToRound, IsTopRightNeedToRound, IsBottomRightNeedToRound, IsBottomLeftNeedToRound);
 		}
 		// background or current candidate background not out of window background
@@ -305,7 +305,8 @@ void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORRE
 	}
 	// draw border
 	if (type == BackType::BACKGROUND && m_style.border != 0 && (m_style.border_color & 0xff000000)) {
-		rc.DeflateRect(m_style.border / 2 , m_style.border / 2 );
+		int deflate = m_style.border / 2 ? m_style.border / 2 : 1;
+		rc.DeflateRect(deflate, deflate);
 		GraphicsRoundRectPath bgPath(rc, m_style.round_corner_ex);
 		int alpha = ((m_style.border_color >> 24) & 0xff);
 		Gdiplus::Color border_color = Gdiplus::Color::MakeARGB(alpha, GetRValue(m_style.border_color), GetGValue(m_style.border_color), GetBValue(m_style.border_color));
@@ -521,10 +522,10 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 		if (!m_ctx.empty()) {
 			bgRc = rc;
 			bgRc.DeflateRect(m_layout->offsetX + 1, m_layout->offsetY + 1);
-			int offsetx = m_style.border == 0 ? m_layout->offsetX - m_style.border : m_layout->offsetX - m_style.border + 1;
-			int offsety = m_style.border == 0 ? m_layout->offsetY - m_style.border : m_layout->offsetY - m_style.border + 1;
+			int offsetx = m_layout->offsetX - m_style.border ;
+			int offsety = m_layout->offsetY - m_style.border ;
 			trc.DeflateRect(offsetx, offsety);
-			_HighlightText(memDC, trc, m_style.back_color, m_style.shadow_color, m_style.round_corner_ex + m_style.border / 2, BackType::BACKGROUND);
+			_HighlightText(memDC, trc, m_style.back_color, m_style.shadow_color, m_style.round_corner_ex, BackType::BACKGROUND);
 		}
 		// background end
 		// draw auxiliary string
