@@ -14,47 +14,9 @@ std::wstring StandardLayout::GetLabelText(const std::vector<Text> &labels, int i
 	return std::wstring(buffer);
 }
 
-// from https://www.wabiapp.com/WabiSampleSource/windows/convert_crlf_w.html
-std::wstring StandardLayout::ConvertCRLF(std::wstring strString, std::wstring strCRLF) const
-{
-	std::wstring strRet;
-	std::wstring::iterator ite = strString.begin();
-	std::wstring::iterator iteEnd = strString.end();
-	if (0 < strString.size()) {
-		wchar_t wNextChar = *ite++;
-		while (1) {
-			if ('\r' == wNextChar) {
-				strRet += strCRLF;
-				if (ite == iteEnd) { break; }
-				wNextChar = *ite++;
-				if ('\n' == wNextChar) {
-					if (ite == iteEnd) { break; }
-					wNextChar = *ite++;
-				}
-			}
-			else if ('\n' == wNextChar) {
-				strRet += strCRLF;
-				if (ite == iteEnd) { break; }
-				wNextChar = *ite++;
-				if ('\r' == wNextChar) {
-					if (ite == iteEnd) { break; }
-					wNextChar = *ite++;
-				}
-			}
-			else {
-				strRet += wNextChar;
-				if (ite == iteEnd) { break; }
-				wNextChar = *ite++;
-			}
-		};
-	}
-	return(strRet);
-}
-
 void weasel::StandardLayout::GetTextExtentDCMultiline(CDCHandle dc, std::wstring wszString, int nCount, LPSIZE lpSize) const
 {
 	RECT TextArea = { 0, 0, 0, 0 };
-	wszString = ConvertCRLF(wszString,  L"\r");
 	DrawText(dc, wszString.c_str(), nCount, &TextArea, DT_CALCRECT);
 	lpSize->cx = TextArea.right - TextArea.left;
 	lpSize->cy = TextArea.bottom - TextArea.top;

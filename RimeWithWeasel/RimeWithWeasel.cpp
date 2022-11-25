@@ -297,6 +297,42 @@ void RimeWithWeaselHandler::_ReadClientInfo(UINT session_id, LPWSTR buffer)
 	RimeSetOption(session_id, "soft_cursor", Bool(!inline_preedit));
 }
 
+std::wstring ConvertCRLF(std::wstring strString, std::wstring strCRLF)
+{
+	std::wstring strRet;
+	std::wstring::iterator ite = strString.begin();
+	std::wstring::iterator iteEnd = strString.end();
+	if (0 < strString.size()) {
+		wchar_t wNextChar = *ite++;
+		while (1) {
+			if ('\r' == wNextChar) {
+				strRet += strCRLF;
+				if (ite == iteEnd) { break; }
+				wNextChar = *ite++;
+				if ('\n' == wNextChar) {
+					if (ite == iteEnd) { break; }
+					wNextChar = *ite++;
+				}
+			}
+			else if ('\n' == wNextChar) {
+				strRet += strCRLF;
+				if (ite == iteEnd) { break; }
+				wNextChar = *ite++;
+				if ('\r' == wNextChar) {
+					if (ite == iteEnd) { break; }
+					wNextChar = *ite++;
+				}
+			}
+			else {
+				strRet += wNextChar;
+				if (ite == iteEnd) { break; }
+				wNextChar = *ite++;
+			}
+		};
+	}
+	return(strRet);
+}
+
 void RimeWithWeaselHandler::_GetCandidateInfo(weasel::CandidateInfo & cinfo, RimeContext & ctx)
 {
 	cinfo.candies.resize(ctx.menu.num_candidates);
@@ -304,18 +340,18 @@ void RimeWithWeaselHandler::_GetCandidateInfo(weasel::CandidateInfo & cinfo, Rim
 	cinfo.labels.resize(ctx.menu.num_candidates);
 	for (int i = 0; i < ctx.menu.num_candidates; ++i)
 	{
-		cinfo.candies[i].str = utf8towcs(ctx.menu.candidates[i].text);
+		cinfo.candies[i].str = ConvertCRLF(utf8towcs(ctx.menu.candidates[i].text), L"\r");
 		if (ctx.menu.candidates[i].comment)
 		{
-			cinfo.comments[i].str = utf8towcs(ctx.menu.candidates[i].comment);
+			cinfo.comments[i].str = ConvertCRLF(utf8towcs(ctx.menu.candidates[i].comment), L"\r");
 		}
 		if (RIME_STRUCT_HAS_MEMBER(ctx, ctx.select_labels) && ctx.select_labels)
 		{
-			cinfo.labels[i].str = utf8towcs(ctx.select_labels[i]);
+			cinfo.labels[i].str = ConvertCRLF(utf8towcs(ctx.select_labels[i]), L"\r");
 		}
 		else if (ctx.menu.select_keys)
 		{
-			cinfo.labels[i].str = std::wstring(1, ctx.menu.select_keys[i]);
+			cinfo.labels[i].str = ConvertCRLF(std::wstring(1, ctx.menu.select_keys[i]), L"\r");
 		}
 		else
 		{

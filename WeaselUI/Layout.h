@@ -30,7 +30,6 @@ namespace weasel
 		virtual void GetTextExtentDCMultiline(CDCHandle dc, std::wstring wszString, int nCount, LPSIZE lpSize) const = 0;
 		virtual void GetTextSizeDW(const std::wstring text, int nCount, IDWriteTextFormat* pTextFormat, DirectWriteResources* pDWR,  LPSIZE lpSize) const = 0;
 		
-		virtual std::wstring Layout::ConvertCRLF(std::wstring strString, std::wstring strCRLF) const = 0;
 		int offsetX = 0;
 		int offsetY = 0;
 		int MARK_WIDTH = 4;
