@@ -2,10 +2,48 @@
 
 #include <WeaselCommon.h>
 #include <WeaselUI.h>
+#include <gdiplus.h>
 #include "fontClasses.h"
+
+#pragma comment(lib, "gdiplus.lib")
 
 namespace weasel
 {
+	class GraphicsRoundRectPath : public Gdiplus::GraphicsPath
+	{
+	public:
+		GraphicsRoundRectPath() {};
+		GraphicsRoundRectPath(int left, int top, int width, int height, int cornerx, int cornery) : Gdiplus::GraphicsPath()
+		{
+			AddRoundRect(left, top, width, height, cornerx, cornery);
+		}
+		GraphicsRoundRectPath(const CRect rc, int corner)
+		{
+			if (corner > 0) AddRoundRect(rc.left, rc.top, rc.Width(), rc.Height(), corner, corner);
+			else AddRectangle(Gdiplus::Rect(rc.left, rc.top, rc.Width(), rc.Height()));
+		}
+
+		GraphicsRoundRectPath(const CRect rc, int corner, bool roundTopLeft, bool roundTopRight, bool roundBottomRight, bool roundBottomLeft);
+
+	public:
+		void AddRoundRect(int left, int top, int width, int height, int cornerx, int cornery);
+	};
+
+	struct IsToRoundStruct
+	{
+		bool IsTopLeftNeedToRound;
+		bool IsBottomLeftNeedToRound;
+		bool IsTopRightNeedToRound;
+		bool IsBottomRightNeedToRound;
+		bool Hemospherical;
+		IsToRoundStruct():
+			IsTopLeftNeedToRound(true), 
+			IsTopRightNeedToRound(true), 
+			IsBottomLeftNeedToRound(true), 
+			IsBottomRightNeedToRound(true),
+			Hemospherical(false)
+		{}
+	};
 	class Layout
 	{
 	public:
@@ -23,6 +61,9 @@ namespace weasel
 		virtual CRect GetCandidateRect(int id) const = 0;
 		virtual CRect GetCandidateCommentRect(int id) const = 0;
 		virtual CRect GetStatusIconRect() const = 0;
+		virtual IsToRoundStruct GetRoundInfo(int id) = 0;
+		virtual IsToRoundStruct GetTextRoundInfo() = 0;
+		virtual CRect GetContentRect() = 0;
 
 		virtual std::wstring GetLabelText(const std::vector<Text> &labels, int id, const wchar_t *format) const = 0;
 		virtual bool IsInlinePreedit() const = 0;

@@ -2,12 +2,9 @@
 #include <WeaselCommon.h>
 #include <WeaselUI.h>
 #include <Usp10.h>
-#include <gdiplus.h>
-
 #include "Layout.h"
 #include "GdiplusBlur.h"
 
-#pragma comment(lib, "gdiplus.lib")
 #pragma comment(lib, "d2d1.lib")
 #pragma comment(lib, "dwrite.lib")
 
@@ -54,7 +51,8 @@ private:
 	void _RepositionWindow(bool adj = false);
 	bool _DrawPreedit(weasel::Text const& text, CDCHandle dc, CRect const& rc);
 	bool _DrawCandidates(CDCHandle dc);
-	void _HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORREF shadowColor, int radius, BackType type, bool highlighted);
+	void _HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORREF shadowColor, int radius, BackType type, bool highlighted, 
+		IsToRoundStruct rd);
 	void _TextOut(CDCHandle dc, CRect const& rc, LPCWSTR psz, size_t cch, FontInfo* pFontInfo, int inColor, IDWriteTextFormat* pTextFormat = NULL);
 	bool _TextOutWithFallbackDW(CDCHandle dc, CRect const rc, std::wstring psz, size_t cch, COLORREF gdiColor, IDWriteTextFormat* pTextFormat);
 
@@ -92,22 +90,3 @@ private:
 	ID2D1SolidColorBrush* pBrush;
 };
 
-class GraphicsRoundRectPath : public Gdiplus::GraphicsPath
-{
-public:
-	GraphicsRoundRectPath() {};
-	GraphicsRoundRectPath(int left, int top, int width, int height, int cornerx, int cornery) : Gdiplus::GraphicsPath()
-	{
-		AddRoundRect(left, top, width, height, cornerx, cornery);
-	}
-	GraphicsRoundRectPath(const CRect rc, int corner)
-	{
-		if (corner > 0) AddRoundRect(rc.left, rc.top, rc.Width(), rc.Height(), corner, corner);
-		else AddRectangle(Gdiplus::Rect(rc.left, rc.top, rc.Width(), rc.Height()));
-	}
-
-	GraphicsRoundRectPath(const CRect rc, int corner, bool roundTopLeft, bool roundTopRight, bool roundBottomRight, bool roundBottomLeft);
-
-public:
-	void AddRoundRect(int left, int top, int width, int height, int cornerx, int cornery);
-};

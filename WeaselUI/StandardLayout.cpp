@@ -98,6 +98,103 @@ CSize StandardLayout::GetPreeditSize(CDCHandle dc, const weasel::Text& text, IDW
 	}
 	return size;
 }
+bool weasel::StandardLayout::_IsHighlightOverCandidateWindow(CRect rc, CDCHandle dc)
+{
+	GraphicsRoundRectPath bgPath(_bgRect, _style.round_corner_ex);
+	GraphicsRoundRectPath hlPath(rc, _style.round_corner);
+
+	Gdiplus::Region bgRegion(&bgPath);
+	Gdiplus::Region hlRegion(&hlPath);
+	Gdiplus::Region* tmpRegion = hlRegion.Clone();
+
+	tmpRegion->Xor(&bgRegion);
+	tmpRegion->Exclude(&bgRegion);
+
+	Gdiplus::Graphics g(dc);
+	bool res = !tmpRegion->IsEmpty(&g);
+	delete tmpRegion;
+	tmpRegion = NULL;
+	return res;
+}
+
+void weasel::StandardLayout::_PrepareRoundInfo(CDCHandle dc)
+{
+	int m_candidateCount = _context.cinfo.candies.size();
+	for (auto i = 0; i < m_candidateCount; i++)
+	{
+		CRect hilite_rect(_candidateRects[i]);
+		hilite_rect.InflateRect(_style.hilite_padding, _style.hilite_padding);
+		bool current_hemispherical_dome_status = _IsHighlightOverCandidateWindow(hilite_rect, dc);
+		//if (current_hemispherical_dome_status) _textRoundInfo.Hemospherical = true;
+		// level 0: m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL
+		// level 1: m_style.inline_preedit 
+		// level 2: BackType
+		// level 3: IsTopLeftNeedToRound, IsBottomLeftNeedToRound, IsTopRightNeedToRound, IsBottomRightNeedToRound
+		const bool is_to_round_corner[2][2][5][4] =
+		{
+			// LAYOUT_VERTICAL
+			{
+				// not inline_preedit
+				{
+					{current_hemispherical_dome_status, current_hemispherical_dome_status && (!m_candidateCount), false, false},		// TEXT
+					{false, false, false, false},		// FIRST_CAND
+					{false, false, false, false},	// MID_CAND
+					{false, true, false, true},		// LAST_CAND
+					{false, true, false, true},		// ONLY_CAND
+				} ,
+				// inline_preedit
+				{
+					{true, true, true, true},		// TEXT
+					{true, false, true, false},		// FIRST_CAND
+					{false, false, false, false},	// MID_CAND
+					{false, true, false, true},		// LAST_CAND
+					{true, true, true, true},		// ONLY_CAND
+				}
+			} ,
+			// LAYOUT_HORIZONTAL
+			{
+				// not inline_preedit
+				{
+					{current_hemispherical_dome_status, current_hemispherical_dome_status && (!m_candidateCount), false, false},		// TEXT
+					{false, true, false, false},		// FIRST_CAND
+					{false, false, false, false},	// MID_CAND
+					{false, false, false, true},		// LAST_CAND
+					{false, true, false, true},		// ONLY_CAND
+				} ,
+				// inline_preedit
+				{
+					{true, true, true, true},		// TEXT
+					{true, true, false, false},		// FIRST_CAND
+					{false, false, false, false},	// MID_CAND
+					{false, false, true, true},		// LAST_CAND
+					{true, true, true, true},		// ONLY_CAND
+				}
+			}
+		};
+		int type = 1;
+		if (m_candidateCount == 1)
+			type = 4;
+		else if (i != 0 && i != m_candidateCount - 1)
+			type = 2;
+		else if (i == m_candidateCount - 1)
+			type = 3;
+		_roundInfo[i].IsTopLeftNeedToRound = is_to_round_corner[_style.layout_type == UIStyle::LAYOUT_HORIZONTAL][_style.inline_preedit][type][0];
+		_roundInfo[i].IsBottomLeftNeedToRound = is_to_round_corner[_style.layout_type == UIStyle::LAYOUT_HORIZONTAL][_style.inline_preedit][type][1];
+		_roundInfo[i].IsTopRightNeedToRound = is_to_round_corner[_style.layout_type == UIStyle::LAYOUT_HORIZONTAL][_style.inline_preedit][type][2];
+		_roundInfo[i].IsBottomRightNeedToRound = is_to_round_corner[_style.layout_type == UIStyle::LAYOUT_HORIZONTAL][_style.inline_preedit][type][3];
+		_roundInfo[i].Hemospherical = current_hemispherical_dome_status;
+		if (i == m_candidateCount - 1)
+		{
+			type = 0;
+			_textRoundInfo.IsTopLeftNeedToRound = is_to_round_corner[_style.layout_type == UIStyle::LAYOUT_HORIZONTAL][_style.inline_preedit][type][0];
+			_textRoundInfo.IsBottomLeftNeedToRound = is_to_round_corner[_style.layout_type == UIStyle::LAYOUT_HORIZONTAL][_style.inline_preedit][type][1];
+			_textRoundInfo.IsTopRightNeedToRound = is_to_round_corner[_style.layout_type == UIStyle::LAYOUT_HORIZONTAL][_style.inline_preedit][type][2];
+			_textRoundInfo.IsBottomRightNeedToRound = is_to_round_corner[_style.layout_type == UIStyle::LAYOUT_HORIZONTAL][_style.inline_preedit][type][3];
+			_textRoundInfo.Hemospherical = _roundInfo[0].Hemospherical;
+		}
+	}
+}
+
 void StandardLayout::UpdateStatusIconLayout(int* width, int* height)
 {
 	// rule 1. status icon is middle-aligned with preedit text or auxiliary text, whichever comes first

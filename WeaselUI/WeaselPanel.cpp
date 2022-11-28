@@ -164,7 +164,8 @@ bool WeaselPanel::_IsHighlightOverCandidateWindow(CRect rc, CRect bg, Gdiplus::G
 	return res;
 }
 
-void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORREF shadowColor, int radius, BackType type = BackType::TEXT, bool highlighted = false)
+void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORREF shadowColor, int radius, BackType type = BackType::TEXT, bool highlighted = false, 
+	IsToRoundStruct rd = IsToRoundStruct())
 {
 	Gdiplus::Graphics g_back(dc);
 	g_back.SetSmoothingMode(Gdiplus::SmoothingMode::SmoothingModeHighQuality);
@@ -172,7 +173,7 @@ void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORRE
 	int blurMarginX = (type == BackType::BACKGROUND) ? m_layout->offsetX * 2 : 2*(m_style.shadow_radius + abs(m_style.shadow_offset_x));
 	int blurMarginY = (type == BackType::BACKGROUND) ? m_layout->offsetY * 2 : 2*(m_style.shadow_radius + abs(m_style.shadow_offset_x));
 	// if current rc trigger hemispherical dome
-	bool current_hemispherical_dome_status = (type != BackType::BACKGROUND && _IsHighlightOverCandidateWindow(rc, bgRc, &g_back));
+	//bool current_hemispherical_dome_status = (type != BackType::BACKGROUND && _IsHighlightOverCandidateWindow(rc, bgRc, &g_back));
 	// 必须shadow_color都是非完全透明色才做绘制, 全屏状态不绘制阴影保证响应速度
 	if ( m_style.shadow_radius && (shadowColor & 0xff000000) && m_style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN && m_style.layout_type != UIStyle::LAYOUT_VERTICAL_FULLSCREEN ) {
 		CRect rect(
@@ -219,60 +220,11 @@ void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORRE
 		Gdiplus::SolidBrush back_brush(back_color);
 		GraphicsRoundRectPath* hiliteBackPath;
 		// candidates only, and current candidate background out of window background
-		if (current_hemispherical_dome_status && m_style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN && m_style.layout_type != UIStyle::LAYOUT_VERTICAL_FULLSCREEN) {
-			// level 0: m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL
-			// level 1: m_style.inline_preedit 
-			// level 2: BackType
-			// level 3: IsTopLeftNeedToRound, IsBottomLeftNeedToRound, IsTopRightNeedToRound, IsBottomRightNeedToRound
-			const bool is_to_round_corner[2][2][5][4] = 
-			{
-				// LAYOUT_VERTICAL
-				{
-					// not inline_preedit
-					{
-						{current_hemispherical_dome_status, current_hemispherical_dome_status && (!m_candidateCount), false, false},		// TEXT
-						{false, false, false, false},		// FIRST_CAND
-						{false, false, false, false},	// MID_CAND
-						{false, true, false, true},		// LAST_CAND
-						{false, true, false, true},		// ONLY_CAND
-					} ,
-					// inline_preedit
-					{
-						{true, true, true, true},		// TEXT
-						{true, false, true, false},		// FIRST_CAND
-						{false, false, false, false},	// MID_CAND
-						{false, true, false, true},		// LAST_CAND
-						{true, true, true, true},		// ONLY_CAND
-					}
-				} ,
-				// LAYOUT_HORIZONTAL
-				{
-					// not inline_preedit
-					{
-						{current_hemispherical_dome_status, current_hemispherical_dome_status && (!m_candidateCount), false, false},		// TEXT
-						{false, true, false, false},		// FIRST_CAND
-						{false, false, false, false},	// MID_CAND
-						{false, false, false, true},		// LAST_CAND
-						{false, true, false, true},		// ONLY_CAND
-					} ,
-					// inline_preedit
-					{
-						{true, true, true, true},		// TEXT
-						{true, true, false, false},		// FIRST_CAND
-						{false, false, false, false},	// MID_CAND
-						{false, false, true, true},		// LAST_CAND
-						{true, true, true, true},		// ONLY_CAND
-					}
-				}
-			};
-			bool IsTopLeftNeedToRound		= is_to_round_corner[m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL][m_style.inline_preedit][static_cast<int>(type)][0];
-			bool IsBottomLeftNeedToRound	= is_to_round_corner[m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL][m_style.inline_preedit][static_cast<int>(type)][1];
-			bool IsTopRightNeedToRound		= is_to_round_corner[m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL][m_style.inline_preedit][static_cast<int>(type)][2];
-			bool IsBottomRightNeedToRound	= is_to_round_corner[m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL][m_style.inline_preedit][static_cast<int>(type)][3];
+		if ( type!= BackType::BACKGROUND && rd.Hemospherical && m_style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN && m_style.layout_type != UIStyle::LAYOUT_VERTICAL_FULLSCREEN) {
 			int real_margin_x = (abs(m_style.margin_x) > m_style.hilite_padding) ? abs(m_style.margin_x) : m_style.hilite_padding;
 			int real_margin_y = (abs(m_style.margin_y) > m_style.hilite_padding) ? abs(m_style.margin_y) : m_style.hilite_padding;
-			int rr = m_style.round_corner_ex - m_style.border / 2 + (m_style.border != 0); // + (m_style.border > 0);
-			hiliteBackPath = new GraphicsRoundRectPath(rc, rr, IsTopLeftNeedToRound, IsTopRightNeedToRound, IsBottomRightNeedToRound, IsBottomLeftNeedToRound);
+			int rr = m_style.round_corner_ex - m_style.border / 2 ;
+			hiliteBackPath = new GraphicsRoundRectPath(rc, rr, rd.IsTopLeftNeedToRound, rd.IsTopRightNeedToRound, rd.IsBottomRightNeedToRound, rd.IsBottomLeftNeedToRound);
 		}
 		// background or current candidate background not out of window background
 		else
@@ -360,7 +312,11 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 				CRect rc_hi(x, rc.top, x + (selEnd.cx - selStart.cx), rc.bottom);
 				CRect rct = rc_hi;
 				rc_hi.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
-				_HighlightText(dc, rc_hi, m_style.hilited_back_color, m_style.hilited_shadow_color, m_style.round_corner);
+				IsToRoundStruct rd = m_layout->GetTextRoundInfo();
+				if (rc_hi.left > rc.left && rd.Hemospherical)
+					rd.IsTopLeftNeedToRound = false;
+				_HighlightText(dc, rc_hi, m_style.hilited_back_color, m_style.hilited_shadow_color,
+					m_style.round_corner, BackType::TEXT, false, rd);
 				_TextOut(dc, rct, str_highlight.c_str(), str_highlight.length(), &pFonts->m_TextFont, m_style.hilited_text_color, txtFormat);
 				x += (selEnd.cx - selStart.cx);
 			}
@@ -426,7 +382,8 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 			bkType = BackType::LAST_CAND;
 			rect = m_layout->GetCandidateRect((int)i);
 			rect.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
-			_HighlightText(dc, rect, m_style.candidate_back_color, 0x00000000, m_style.round_corner, bkType);
+			IsToRoundStruct rd = m_layout->GetRoundInfo(i);
+			_HighlightText(dc, rect, m_style.candidate_back_color, 0x00000000, m_style.round_corner, bkType, false, rd);
 		}
 		// Draw label
 		std::wstring label = m_layout->GetLabelText(labels, (int)i, m_style.label_text_format.c_str());
@@ -456,7 +413,8 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 			bkType = BackType::LAST_CAND;
 		CRect rect = m_layout->GetHighlightRect();
 		rect.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
-		_HighlightText(dc, rect, m_style.hilited_candidate_back_color, m_style.hilited_candidate_shadow_color, m_style.round_corner, bkType, true);
+		IsToRoundStruct rd = m_layout->GetRoundInfo(m_ctx.cinfo.highlighted);
+		_HighlightText(dc, rect, m_style.hilited_candidate_back_color, m_style.hilited_candidate_shadow_color, m_style.round_corner, bkType, true, rd);
 		// Draw label
 		std::wstring label = m_layout->GetLabelText(labels, m_ctx.cinfo.highlighted, m_style.label_text_format.c_str());
 		rect = m_layout->GetCandidateLabelRect(m_ctx.cinfo.highlighted);
@@ -520,6 +478,7 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 		CRect trc(rc);
 		// background start
 		if (!m_ctx.empty()) {
+			/*
 			bgRc = rc;
 			bgRc.DeflateRect(m_layout->offsetX + 1, m_layout->offsetY + 1);
 			int offsetx = m_layout->offsetX - m_style.border/2 ;
@@ -527,6 +486,9 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 			trc.DeflateRect(offsetx, offsety);
 			if(m_style.border % 2 == 0)	trc.DeflateRect(1,1);
 			_HighlightText(memDC, trc, m_style.back_color, m_style.shadow_color, m_style.round_corner_ex, BackType::BACKGROUND);
+			*/
+			CRect backrc = m_layout->GetContentRect();
+			_HighlightText(memDC, backrc, m_style.back_color, m_style.shadow_color, m_style.round_corner_ex, BackType::BACKGROUND);
 		}
 		// background end
 		// draw auxiliary string
@@ -850,52 +812,3 @@ void WeaselPanel::_TextOut(CDCHandle dc, CRect const& rc, LPCWSTR psz, size_t cc
 	}
 }
 
-GraphicsRoundRectPath::GraphicsRoundRectPath(const CRect rc, int corner, bool roundTopLeft, bool roundTopRight, bool roundBottomRight, bool roundBottomLeft)
-{
-	if (!(roundTopLeft || roundTopRight || roundBottomRight || roundBottomLeft) || corner <= 0) {
-		Gdiplus::Rect& rcp = Gdiplus::Rect(rc.left, rc.top, rc.Width()  , rc.Height());
-		AddRectangle(rcp);
-	}
-	else {
-		int cnx = ((corner * 2 <= rc.Width()) ? corner : (rc.Width() / 2));
-		int cny = ((corner * 2 <= rc.Height()) ? corner : (rc.Height() / 2));
-		int elWid = 2 * cnx;
-		int elHei = 2 * cny;
-		AddArc(rc.left, rc.top, elWid * roundTopLeft, elHei * roundTopLeft, 180, 90);
-		AddLine(rc.left + cnx * roundTopLeft, rc.top, rc.right - cnx * roundTopRight, rc.top);
-
-		AddArc(rc.right - elWid * roundTopRight, rc.top, elWid * roundTopRight, elHei * roundTopRight, 270, 90);
-		AddLine(rc.right, rc.top + cny * roundTopRight, rc.right, rc.bottom - cny * roundBottomRight);
-
-		AddArc(rc.right - elWid * roundBottomRight, rc.bottom - elHei * roundBottomRight, elWid * roundBottomRight, elHei * roundBottomRight, 0, 90);
-		AddLine(rc.right - cnx * roundBottomRight, rc.bottom, rc.left + cnx * roundBottomLeft, rc.bottom);
-
-		AddArc(rc.left, rc.bottom - elHei * roundBottomLeft, elWid * roundBottomLeft, elHei * roundBottomLeft, 90, 90);
-		AddLine(rc.left, rc.top + cny * roundTopLeft - 1, rc.left, rc.bottom - cny * roundBottomLeft);
-	}
-}
-
-void GraphicsRoundRectPath::AddRoundRect(int left, int top, int width, int height, int cornerx, int cornery)
-{
-	if (cornery > 0 && cornerx > 0) {
-		int cnx = ((cornerx * 2 <= width) ? cornerx : (width / 2));
-		int cny = ((cornery * 2 <= height) ? cornery : (height / 2));
-		int elWid = 2 * cnx;
-		int elHei = 2 * cny;
-		AddArc(left, top, elWid, elHei, 180, 90);
-		AddLine(left + cnx, top, left + width - cnx, top);
-
-		AddArc(left + width - elWid, top, elWid, elHei, 270, 90);
-		AddLine(left + width, top + cny, left + width, top + height - cny);
-
-		AddArc(left + width - elWid, top + height - elHei, elWid, elHei, 0, 90);
-		AddLine(left + width - cnx, top + height, left + cnx, top + height);
-
-		AddArc(left, top + height - elHei, elWid, elHei, 90, 90);
-		AddLine(left, top + cny-1, left, top + height - cny);
-	}
-	else {
-		Gdiplus::Rect& rc = Gdiplus::Rect(left, top, width, height);
-		AddRectangle(rc);
-	}
-}

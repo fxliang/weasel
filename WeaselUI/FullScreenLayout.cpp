@@ -77,6 +77,8 @@ void weasel::FullScreenLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWr
 	_statusIconRect = m_layout->GetStatusIconRect();
 
 	_contentSize.SetSize(workArea.Width(), workArea.Height());
+	_contentRect.SetRect(0, 0, workArea.Width(), workArea.Height());
+	_contentRect.DeflateRect(offsetX, offsetY);
 }
 
 bool FullScreenLayout::AdjustFontPoint(CDCHandle dc, const CRect& workArea, GDIFonts* pFonts, int& step, DirectWriteResources* pDWR)

@@ -230,6 +230,17 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 	_candidateRects[candidates.size() - 1].right = width - real_margin_x + offsetX;
 	_highlightRect = _candidateRects[id];
 
+	// calc roundings start
+	_contentRect.SetRect(0, 0, _contentSize.cx, _contentSize.cy);
+	CopyRect(_bgRect, _contentRect);
+	_bgRect.DeflateRect(offsetX + 1, offsetY + 1);
+	_PrepareRoundInfo(dc);
+
+	int deflatex = offsetX - _style.border / 2;
+	int deflatey = offsetY - _style.border / 2;
+	_contentRect.DeflateRect(deflatex, deflatey);
+	//if (_style.border % 2 == 0)	_contentRect.DeflateRect(1, 1);
+	// calc roundings end
 	labelFont.DeleteObject();
 	textFont.DeleteObject();
 	commentFont.DeleteObject();

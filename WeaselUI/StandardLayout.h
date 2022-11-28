@@ -10,6 +10,7 @@ namespace weasel
 {
 	const int MAX_CANDIDATES_COUNT = 10;
 	const int STATUS_ICON_SIZE = GetSystemMetrics(SM_CXICON);
+
 	class StandardLayout: public Layout
 	{
 	public:
@@ -30,6 +31,9 @@ namespace weasel
 		virtual std::wstring GetLabelText(const std::vector<Text> &labels, int id, const wchar_t *format) const;
 		virtual bool IsInlinePreedit() const;
 		virtual bool ShouldDisplayStatusIcon() const;
+		virtual IsToRoundStruct GetRoundInfo(int id) { return _roundInfo[id]; }
+		virtual IsToRoundStruct GetTextRoundInfo() { return _textRoundInfo; }
+		virtual CRect GetContentRect() { return _contentRect; }
 
 		void GetTextExtentDCMultiline(CDCHandle dc, std::wstring wszString, int nCount, LPSIZE lpSize) const;
 		void GetTextSizeDW(const std::wstring text, int nCount, IDWriteTextFormat* pTextFormat, DirectWriteResources* pDWR, LPSIZE lpSize) const;
@@ -37,6 +41,8 @@ namespace weasel
 	protected:
 		/* Utility functions */
 		CSize GetPreeditSize(CDCHandle dc, const weasel::Text& text, IDWriteTextFormat* pTextFormat = NULL, DirectWriteResources* pDWR = NULL) const;
+		bool _IsHighlightOverCandidateWindow(CRect rc, CDCHandle dc);
+		void _PrepareRoundInfo(CDCHandle dc);
 
 		void UpdateStatusIconLayout(int* width, int* height);
 
@@ -47,5 +53,9 @@ namespace weasel
 		CRect _candidateTextRects[MAX_CANDIDATES_COUNT];
 		CRect _candidateCommentRects[MAX_CANDIDATES_COUNT];
 		CRect _statusIconRect;
+		CRect _bgRect;
+		CRect _contentRect;
+		IsToRoundStruct _roundInfo[MAX_CANDIDATES_COUNT];
+		IsToRoundStruct _textRoundInfo;
 	};
 };
