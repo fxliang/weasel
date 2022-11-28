@@ -92,13 +92,16 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 
 	/* Candidates */
 	int w = real_margin_x, h = 0;
+	int wrap = 0;
+	int rows[MAX_CANDIDATES_COUNT];
+	int row_cnt = 0;
 	for (size_t i = 0; i < candidates.size() && i < MAX_CANDIDATES_COUNT; ++i)
 	{
 		if (i == id)
 			w += base_offset;
 		if (i > 0)
 			w += _style.candidate_spacing - 1;
-
+		int tmp = w;
 		/* Label */
 		std::wstring label = GetLabelText(labels, i, _style.label_text_format.c_str());
 		if (_style.color_font)
@@ -148,6 +151,21 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 			_candidateCommentRects[i].SetRect(w, height, w, height + size.cy);
 		}
 		_candidateCommentRects[i].OffsetRect(offsetX, offsetY);
+		if(_candidateLabelRects[i].left > 1920 || _candidateRects[i].left > 1920 || _candidateCommentRects[i].left > 1920 || _candidateCommentRects[i].right > 1920)
+		{
+			row_cnt++;
+			wrap = max(wrap, tmp - space);
+			w = real_margin_x;
+			if (i == id)
+				w += base_offset;
+			height += h + _style.candidate_spacing;
+			int ofx =   w - tmp;
+			_candidateLabelRects[i].OffsetRect(ofx, h + _style.candidate_spacing);
+			_candidateTextRects[i].OffsetRect(ofx, h + _style.candidate_spacing);
+			_candidateCommentRects[i].OffsetRect(ofx, h + _style.candidate_spacing);
+			w += _candidateTextRects[i].Width() + space + _candidateLabelRects[i].Width() + space + _candidateCommentRects[i].Width();
+		}
+		rows[i] = row_cnt;
 	}
 	if(!_style.color_font)
 		dc.SelectFont(oldFont);
@@ -185,6 +203,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 	}
 	h -= newh;
 	w += real_margin_x;
+	w = max(w, wrap);
 
 	/* Highlighted Candidate */
 	for (size_t i = 0; i < candidates.size() && i < MAX_CANDIDATES_COUNT; ++i)
@@ -202,8 +221,8 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 			hlTop = min(hlTop, _candidateCommentRects[i].top);
 			hlBot = max(hlBot, _candidateCommentRects[i].bottom);
 		}
-		hlTop = min(mintop, hlTop);
-		hlBot = max(maxbot, hlBot);
+		//hlTop = min(mintop, hlTop);
+		//hlBot = max(maxbot, hlBot);
 		int gap = (_style.hilited_mark_color & 0xff000000)!=0 && id == i ? base_offset : 0;
 		_candidateRects[i].SetRect(_candidateLabelRects[i].left - gap, hlTop, _candidateCommentRects[i].right, hlBot);
 	}
