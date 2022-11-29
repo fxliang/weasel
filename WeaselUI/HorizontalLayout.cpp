@@ -93,9 +93,10 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 	/* Candidates */
 	int w = real_margin_x, h = 0;
 	int wrap = 0;
-	int rows[MAX_CANDIDATES_COUNT];
+	int rows[MAX_CANDIDATES_COUNT] = { 0 };
 	int row_cnt = 0;
-	for (size_t i = 0; i < candidates.size() && i < MAX_CANDIDATES_COUNT; ++i)
+	int candidate_cnt = candidates.size();
+	for (size_t i = 0; i < candidate_cnt && i < MAX_CANDIDATES_COUNT; ++i)
 	{
 		if (i == id)
 			w += base_offset;
@@ -151,28 +152,33 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 			_candidateCommentRects[i].SetRect(w, height, w, height + size.cy);
 		}
 		_candidateCommentRects[i].OffsetRect(offsetX, offsetY);
-		if(_candidateLabelRects[i].left > 1920 || _candidateRects[i].left > 1920 || _candidateCommentRects[i].left > 1920 || _candidateCommentRects[i].right > 1920)
+		//if(i == candidate_cnt - 1 &&  row_cnt > 0) w -= base_offset;
+		if(_candidateLabelRects[i].left > 960 || _candidateRects[i].left > 960 || _candidateCommentRects[i].left > 960 || _candidateCommentRects[i].right > 960)
 		{
 			row_cnt++;
-			wrap = max(wrap, tmp - space);
+			wrap = max(wrap, tmp);
 			w = real_margin_x;
-			if (i == id)
-				w += base_offset;
+			if (i == id) w += base_offset;
 			height += h + _style.candidate_spacing;
 			int ofx =   w - tmp;
 			_candidateLabelRects[i].OffsetRect(ofx, h + _style.candidate_spacing);
 			_candidateTextRects[i].OffsetRect(ofx, h + _style.candidate_spacing);
 			_candidateCommentRects[i].OffsetRect(ofx, h + _style.candidate_spacing);
-			w += _candidateTextRects[i].Width() + space + _candidateLabelRects[i].Width() + space + _candidateCommentRects[i].Width();
+			w += _candidateTextRects[i].Width() + space + _candidateLabelRects[i].Width() + space 
+				+ _candidateCommentRects[i].Width()*(!comments.at(i).str.empty() && pFonts->m_CommentFont.m_FontPoint > 0);
 		}
+		else
+			wrap = w;
 		rows[i] = row_cnt;
+		width = max(width, wrap);
 	}
 	if(!_style.color_font)
 		dc.SelectFont(oldFont);
+
 	int newh = 0;
 	int mintop = _candidateTextRects[0].bottom;
 	int maxbot = _candidateTextRects[0].top;
-	for (size_t i = 0; i < candidates.size() && i < MAX_CANDIDATES_COUNT; ++i)
+	for (size_t i = 0; i < candidate_cnt && i < MAX_CANDIDATES_COUNT; ++i)
 	{
 		int ol = 0, ot = 0, oc = 0;
 		if (_style.align_type == UIStyle::ALIGN_CENTER)
@@ -203,10 +209,9 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 	}
 	h -= newh;
 	w += real_margin_x;
-	w = max(w, wrap);
 
 	/* Highlighted Candidate */
-	for (size_t i = 0; i < candidates.size() && i < MAX_CANDIDATES_COUNT; ++i)
+	for (size_t i = 0; i < candidate_cnt && i < MAX_CANDIDATES_COUNT; ++i)
 	{
 		int hlTop = _candidateTextRects[i].top;
 		int hlBot = _candidateTextRects[i].bottom;
@@ -230,7 +235,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 	width = max(width, w);
 	height += h;
 
-	if (candidates.size())
+	if (candidate_cnt)
 		height += _style.spacing;
 
 	/* Trim the last spacing */
@@ -246,7 +251,11 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 	UpdateStatusIconLayout(&width, &height);
 	_contentSize.SetSize(width + 2 * offsetX, height + 2 * offsetY);
 
-	_candidateRects[candidates.size() - 1].right = width - real_margin_x + offsetX;
+	for(int i = 0; i<candidate_cnt ; i++)
+	{
+		if((i != candidate_cnt - 1 && rows[i] != rows[i+1]) || (i == candidate_cnt - 1))
+			_candidateRects[i].right = width - real_margin_x + offsetX;
+	}
 	_highlightRect = _candidateRects[id];
 
 	// calc roundings start
@@ -254,11 +263,42 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 	CopyRect(_bgRect, _contentRect);
 	_bgRect.DeflateRect(offsetX + 1, offsetY + 1);
 	_PrepareRoundInfo(dc);
+	for (int i = 0; i < candidate_cnt; i++)
+	{
+		if((i != (candidate_cnt - 1)) && (i != 0) && (rows[i+1] == rows[i-1]))	// not the first or last
+		{
+			_roundInfo[i].IsTopLeftNeedToRound = false;
+			_roundInfo[i].IsTopRightNeedToRound = false;
+			_roundInfo[i].IsBottomLeftNeedToRound = false;
+			_roundInfo[i].IsBottomRightNeedToRound = false;
+		}
+
+		if (i == 0)	// first cand
+		{
+			_roundInfo[i].IsTopLeftNeedToRound = _roundInfo[i].IsTopLeftNeedToRound && _style.inline_preedit;
+			_roundInfo[i].IsBottomLeftNeedToRound = _roundInfo[i].IsBottomLeftNeedToRound && (row_cnt == 0);
+		}
+		if (i < candidate_cnt - 1 && rows[i] != rows[i + 1])	// row end, not last
+		{
+			_roundInfo[i].IsBottomRightNeedToRound = false;
+			_roundInfo[i].IsTopRightNeedToRound = (_style.inline_preedit && rows[i] == 0);
+		}
+		if (i > 0 && rows[i] == row_cnt && rows[i - 1] == (row_cnt - 1))	// last line start
+		{
+			_roundInfo[i].IsTopLeftNeedToRound = false;
+			_roundInfo[i].IsBottomLeftNeedToRound = true;
+		}
+		if (i == candidate_cnt - 1)	// last candidate
+		{
+			_roundInfo[i].IsTopRightNeedToRound = _roundInfo[i].Hemospherical && _style.inline_preedit && (rows[i] == 0);
+			//_roundInfo[i].IsBottomRightNeedToRound 
+		}
+
+	}
 
 	int deflatex = offsetX - _style.border / 2;
 	int deflatey = offsetY - _style.border / 2;
 	_contentRect.DeflateRect(deflatex, deflatey);
-	//if (_style.border % 2 == 0)	_contentRect.DeflateRect(1, 1);
 	// calc roundings end
 	labelFont.DeleteObject();
 	textFont.DeleteObject();
