@@ -91,9 +91,11 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 	}
 
 	/* Candidates */
+	int mintops[MAX_CANDIDATES_COUNT] = { 0 };
+	int maxbots[MAX_CANDIDATES_COUNT] = { 0 };
 	int w = real_margin_x, h = 0;
 	int wrap = 0;
-	int rows[MAX_CANDIDATES_COUNT] = { 0 };
+	int rows[MAX_CANDIDATES_COUNT] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 	int row_cnt = 0;
 	int candidate_cnt = candidates.size();
 	for (size_t i = 0; i < candidate_cnt && i < MAX_CANDIDATES_COUNT; ++i)
@@ -152,13 +154,17 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 			_candidateCommentRects[i].SetRect(w, height, w, height + size.cy);
 		}
 		_candidateCommentRects[i].OffsetRect(offsetX, offsetY);
-		//if(i == candidate_cnt - 1 &&  row_cnt > 0) w -= base_offset;
+
 		if(_candidateLabelRects[i].left > 960 || _candidateRects[i].left > 960 || _candidateCommentRects[i].left > 960 || _candidateCommentRects[i].right > 960)
 		{
 			row_cnt++;
 			wrap = max(wrap, tmp);
 			w = real_margin_x;
-			if (i == id) w += base_offset;
+			if (i == id)
+			{
+				w += base_offset;
+				//wrap -= base_offset;
+			}
 			height += h + _style.candidate_spacing;
 			int ofx =   w - tmp;
 			_candidateLabelRects[i].OffsetRect(ofx, h + _style.candidate_spacing);
@@ -166,18 +172,51 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 			_candidateCommentRects[i].OffsetRect(ofx, h + _style.candidate_spacing);
 			w += _candidateTextRects[i].Width() + space + _candidateLabelRects[i].Width() + space 
 				+ _candidateCommentRects[i].Width()*(!comments.at(i).str.empty() && pFonts->m_CommentFont.m_FontPoint > 0);
+			if(!candidates.at(i).empty())
+				mintops[row_cnt] = _candidateTextRects[i].bottom;
+			if(!label.empty())
+				mintops[row_cnt] = max(mintops[row_cnt], _candidateLabelRects[i].bottom);
+			if(!comments.at(i).empty())
+				mintops[row_cnt] = max(mintops[row_cnt], _candidateCommentRects[i].bottom);
+
+			if(!candidates.at(i).empty())
+				maxbots[row_cnt] = _candidateTextRects[i].top;
+			if(!label.empty())
+				maxbots[row_cnt] = min(maxbots[row_cnt], _candidateLabelRects[i].top);
+			if(!comments.at(i).empty())
+				maxbots[row_cnt] = min(maxbots[row_cnt], _candidateCommentRects[i].top);
 		}
-		else
+		else if(i == candidate_cnt - 1)
 			wrap = w;
+		if(i == 0)
+		{
+			if(!candidates.at(i).empty())
+				mintops[row_cnt] = _candidateTextRects[i].bottom;
+			if(!label.empty())
+				mintops[row_cnt] = max(mintops[row_cnt], _candidateLabelRects[i].bottom);
+			if(!comments.at(i).empty())
+				mintops[row_cnt] = max(mintops[row_cnt], _candidateCommentRects[i].bottom);
+
+			if(!candidates.at(i).empty())
+				maxbots[row_cnt] = _candidateTextRects[i].top;
+			if(!label.empty())
+				maxbots[row_cnt] = min(maxbots[row_cnt], _candidateLabelRects[i].top);
+			if(!comments.at(i).empty())
+				maxbots[row_cnt] = min(maxbots[row_cnt], _candidateCommentRects[i].top);
+		}
 		rows[i] = row_cnt;
 		width = max(width, wrap);
 	}
 	if(!_style.color_font)
 		dc.SelectFont(oldFont);
 
+#if 1
+	int newhs[MAX_CANDIDATES_COUNT] = {0};
+#else
 	int newh = 0;
 	int mintop = _candidateTextRects[0].bottom;
 	int maxbot = _candidateTextRects[0].top;
+#endif
 	for (size_t i = 0; i < candidate_cnt && i < MAX_CANDIDATES_COUNT; ++i)
 	{
 		int ol = 0, ot = 0, oc = 0;
@@ -192,11 +231,23 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 			ol = (h - _candidateLabelRects[i].Height()) ;
 			ot = (h - _candidateTextRects[i].Height()) ;
 			oc = (h - _candidateCommentRects[i].Height()) ;
-
 		}
 		_candidateLabelRects[i].OffsetRect(0, ol);
 		_candidateTextRects[i].OffsetRect(0, ot);
 		_candidateCommentRects[i].OffsetRect(0, oc);
+
+#if 1
+		mintops[rows[i]] = min(mintops[rows[i]], _candidateLabelRects[i].top);
+		mintops[rows[i]] = min(mintops[rows[i]], _candidateTextRects[i].top);
+		mintops[rows[i]] = min(mintops[rows[i]], _candidateCommentRects[i].top);
+		maxbots[rows[i]] = max(maxbots[rows[i]], _candidateLabelRects[i].bottom);
+		maxbots[rows[i]] = max(maxbots[rows[i]], _candidateTextRects[i].bottom);
+		maxbots[rows[i]] = max(maxbots[rows[i]], _candidateCommentRects[i].bottom);
+		newhs[rows[i]] = min(newhs[rows[i]], ol);
+		newhs[rows[i]] = min(newhs[rows[i]], ot);
+		newhs[rows[i]] = min(newhs[rows[i]], oc);
+		if((i != candidate_cnt - 1 && rows[i+1] > rows[i]) || (i == candidate_cnt - 1)) h -= newhs[rows[i]];
+#else
 		mintop = min(mintop, _candidateLabelRects[i].top);
 		mintop = min(mintop, _candidateTextRects[i].top);
 		mintop = min(mintop, _candidateCommentRects[i].top);
@@ -206,8 +257,9 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 		newh = min(newh, ol);
 		newh = min(newh, ot);
 		newh = min(newh, oc);
+#endif
 	}
-	h -= newh;
+	//h -= newh;
 	w += real_margin_x;
 
 	/* Highlighted Candidate */
@@ -226,8 +278,13 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 			hlTop = min(hlTop, _candidateCommentRects[i].top);
 			hlBot = max(hlBot, _candidateCommentRects[i].bottom);
 		}
-		//hlTop = min(mintop, hlTop);
-		//hlBot = max(maxbot, hlBot);
+#if 1
+		hlTop = min(mintops[rows[i]], hlTop);
+		hlBot = max(maxbots[rows[i]], hlBot);
+#else
+		hlTop = min(mintop, hlTop);
+		hlBot = max(maxbot, hlBot);
+#endif
 		int gap = (_style.hilited_mark_color & 0xff000000)!=0 && id == i ? base_offset : 0;
 		_candidateRects[i].SetRect(_candidateLabelRects[i].left - gap, hlTop, _candidateCommentRects[i].right, hlBot);
 	}
@@ -290,8 +347,8 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 		}
 		if (i == candidate_cnt - 1)	// last candidate
 		{
-			_roundInfo[i].IsTopRightNeedToRound = _roundInfo[i].Hemospherical && _style.inline_preedit && (rows[i] == 0);
-			//_roundInfo[i].IsBottomRightNeedToRound 
+			if(rows[i])
+				_roundInfo[i].IsTopRightNeedToRound = false;
 		}
 
 	}
