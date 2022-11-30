@@ -155,16 +155,19 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 		}
 		_candidateCommentRects[i].OffsetRect(offsetX, offsetY);
 
-		if(_candidateLabelRects[i].left > 960 || _candidateRects[i].left > 960 || _candidateCommentRects[i].left > 960 || _candidateCommentRects[i].right > 960)
+		if(_style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN && _style.max_width > 0 &&
+				(  _candidateLabelRects[i].left	+ 2 * offsetX		> _style.max_width 
+				|| _candidateRects[i].left	+ 2 * offsetX			> _style.max_width 
+				|| _candidateCommentRects[i].left + 2 * offsetX		> _style.max_width 
+				|| _candidateCommentRects[i].right + 2 * offsetX	> _style.max_width
+				)
+			)
 		{
 			row_cnt++;
 			wrap = max(wrap, tmp);
 			w = real_margin_x;
 			if (i == id)
-			{
 				w += base_offset;
-				//wrap -= base_offset;
-			}
 			height += h + _style.candidate_spacing;
 			int ofx =   w - tmp;
 			_candidateLabelRects[i].OffsetRect(ofx, h + _style.candidate_spacing);
@@ -210,13 +213,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 	if(!_style.color_font)
 		dc.SelectFont(oldFont);
 
-#if 1
 	int newhs[MAX_CANDIDATES_COUNT] = {0};
-#else
-	int newh = 0;
-	int mintop = _candidateTextRects[0].bottom;
-	int maxbot = _candidateTextRects[0].top;
-#endif
 	for (size_t i = 0; i < candidate_cnt && i < MAX_CANDIDATES_COUNT; ++i)
 	{
 		int ol = 0, ot = 0, oc = 0;
@@ -236,7 +233,6 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 		_candidateTextRects[i].OffsetRect(0, ot);
 		_candidateCommentRects[i].OffsetRect(0, oc);
 
-#if 1
 		mintops[rows[i]] = min(mintops[rows[i]], _candidateLabelRects[i].top);
 		mintops[rows[i]] = min(mintops[rows[i]], _candidateTextRects[i].top);
 		mintops[rows[i]] = min(mintops[rows[i]], _candidateCommentRects[i].top);
@@ -247,19 +243,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 		newhs[rows[i]] = min(newhs[rows[i]], ot);
 		newhs[rows[i]] = min(newhs[rows[i]], oc);
 		if((i != candidate_cnt - 1 && rows[i+1] > rows[i]) || (i == candidate_cnt - 1)) h -= newhs[rows[i]];
-#else
-		mintop = min(mintop, _candidateLabelRects[i].top);
-		mintop = min(mintop, _candidateTextRects[i].top);
-		mintop = min(mintop, _candidateCommentRects[i].top);
-		maxbot = max(maxbot, _candidateLabelRects[i].bottom);
-		maxbot = max(maxbot, _candidateTextRects[i].bottom);
-		maxbot = max(maxbot, _candidateCommentRects[i].bottom);
-		newh = min(newh, ol);
-		newh = min(newh, ot);
-		newh = min(newh, oc);
-#endif
 	}
-	//h -= newh;
 	w += real_margin_x;
 
 	/* Highlighted Candidate */
@@ -278,13 +262,8 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 			hlTop = min(hlTop, _candidateCommentRects[i].top);
 			hlBot = max(hlBot, _candidateCommentRects[i].bottom);
 		}
-#if 1
 		hlTop = min(mintops[rows[i]], hlTop);
 		hlBot = max(maxbots[rows[i]], hlBot);
-#else
-		hlTop = min(mintop, hlTop);
-		hlBot = max(maxbot, hlBot);
-#endif
 		int gap = (_style.hilited_mark_color & 0xff000000)!=0 && id == i ? base_offset : 0;
 		_candidateRects[i].SetRect(_candidateLabelRects[i].left - gap, hlTop, _candidateCommentRects[i].right, hlBot);
 	}

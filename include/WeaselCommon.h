@@ -5,7 +5,6 @@
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/string.hpp>
 
-#define GDIPVER     0x0110  // Use more advanced GDI+ features
 #define WEASEL_IME_NAME L"小狼毫"
 #define WEASEL_REG_KEY L"Software\\Rime\\Weasel"
 #define RIME_REG_KEY L"Software\\Rime"
@@ -276,6 +275,7 @@ namespace weasel
 		std::wstring mark_text;
 		// layout
 		int min_width;
+		int max_width;
 		int min_height;
 		int border;
 		int margin_x;
@@ -327,6 +327,7 @@ namespace weasel
 			mark_text(),
 			layout_type(LAYOUT_VERTICAL),
 			min_width(0),
+			max_width(0),
 			min_height(0),
 			border(0),
 			margin_x(0),
@@ -379,6 +380,7 @@ namespace weasel
 					|| label_text_format != st.label_text_format
 					|| mark_text != st.mark_text
 					|| min_width != st.min_width
+					|| max_width != st.max_width
 					|| min_height != st.min_height
 					|| border != st.border
 					|| margin_x != st.margin_x
@@ -436,6 +438,7 @@ namespace boost {
 			// layout
 			ar & s.layout_type;
 			ar & s.min_width;
+			ar & s.max_width;
 			ar & s.min_height;
 			ar & s.border;
 			ar & s.margin_x;
