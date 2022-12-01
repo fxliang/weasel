@@ -29,7 +29,7 @@ style:
   mark_text: ""
   layout:
     align_type: bottom
-    max_width: 1920
+    max_width: 0
     min_width: 160
     min_height: 0
     border_width: 3

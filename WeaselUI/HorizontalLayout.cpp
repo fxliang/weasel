@@ -156,10 +156,12 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 		_candidateCommentRects[i].OffsetRect(offsetX, offsetY);
 
 		if(_style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN && _style.max_width > 0 &&
-				(  _candidateLabelRects[i].left	+ 2 * offsetX		> _style.max_width 
-				|| _candidateRects[i].left	+ 2 * offsetX			> _style.max_width 
-				|| _candidateCommentRects[i].left + 2 * offsetX		> _style.max_width 
-				|| _candidateCommentRects[i].right + 2 * offsetX	> _style.max_width
+				(  _candidateLabelRects[i].left	+ 2 * offsetX + real_margin_x		> _style.max_width 
+				|| _candidateLabelRects[i].right	+ 2 * offsetX + real_margin_x	> _style.max_width 
+				|| _candidateTextRects[i].left	+ 2 * offsetX + real_margin_x		> _style.max_width 
+				|| _candidateTextRects[i].right	+ 2 * offsetX + real_margin_x		> _style.max_width 
+				|| _candidateCommentRects[i].left + 2 * offsetX + real_margin_x		> _style.max_width 
+				|| _candidateCommentRects[i].right + 2 * offsetX + real_margin_x	> _style.max_width
 				)
 			)
 		{
@@ -167,7 +169,10 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 			wrap = max(wrap, tmp);
 			w = real_margin_x;
 			if (i == id)
+			{
 				w += base_offset;
+				wrap -= base_offset;
+			}
 			height += h + _style.candidate_spacing;
 			int ofx =   w - tmp;
 			_candidateLabelRects[i].OffsetRect(ofx, h + _style.candidate_spacing);
@@ -189,8 +194,11 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 			if(!comments.at(i).empty())
 				maxbots[row_cnt] = min(maxbots[row_cnt], _candidateCommentRects[i].top);
 		}
-		else if(i == candidate_cnt - 1)
-			wrap = w;
+		else
+		{
+			wrap = w + _style.hilite_padding;
+		}
+		//else if(i == candidate_cnt - 1) wrap = w;
 		if(i == 0)
 		{
 			if(!candidates.at(i).empty())
@@ -210,6 +218,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 		rows[i] = row_cnt;
 		width = max(width, wrap);
 	}
+
 	if(!_style.color_font)
 		dc.SelectFont(oldFont);
 
@@ -244,7 +253,6 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 		newhs[rows[i]] = min(newhs[rows[i]], oc);
 		if((i != candidate_cnt - 1 && rows[i+1] > rows[i]) || (i == candidate_cnt - 1)) h -= newhs[rows[i]];
 	}
-	w += real_margin_x;
 
 	/* Highlighted Candidate */
 	for (size_t i = 0; i < candidate_cnt && i < MAX_CANDIDATES_COUNT; ++i)
@@ -299,39 +307,53 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 	CopyRect(_bgRect, _contentRect);
 	_bgRect.DeflateRect(offsetX + 1, offsetY + 1);
 	_PrepareRoundInfo(dc);
-	for (int i = 0; i < candidate_cnt; i++)
+	//int m_candidateCount = _context.cinfo.candies.size();
+	bool textHemispherical = false, cand0Hemispherical = false;
+	if(!_style.inline_preedit)
 	{
-		if((i != (candidate_cnt - 1)) && (i != 0) && (rows[i+1] == rows[i-1]))	// not the first or last
-		{
-			_roundInfo[i].IsTopLeftNeedToRound = false;
-			_roundInfo[i].IsTopRightNeedToRound = false;
-			_roundInfo[i].IsBottomLeftNeedToRound = false;
-			_roundInfo[i].IsBottomRightNeedToRound = false;
-		}
-
-		if (i == 0)	// first cand
-		{
-			_roundInfo[i].IsTopLeftNeedToRound = _roundInfo[i].IsTopLeftNeedToRound && _style.inline_preedit;
-			_roundInfo[i].IsBottomLeftNeedToRound = _roundInfo[i].IsBottomLeftNeedToRound && (row_cnt == 0);
-		}
-		if (i < candidate_cnt - 1 && rows[i] != rows[i + 1])	// row end, not last
-		{
-			_roundInfo[i].IsBottomRightNeedToRound = false;
-			_roundInfo[i].IsTopRightNeedToRound = (_style.inline_preedit && rows[i] == 0);
-		}
-		if (i > 0 && rows[i] == row_cnt && rows[i - 1] == (row_cnt - 1))	// last line start
-		{
-			_roundInfo[i].IsTopLeftNeedToRound = false;
-			_roundInfo[i].IsBottomLeftNeedToRound = true;
-		}
-		if (i == candidate_cnt - 1)	// last candidate
-		{
-			if(rows[i])
-				_roundInfo[i].IsTopRightNeedToRound = false;
-		}
-
+		CRect textRect(_preeditRect);
+		textRect.InflateRect(_style.hilite_padding, _style.hilite_padding);
+		textHemispherical = _IsHighlightOverCandidateWindow(textRect, dc);
 	}
+	if(candidate_cnt)
+	{
+		CRect cand0Rect(_candidateRects[0]);
+		cand0Rect.InflateRect(_style.hilite_padding, _style.hilite_padding);
+		cand0Hemispherical = _IsHighlightOverCandidateWindow(cand0Rect, dc);
+	}
+	if(textHemispherical || cand0Hemispherical)
+		for (int i = 0; i < candidate_cnt; i++)
+		{
+			if((i != (candidate_cnt - 1)) && (i != 0) && (rows[i+1] == rows[i-1]))	// not the first or last
+			{
+				_roundInfo[i].IsTopLeftNeedToRound = false;
+				_roundInfo[i].IsTopRightNeedToRound = false;
+				_roundInfo[i].IsBottomLeftNeedToRound = false;
+				_roundInfo[i].IsBottomRightNeedToRound = false;
+			}
 
+			if (i == 0)	// first cand
+			{
+				_roundInfo[i].IsTopLeftNeedToRound = _roundInfo[i].IsTopLeftNeedToRound && _style.inline_preedit;
+				_roundInfo[i].IsBottomLeftNeedToRound = _roundInfo[i].IsBottomLeftNeedToRound && (row_cnt == 0);
+			}
+			if (i < candidate_cnt - 1 && rows[i] != rows[i + 1])	// row end, not last
+			{
+				_roundInfo[i].IsBottomRightNeedToRound = false;
+				_roundInfo[i].IsTopRightNeedToRound = (_style.inline_preedit && rows[i] == 0);
+			}
+			if (i > 0 && rows[i] == row_cnt && rows[i - 1] == (row_cnt - 1))	// last line start
+			{
+				_roundInfo[i].IsTopLeftNeedToRound = false;
+				_roundInfo[i].IsBottomLeftNeedToRound = true;
+			}
+			if (i == candidate_cnt - 1)	// last candidate
+			{
+				if(rows[i])
+					_roundInfo[i].IsTopRightNeedToRound = false;
+			}
+
+		}
 	int deflatex = offsetX - _style.border / 2;
 	int deflatey = offsetY - _style.border / 2;
 	_contentRect.DeflateRect(deflatex, deflatey);

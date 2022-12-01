@@ -35,13 +35,13 @@ namespace weasel
 		bool IsBottomLeftNeedToRound;
 		bool IsTopRightNeedToRound;
 		bool IsBottomRightNeedToRound;
-		bool Hemospherical;
+		bool Hemispherical;
 		IsToRoundStruct():
 			IsTopLeftNeedToRound(true), 
 			IsTopRightNeedToRound(true), 
 			IsBottomLeftNeedToRound(true), 
 			IsBottomRightNeedToRound(true),
-			Hemospherical(false)
+			Hemispherical(false)
 		{}
 	};
 	class Layout
