@@ -99,6 +99,9 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 	int height_of_rows[MAX_CANDIDATES_COUNT] = {0};
 	int row_cnt = 0;
 	int candidate_cnt = candidates.size();
+	int labelSizeValid = (pFonts->m_LabelFont.m_FontPoint > 0) ? 1 : 0;
+	int textSizeValid = (pFonts->m_TextFont.m_FontPoint > 0) ? 1 : 0;
+	int commentSizeValid = (pFonts->m_TextFont.m_FontPoint > 0) ? 1 : 0;
 	for (size_t i = 0; i < candidate_cnt && i < MAX_CANDIDATES_COUNT; ++i)
 	{
 		if (i == id)
@@ -118,7 +121,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 
 		_candidateLabelRects[i].SetRect(w, height, w + size.cx * ((int)(pFonts->m_LabelFont.m_FontPoint > 0)), height + size.cy);
 		_candidateLabelRects[i].OffsetRect(offsetX, offsetY);
-		w += (size.cx + space) * ((int)(pFonts->m_LabelFont.m_FontPoint > 0));
+		w += (size.cx + space) * labelSizeValid;
 		//h = max(h, size.cy);
 		height_of_rows[row_cnt] = max(height_of_rows[row_cnt], size.cy);
 
@@ -134,7 +137,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 
 		_candidateTextRects[i].SetRect(w, height, w + size.cx * ((int)(pFonts->m_TextFont.m_FontPoint > 0)), height + size.cy);
 		_candidateTextRects[i].OffsetRect(offsetX, offsetY);
-		w += (size.cx + space) * ((int)(pFonts->m_TextFont.m_FontPoint > 0));
+		w += (size.cx + space) * textSizeValid;
 		height_of_rows[row_cnt] = max(height_of_rows[row_cnt], size.cy);
 
 		/* Comment */
@@ -150,7 +153,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 			}
 
 			_candidateCommentRects[i].SetRect(w, height, w + size.cx + space, height + size.cy);
-			w += (size.cx + space) * ((int)(pFonts->m_CommentFont.m_FontPoint > 0));
+			w += (size.cx + space) * commentSizeValid;
 			height_of_rows[row_cnt] = max(height_of_rows[row_cnt], size.cy);
 		}
 		else /* Used for highlighted candidate calculation below */
@@ -183,8 +186,8 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 			_candidateLabelRects[i].OffsetRect(ofx, height_of_rows[row_cnt - 1] + _style.candidate_spacing);
 			_candidateTextRects[i].OffsetRect(ofx, height_of_rows[row_cnt - 1] + _style.candidate_spacing);
 			_candidateCommentRects[i].OffsetRect(ofx, height_of_rows[row_cnt - 1] + _style.candidate_spacing);
-			w += _candidateTextRects[i].Width() + space + _candidateLabelRects[i].Width() + space 
-				+ _candidateCommentRects[i].Width()*(!comments.at(i).str.empty() && pFonts->m_CommentFont.m_FontPoint > 0);
+			w += _candidateTextRects[i].Width()*textSizeValid + space + _candidateLabelRects[i].Width() * labelSizeValid + space 
+				+ _candidateCommentRects[i].Width() * commentSizeValid;
 			height_of_rows[row_cnt] = max(height_of_rows[row_cnt], _candidateLabelRects[i].Height());
 			height_of_rows[row_cnt] = max(height_of_rows[row_cnt], _candidateTextRects[i].Height());
 			height_of_rows[row_cnt] = max(height_of_rows[row_cnt], _candidateCommentRects[i].Height());
@@ -295,12 +298,12 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 
 	if (candidate_cnt)
 		height += _style.spacing;
-
 	/* Trim the last spacing */
 	if (height > 0)
 		height -= _style.spacing;
 	if (candidate_cnt)
 		height = min(height, _candidateRects[candidate_cnt - 1].bottom);
+
 	height += real_margin_y;
 
 	if (!_context.preedit.str.empty() && !candidates.empty())
@@ -372,6 +375,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 	int deflatex = offsetX - _style.border / 2;
 	int deflatey = offsetY - _style.border / 2;
 	_contentRect.DeflateRect(deflatex, deflatey);
+	if (_style.border % 2 == 0)	_contentRect.DeflateRect(1, 1);
 	// calc roundings end
 	labelFont.DeleteObject();
 	textFont.DeleteObject();
