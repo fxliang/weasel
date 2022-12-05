@@ -119,7 +119,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 			GetTextExtentDCMultiline(dc, label, label.length(), &size);
 		}
 
-		_candidateLabelRects[i].SetRect(w, height, w + size.cx * ((int)(pFonts->m_LabelFont.m_FontPoint > 0)), height + size.cy);
+		_candidateLabelRects[i].SetRect(w, height, w + size.cx * labelSizeValid, height + size.cy);
 		_candidateLabelRects[i].OffsetRect(offsetX, offsetY);
 		w += (size.cx + space) * labelSizeValid;
 		//h = max(h, size.cy);
@@ -135,7 +135,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 			GetTextExtentDCMultiline(dc, text, text.length(), &size);
 		}
 
-		_candidateTextRects[i].SetRect(w, height, w + size.cx * ((int)(pFonts->m_TextFont.m_FontPoint > 0)), height + size.cy);
+		_candidateTextRects[i].SetRect(w, height, w + size.cx * textSizeValid, height + size.cy);
 		_candidateTextRects[i].OffsetRect(offsetX, offsetY);
 		w += (size.cx + space) * textSizeValid;
 		height_of_rows[row_cnt] = max(height_of_rows[row_cnt], size.cy);
@@ -288,21 +288,9 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 	}
 
 	width = max(width, w);
-	if (row_cnt)
-	{
-		for (auto i = 0; i < row_cnt; i++)
-			height += height_of_rows[i];
-	}
-	else
-		height += height_of_rows[0];
+	height += height_of_rows[0];
 
-	if (candidate_cnt)
-		height += _style.spacing;
-	/* Trim the last spacing */
-	if (height > 0)
-		height -= _style.spacing;
-	if (candidate_cnt)
-		height = min(height, _candidateRects[candidate_cnt - 1].bottom);
+	if (candidate_cnt) height = min(height, _candidateRects[candidate_cnt - 1].bottom);
 
 	height += real_margin_y;
 
