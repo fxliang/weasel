@@ -208,7 +208,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 		}
 		else
 		{
-			wrap = w + _style.hilite_padding;
+			wrap = _candidateCommentRects[i].right;
 		}
 		if(i == 0)
 		{
