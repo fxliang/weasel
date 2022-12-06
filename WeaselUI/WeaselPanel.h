@@ -56,7 +56,6 @@ private:
 	void _TextOut(CDCHandle dc, CRect const& rc, LPCWSTR psz, size_t cch, FontInfo* pFontInfo, int inColor, IDWriteTextFormat* pTextFormat = NULL);
 	bool _TextOutWithFallbackDW(CDCHandle dc, CRect const rc, std::wstring psz, size_t cch, COLORREF gdiColor, IDWriteTextFormat* pTextFormat);
 
-	bool _IsHighlightOverCandidateWindow(CRect rc, CRect bg, Gdiplus::Graphics* g);
 	void _LayerUpdate(const CRect& rc, CDCHandle dc);
 
 	weasel::Layout *m_layout;
