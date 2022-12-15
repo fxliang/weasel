@@ -471,6 +471,28 @@ void RimeWithWeaselHandler::_LoadSchemaSpecificSettings(const std::string& schem
 	}
 	//m_ui->style() = m_base_style;
 	_UpdateUIStyle(&config, m_ui, false);
+	const int BUF_SIZE = 2047;
+	char buffer[BUF_SIZE + 1];
+	memset(buffer, '\0', sizeof(buffer));
+	if (RimeConfigGetString(&config, "schema/icon", buffer, BUF_SIZE))
+	{
+		std::wstring tmp = utf8towcs(buffer);
+		std::wstring user_dir = utf8towcs(weasel_user_data_dir());
+		DWORD dwAttrib = GetFileAttributes((user_dir + L"\/" + tmp).c_str());
+		if (!(INVALID_FILE_ATTRIBUTES != dwAttrib && 0 == (dwAttrib & FILE_ATTRIBUTE_DIRECTORY)))
+		{
+			std::wstring share_dir = utf8towcs(weasel_shared_data_dir());
+			dwAttrib = GetFileAttributes((share_dir + L"\/" + tmp).c_str());
+			if (!(INVALID_FILE_ATTRIBUTES != dwAttrib && 0 == (dwAttrib & FILE_ATTRIBUTE_DIRECTORY)))
+				m_ui->style().current_icon = L"";
+			else
+				m_ui->style().current_icon = (share_dir + L"\/" + tmp);
+		}
+		else
+			m_ui->style().current_icon = user_dir + L"\/" + tmp;
+	}
+	else
+		m_ui->style().current_icon = L"";
 	RimeConfigClose(&config);
 	if (is_light)
 		CopyColorScheme(m_ui->style(), m_base_style);

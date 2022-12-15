@@ -467,6 +467,10 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 		drawn |= _DrawCandidates(memDC);
 		// status icon (I guess Metro IME stole my idea :)
 		if (m_layout->ShouldDisplayStatusIcon()) {
+			if (!m_style.current_icon.empty())
+				m_iconEnabled = (HICON)LoadImage(NULL, m_style.current_icon.c_str(), IMAGE_ICON, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_LOADFROMFILE);
+			else
+				m_iconEnabled.LoadIconW(IDI_ZH, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
 			CRect iconRect(m_layout->GetStatusIconRect());
 			if(m_style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN 
 					|| m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN)
@@ -729,7 +733,6 @@ bool WeaselPanel::_TextOutWithFallbackDW (CDCHandle dc, CRect const rc, std::wst
 
 void WeaselPanel::_TextOut(CDCHandle dc, CRect const& rc, LPCWSTR psz, size_t cch, FontInfo* pFontInfo, int inColor, IDWriteTextFormat* pTextFormat)
 {
-	if (COLORTRANSPARENT(inColor)) return;	// transparent, no need to draw
 	if (m_style.color_font ) {
 		if(pTextFormat == NULL) return;
 		_TextOutWithFallbackDW(dc, rc, psz, cch, inColor, pTextFormat);

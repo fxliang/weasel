@@ -270,6 +270,7 @@ namespace weasel
 		bool inline_preedit;
 		bool color_font;
 		bool display_tray_icon;
+		std::wstring current_icon;
 		CaptureType capture_type;
 		std::wstring label_text_format;
 		std::wstring mark_text;
@@ -322,6 +323,7 @@ namespace weasel
 			preedit_type(COMPOSITION),
 			color_font(0),
 			display_tray_icon(false),
+			current_icon(),
 			capture_type(UIStyle::CaptureType::NONE),
 			label_text_format(L"%s."),
 			mark_text(),
@@ -376,6 +378,7 @@ namespace weasel
 					|| inline_preedit != st.inline_preedit
 					|| color_font != st.color_font
 					|| display_tray_icon != st.display_tray_icon
+					|| current_icon != st.current_icon
 					|| capture_type != st.capture_type
 					|| label_text_format != st.label_text_format
 					|| mark_text != st.mark_text
@@ -432,6 +435,7 @@ namespace boost {
 			ar & s.color_font;
 			ar & s.preedit_type;
 			ar & s.display_tray_icon;
+			ar & s.current_icon;
 			ar & s.capture_type;
 			ar & s.label_text_format;
 			ar & s.mark_text;
