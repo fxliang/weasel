@@ -165,7 +165,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 			}
 			_candidateCommentRects[i].OffsetRect(offsetX, offsetY);
 
-			if(_style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN && _style.max_width > 0 &&
+			if(i != 0 && _style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN && _style.max_width > 0 &&
 					(  _candidateLabelRects[i].left	+ 2 * offsetX + real_margin_x		> _style.max_width 
 					   || _candidateLabelRects[i].right	+ 2 * offsetX + real_margin_x	> _style.max_width 
 					   || _candidateTextRects[i].left	+ 2 * offsetX + real_margin_x		> _style.max_width 

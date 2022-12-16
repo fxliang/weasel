@@ -2,7 +2,8 @@
 #include <string>
 #include "fontClasses.h"
 
-DirectWriteResources::DirectWriteResources(const weasel::UIStyle& style) :
+DirectWriteResources::DirectWriteResources(weasel::UIStyle& style) :
+	_style(style),
 	dpiScaleX_(0),
 	dpiScaleY_(0),
 	pD2d1Factory(NULL),
@@ -56,7 +57,7 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 	SafeRelease(&pTextFormat);
 	SafeRelease(&pLabelTextFormat);
 	SafeRelease(&pCommentTextFormat);
-
+	DWRITE_WORD_WRAPPING wrapping = _style.max_width == 0 ? DWRITE_WORD_WRAPPING_NO_WRAP : DWRITE_WORD_WRAPPING_WHOLE_WORD;
 	HRESULT hResult = S_OK;
 	std::vector<std::wstring> fontFaceStrVector;
 	// text font text format set up
@@ -72,7 +73,7 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 	{
 		pTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
 		pTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
-		pTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
+		pTextFormat->SetWordWrapping(wrapping);
 		if (fontFaceStrVector.size() > 1)
 			_SetFontFallback(pTextFormat, fontFaceStrVector);
 	}
@@ -90,7 +91,7 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 	{
 		pLabelTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
 		pLabelTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
-		pLabelTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
+		pLabelTextFormat->SetWordWrapping(wrapping);
 		if (fontFaceStrVector.size() > 1)
 			_SetFontFallback(pLabelTextFormat, fontFaceStrVector);
 	}
@@ -108,7 +109,7 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 	{
 		pCommentTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
 		pCommentTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
-		pCommentTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
+		pCommentTextFormat->SetWordWrapping(wrapping);
 		if (fontFaceStrVector.size() > 1)
 			_SetFontFallback(pCommentTextFormat, fontFaceStrVector);
 	}
@@ -116,8 +117,9 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 	return hResult;
 }
 
-HRESULT DirectWriteResources::InitResources(const UIStyle& style)
+HRESULT DirectWriteResources::InitResources(UIStyle& style)
 {
+	_style = style;
 	return InitResources(style.label_font_face, style.label_font_point, style.font_face, style.font_point, style.comment_font_face, style.comment_font_point);
 }
 

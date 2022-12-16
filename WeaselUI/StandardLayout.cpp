@@ -38,7 +38,7 @@ void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, int nCount, 
 
 	// 创建文本布局 
 	if (pTextFormat != NULL)
-		hr = pDWR->pDWFactory->CreateTextLayout(text.c_str(), nCount, pTextFormat, 0, 0, &tmpLayout);
+		hr = pDWR->pDWFactory->CreateTextLayout(text.c_str(), nCount, pTextFormat, _style.max_width, 0, &tmpLayout);
 	if (SUCCEEDED(hr))
 	{
 		// 获取文本尺寸  
@@ -49,7 +49,8 @@ void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, int nCount, 
 		lpSize->cy = (int)sz.height;
 
 		pDWR->pTextLayout = NULL;
-		hr = pDWR->pDWFactory->CreateTextLayout(text.c_str(), nCount, pTextFormat, textMetrics.widthIncludingTrailingWhitespace, textMetrics.height, &pDWR->pTextLayout);
+		size_t max_width = _style.max_width == 0 ? textMetrics.widthIncludingTrailingWhitespace : _style.max_width;
+		hr = pDWR->pDWFactory->CreateTextLayout(text.c_str(), nCount, pTextFormat, max_width, textMetrics.height, &pDWR->pTextLayout);
 		DWRITE_OVERHANG_METRICS overhangMetrics;
 		hr = pDWR->pTextLayout->GetOverhangMetrics(&overhangMetrics);
 		if (overhangMetrics.left > 0)
