@@ -38,7 +38,7 @@ void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, int nCount, 
 
 	// 创建文本布局 
 	if (pTextFormat != NULL)
-		hr = pDWR->pDWFactory->CreateTextLayout(text.c_str(), nCount, pTextFormat, 0, 0, &tmpLayout);
+		hr = pDWR->pDWFactory->CreateTextLayout(text.c_str(), nCount, pTextFormat, _style.max_width, 0, &tmpLayout);
 	if (SUCCEEDED(hr))
 	{
 		// 获取文本尺寸  
@@ -49,7 +49,8 @@ void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, int nCount, 
 		lpSize->cy = (int)sz.height;
 
 		pDWR->pTextLayout = NULL;
-		hr = pDWR->pDWFactory->CreateTextLayout(text.c_str(), nCount, pTextFormat, textMetrics.widthIncludingTrailingWhitespace, textMetrics.height, &pDWR->pTextLayout);
+		size_t max_width = _style.max_width == 0 ? textMetrics.widthIncludingTrailingWhitespace : _style.max_width;
+		hr = pDWR->pDWFactory->CreateTextLayout(text.c_str(), nCount, pTextFormat, max_width, textMetrics.height, &pDWR->pTextLayout);
 		DWRITE_OVERHANG_METRICS overhangMetrics;
 		hr = pDWR->pTextLayout->GetOverhangMetrics(&overhangMetrics);
 		if (overhangMetrics.left > 0)
@@ -120,79 +121,93 @@ bool weasel::StandardLayout::_IsHighlightOverCandidateWindow(CRect rc, CDCHandle
 void weasel::StandardLayout::_PrepareRoundInfo(CDCHandle dc)
 {
 	int m_candidateCount = _context.cinfo.candies.size();
-	for (auto i = 0; i < m_candidateCount; i++)
+	bool textHemispherical = false, cand0Hemispherical = false;
+	if(!_style.inline_preedit)
 	{
-		CRect hilite_rect(_candidateRects[i]);
-		hilite_rect.InflateRect(_style.hilite_padding, _style.hilite_padding);
-		bool current_hemispherical_dome_status = _IsHighlightOverCandidateWindow(hilite_rect, dc);
-		//if (current_hemispherical_dome_status) _textRoundInfo.Hemospherical = true;
-		// level 0: m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL
-		// level 1: m_style.inline_preedit 
-		// level 2: BackType
-		// level 3: IsTopLeftNeedToRound, IsBottomLeftNeedToRound, IsTopRightNeedToRound, IsBottomRightNeedToRound
-		const bool is_to_round_corner[2][2][5][4] =
-		{
-			// LAYOUT_VERTICAL
-			{
-				// not inline_preedit
-				{
-					{current_hemispherical_dome_status, current_hemispherical_dome_status && (!m_candidateCount), false, false},		// TEXT
-					{false, false, false, false},		// FIRST_CAND
-					{false, false, false, false},	// MID_CAND
-					{false, true, false, true},		// LAST_CAND
-					{false, true, false, true},		// ONLY_CAND
-				} ,
-				// inline_preedit
-				{
-					{true, true, true, true},		// TEXT
-					{true, false, true, false},		// FIRST_CAND
-					{false, false, false, false},	// MID_CAND
-					{false, true, false, true},		// LAST_CAND
-					{true, true, true, true},		// ONLY_CAND
-				}
-			} ,
-			// LAYOUT_HORIZONTAL
-			{
-				// not inline_preedit
-				{
-					{current_hemispherical_dome_status, current_hemispherical_dome_status && (!m_candidateCount), false, false},		// TEXT
-					{false, true, false, false},		// FIRST_CAND
-					{false, false, false, false},	// MID_CAND
-					{false, false, false, true},		// LAST_CAND
-					{false, true, false, true},		// ONLY_CAND
-				} ,
-				// inline_preedit
-				{
-					{true, true, true, true},		// TEXT
-					{true, true, false, false},		// FIRST_CAND
-					{false, false, false, false},	// MID_CAND
-					{false, false, true, true},		// LAST_CAND
-					{true, true, true, true},		// ONLY_CAND
-				}
-			}
-		};
-		int type = 1;
-		if (m_candidateCount == 1)
-			type = 4;
-		else if (i != 0 && i != m_candidateCount - 1)
-			type = 2;
-		else if (i == m_candidateCount - 1)
-			type = 3;
-		_roundInfo[i].IsTopLeftNeedToRound = is_to_round_corner[_style.layout_type == UIStyle::LAYOUT_HORIZONTAL][_style.inline_preedit][type][0];
-		_roundInfo[i].IsBottomLeftNeedToRound = is_to_round_corner[_style.layout_type == UIStyle::LAYOUT_HORIZONTAL][_style.inline_preedit][type][1];
-		_roundInfo[i].IsTopRightNeedToRound = is_to_round_corner[_style.layout_type == UIStyle::LAYOUT_HORIZONTAL][_style.inline_preedit][type][2];
-		_roundInfo[i].IsBottomRightNeedToRound = is_to_round_corner[_style.layout_type == UIStyle::LAYOUT_HORIZONTAL][_style.inline_preedit][type][3];
-		_roundInfo[i].Hemospherical = current_hemispherical_dome_status;
-		if (i == m_candidateCount - 1)
-		{
-			type = 0;
-			_textRoundInfo.IsTopLeftNeedToRound = is_to_round_corner[_style.layout_type == UIStyle::LAYOUT_HORIZONTAL][_style.inline_preedit][type][0];
-			_textRoundInfo.IsBottomLeftNeedToRound = is_to_round_corner[_style.layout_type == UIStyle::LAYOUT_HORIZONTAL][_style.inline_preedit][type][1];
-			_textRoundInfo.IsTopRightNeedToRound = is_to_round_corner[_style.layout_type == UIStyle::LAYOUT_HORIZONTAL][_style.inline_preedit][type][2];
-			_textRoundInfo.IsBottomRightNeedToRound = is_to_round_corner[_style.layout_type == UIStyle::LAYOUT_HORIZONTAL][_style.inline_preedit][type][3];
-			_textRoundInfo.Hemospherical = _roundInfo[0].Hemospherical;
-		}
+		CRect textRect(_preeditRect);
+		textRect.InflateRect(_style.hilite_padding, _style.hilite_padding);
+		textHemispherical = _IsHighlightOverCandidateWindow(textRect, dc);
 	}
+	if(m_candidateCount)
+	{
+		CRect cand0Rect(_candidateRects[0]);
+		cand0Rect.InflateRect(_style.hilite_padding, _style.hilite_padding);
+		cand0Hemispherical = _IsHighlightOverCandidateWindow(cand0Rect, dc);
+	}
+	if(textHemispherical || cand0Hemispherical)
+		for (auto i = 0; i < m_candidateCount; i++)
+		{
+			CRect hilite_rect(_candidateRects[i]);
+			hilite_rect.InflateRect(_style.hilite_padding, _style.hilite_padding);
+			bool current_hemispherical_dome_status = _IsHighlightOverCandidateWindow(hilite_rect, dc);
+			//if (current_hemispherical_dome_status) _textRoundInfo.Hemispherical = true;
+			// level 0: m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL
+			// level 1: m_style.inline_preedit 
+			// level 2: BackType
+			// level 3: IsTopLeftNeedToRound, IsBottomLeftNeedToRound, IsTopRightNeedToRound, IsBottomRightNeedToRound
+			const bool is_to_round_corner[2][2][5][4] =
+			{
+				// LAYOUT_VERTICAL
+				{
+					// not inline_preedit
+					{
+						{current_hemispherical_dome_status, current_hemispherical_dome_status && (!m_candidateCount), false, false},		// TEXT
+						{false, false, false, false},		// FIRST_CAND
+						{false, false, false, false},	// MID_CAND
+						{false, true, false, true},		// LAST_CAND
+						{false, true, false, true},		// ONLY_CAND
+					} ,
+					// inline_preedit
+					{
+						{true, true, true, true},		// TEXT
+						{true, false, true, false},		// FIRST_CAND
+						{false, false, false, false},	// MID_CAND
+						{false, true, false, true},		// LAST_CAND
+						{true, true, true, true},		// ONLY_CAND
+					}
+				} ,
+				// LAYOUT_HORIZONTAL
+				{
+					// not inline_preedit
+					{
+						{current_hemispherical_dome_status, current_hemispherical_dome_status && (!m_candidateCount), false, false},		// TEXT
+						{false, true, false, false},		// FIRST_CAND
+						{false, false, false, false},	// MID_CAND
+						{false, false, false, true},		// LAST_CAND
+						{false, true, false, true},		// ONLY_CAND
+					} ,
+					// inline_preedit
+					{
+						{true, true, true, true},		// TEXT
+						{true, true, false, false},		// FIRST_CAND
+						{false, false, false, false},	// MID_CAND
+						{false, false, true, true},		// LAST_CAND
+						{true, true, true, true},		// ONLY_CAND
+					}
+				}
+			};
+			int type = 1;
+			if (m_candidateCount == 1)
+				type = 4;
+			else if (i != 0 && i != m_candidateCount - 1)
+				type = 2;
+			else if (i == m_candidateCount - 1)
+				type = 3;
+			_roundInfo[i].IsTopLeftNeedToRound = is_to_round_corner[_style.layout_type == UIStyle::LAYOUT_HORIZONTAL][_style.inline_preedit][type][0];
+			_roundInfo[i].IsBottomLeftNeedToRound = is_to_round_corner[_style.layout_type == UIStyle::LAYOUT_HORIZONTAL][_style.inline_preedit][type][1];
+			_roundInfo[i].IsTopRightNeedToRound = is_to_round_corner[_style.layout_type == UIStyle::LAYOUT_HORIZONTAL][_style.inline_preedit][type][2];
+			_roundInfo[i].IsBottomRightNeedToRound = is_to_round_corner[_style.layout_type == UIStyle::LAYOUT_HORIZONTAL][_style.inline_preedit][type][3];
+			_roundInfo[i].Hemispherical = current_hemispherical_dome_status;
+			if (i == m_candidateCount - 1)
+			{
+				type = 0;
+				_textRoundInfo.IsTopLeftNeedToRound = is_to_round_corner[_style.layout_type == UIStyle::LAYOUT_HORIZONTAL][_style.inline_preedit][type][0];
+				_textRoundInfo.IsBottomLeftNeedToRound = is_to_round_corner[_style.layout_type == UIStyle::LAYOUT_HORIZONTAL][_style.inline_preedit][type][1];
+				_textRoundInfo.IsTopRightNeedToRound = is_to_round_corner[_style.layout_type == UIStyle::LAYOUT_HORIZONTAL][_style.inline_preedit][type][2];
+				_textRoundInfo.IsBottomRightNeedToRound = is_to_round_corner[_style.layout_type == UIStyle::LAYOUT_HORIZONTAL][_style.inline_preedit][type][3];
+				_textRoundInfo.Hemispherical = textHemispherical;
+			}
+		}
 }
 
 void StandardLayout::UpdateStatusIconLayout(int* width, int* height)
