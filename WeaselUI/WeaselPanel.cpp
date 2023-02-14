@@ -1,6 +1,7 @@
 ﻿#include "stdafx.h"
 #include "WeaselPanel.h"
 #include <WeaselCommon.h>
+#include "VersionHelpers.hpp"
 #include "VerticalLayout.h"
 #include "HorizontalLayout.h"
 #include "FullScreenLayout.h"
@@ -23,6 +24,11 @@ WeaselPanel::WeaselPanel(weasel::UI& ui)
 	pDWR(NULL),
 	pFonts(new GDIFonts(ui.style())),
 	m_blurer(new GdiplusBlur()),
+	setWindowCompositionAttribute(NULL),
+	accent({ ACCENT_ENABLE_BLURBEHIND, 0xff, (DWORD)((long long)m_style.back_color), 0 }),
+	data({ WCA_ACCENT_POLICY, &accent, sizeof(accent) }),
+	_isWindows10OrGreater(IsWindows10OrGreaterEx()),
+	hUser(ui.module()),
 	pBrush(NULL),
 	_m_gdiplusToken(0)
 {
@@ -31,6 +37,8 @@ WeaselPanel::WeaselPanel(weasel::UI& ui)
 	m_iconAlpha.LoadIconW(IDI_EN, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
 	m_iconFull.LoadIconW(IDI_FULL_SHAPE, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
 	m_iconHalf.LoadIconW(IDI_HALF_SHAPE, STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
+	if(hUser && _isWindows10OrGreater)
+		setWindowCompositionAttribute = (pfnSetWindowCompositionAttribute)GetProcAddress(hUser, "SetWindowCompositionAttribute");
 	GdiplusStartup(&_m_gdiplusToken, &_m_gdiplusStartupInput, NULL);
 	InitFontRes();
 	m_ostyle = m_style;
@@ -154,8 +162,8 @@ void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORRE
 	Gdiplus::Graphics g_back(dc);
 	g_back.SetSmoothingMode(Gdiplus::SmoothingMode::SmoothingModeHighQuality);
 
-	int blurMarginX = m_layout->offsetX * 4;
-	int blurMarginY = m_layout->offsetY * 4;
+	int blurMarginX = m_layout->offsetX * 3;
+	int blurMarginY = m_layout->offsetY * 3;
 	// 必须shadow_color都是非完全透明色才做绘制, 全屏状态不绘制阴影保证响应速度
 	if ( m_style.shadow_radius && COLORNOTTRANSPARENT(shadowColor) && m_style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN && m_style.layout_type != UIStyle::LAYOUT_VERTICAL_FULLSCREEN ) {
 		CRect rect(
@@ -438,6 +446,22 @@ HBITMAP CopyDCToBitmap(HDC hDC, LPRECT lpRect)
 	DeleteObject(hOldBitmap);
 	return hBitmap;
  }
+
+void WeaselPanel::_BlurBacktround(CRect& rc)
+{
+
+	if (setWindowCompositionAttribute != NULL 
+		&& (((m_style.shadow_color & 0xff000000) == 0) || m_style.shadow_radius == 0) 
+		&& (m_style.back_color >> 24) < 0xff
+		&& (m_style.back_color >> 24) > 0
+		&& _isWindows10OrGreater)
+	{
+		rc.DeflateRect(m_layout->offsetX, m_layout->offsetY);
+		SetWindowRgn(CreateRoundRectRgn(rc.left, rc.top, rc.right + 1 + m_style.border, rc.bottom + 1 + m_style.border,
+			m_style.round_corner_ex, m_style.round_corner_ex), true);
+		setWindowCompositionAttribute(m_hWnd, &data);
+	}
+}
 //draw client area
 void WeaselPanel::DoPaint(CDCHandle dc)
 {
@@ -485,6 +509,18 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 			ShowWindow(SW_HIDE);
 	}
 	_LayerUpdate(rc, memDC);
+
+	// blur_window swiching between enable and disable
+	if (!m_style.blur_window) {
+		accent.AccentState = ACCENT_DISABLED;
+		SetWindowRgn(CreateRectRgn(rc.left, rc.top, rc.right, rc.bottom), true);
+		setWindowCompositionAttribute(m_hWnd, &data);
+	}
+	else
+	{
+		accent.AccentState = ACCENT_ENABLE_BLURBEHIND;
+		_BlurBacktround(rc);
+	}
 	::DeleteDC(memDC);
 	::DeleteObject(memBitmap);
 }

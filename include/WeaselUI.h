@@ -18,7 +18,7 @@ namespace weasel
 	class UI
 	{
 	public:
-		UI() : pimpl_(0) { }
+		UI() : pimpl_(0), m_hUser32Module(GetModuleHandle(TEXT("user32.dll"))) { }
 
 		virtual ~UI()
 		{
@@ -55,10 +55,12 @@ namespace weasel
 		Status& status() { return status_; } 
 		UIStyle& style() { return style_; }
 		UIStyle& ostyle() { return ostyle_; }
+		HMODULE& module() { return m_hUser32Module; }
 
 	private:
 		UIImpl* pimpl_;
 
+		HMODULE m_hUser32Module;
 		Context ctx_;
 		Context octx_;
 		Status status_;

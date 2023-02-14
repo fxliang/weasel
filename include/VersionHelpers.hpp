@@ -255,3 +255,4 @@ static inline BOOL IsWinVersionGreaterThan(DWORD dwMajorVersion, DWORD dwMinorVe
 		return false;
 }
 #define IsWindows8Point10OrGreaterEx() IsWinVersionGreaterThan(6, 3)
+#define IsWindows10OrGreaterEx() IsWinVersionGreaterThan(10, 0)
