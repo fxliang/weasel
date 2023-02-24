@@ -140,7 +140,7 @@ private:
 	Gdiplus::GdiplusStartupInput _m_gdiplusStartupInput;
 	ULONG_PTR _m_gdiplusToken;
 	// for hemispherical dome
-	CRect bgRc;
+	CRect rcw;
 	BYTE m_candidateCount;
 
 	bool hide_candidates;
