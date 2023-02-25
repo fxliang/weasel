@@ -15,7 +15,6 @@
 WeaselPanel::WeaselPanel(weasel::UI& ui)
 	: m_layout(NULL),
 	m_ctx(ui.ctx()),
-	m_octx(ui.octx()),
 	m_status(ui.status()),
 	m_style(ui.style()),
 	m_ostyle(ui.ostyle()),
@@ -253,6 +252,19 @@ void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORRE
 	}
 }
 
+void WeaselPanel::_BeginDrawDW(CDCHandle& dc)
+{
+	if(m_style.color_font) {
+		pDWR->pRenderTarget->BindDC(dc, &rcw);
+		pDWR->pRenderTarget->BeginDraw();
+	}
+}
+
+void WeaselPanel::_EndDrawDW()
+{
+	if(m_style.color_font) pDWR->pRenderTarget->EndDraw();
+}
+
 bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 {
 	bool drawn = false;
@@ -287,15 +299,12 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 			int x = rc.left;
 			if (range.start > 0) {
 				// zzz
-				if(m_style.color_font) {
-					pDWR->pRenderTarget->BindDC(dc, &rcw);
-					pDWR->pRenderTarget->BeginDraw();
-				}
 				std::wstring str_before(t.substr(0, range.start));
 				CRect rc_before(x, rc.top, rc.left + selStart.cx, rc.bottom);
+				_BeginDrawDW(dc);
 				_TextOut(dc, rc_before, str_before.c_str(), str_before.length(), &pFonts->m_TextFont, m_style.text_color, txtFormat);
+				_EndDrawDW();
 				x += selStart.cx + m_style.hilite_spacing;
-				if(m_style.color_font) pDWR->pRenderTarget->EndDraw();
 			}
 			{
 				// zzz[yyy]
@@ -308,35 +317,26 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 					rd.IsTopLeftNeedToRound = false;
 				_HighlightText(dc, rc_hi, m_style.hilited_back_color, m_style.hilited_shadow_color,
 					m_style.round_corner, BackType::TEXT, false, rd);
-				if(m_style.color_font) {
-					pDWR->pRenderTarget->BindDC(dc, &rcw);
-					pDWR->pRenderTarget->BeginDraw();
-				}
+				_BeginDrawDW(dc);
 				_TextOut(dc, rct, str_highlight.c_str(), str_highlight.length(), &pFonts->m_TextFont, m_style.hilited_text_color, txtFormat);
+				_EndDrawDW();
 				x += (selEnd.cx - selStart.cx);
-				if(m_style.color_font) pDWR->pRenderTarget->EndDraw();
 			}
 			if (range.end < static_cast<int>(t.length())) {
-				if(m_style.color_font) {
-					pDWR->pRenderTarget->BindDC(dc, &rcw);
-					pDWR->pRenderTarget->BeginDraw();
-				}
 				// zzz[yyy]xxx
 				x += m_style.hilite_spacing;
 				std::wstring str_after(t.substr(range.end));
 				CRect rc_after(x, rc.top, rc.right, rc.bottom);
+				_BeginDrawDW(dc);
 				_TextOut(dc, rc_after, str_after.c_str(), str_after.length(), &pFonts->m_TextFont, m_style.text_color, txtFormat);
-				if(m_style.color_font) pDWR->pRenderTarget->EndDraw();
+				_EndDrawDW();
 			}
 		}
 		else {
-			if(m_style.color_font) {
-				pDWR->pRenderTarget->BindDC(dc, &rcw);
-				pDWR->pRenderTarget->BeginDraw();
-			}
 			CRect rcText(rc.left, rc.top, rc.right, rc.bottom);
+			_BeginDrawDW(dc);
 			_TextOut(dc, rcText, t.c_str(), t.length(), &pFonts->m_TextFont, m_style.text_color, txtFormat);
-			if(m_style.color_font) pDWR->pRenderTarget->EndDraw();
+			_EndDrawDW();
 		}
 		drawn = true;
 	}
@@ -356,12 +356,8 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 {
 	bool drawn = false;
 	const std::vector<Text> &candidates(m_ctx.cinfo.candies);
-	int candidatesize = candidates.size();
-	if(!candidatesize)	return drawn;
-
 	const std::vector<Text> &comments(m_ctx.cinfo.comments);
 	const std::vector<Text> &labels(m_ctx.cinfo.labels);
-
 
 	BackType bkType = BackType::FIRST_CAND;
 	IDWriteTextFormat1* txtFormat = (m_style.color_font) ? pDWR->pTextFormat : NULL;
@@ -371,20 +367,20 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 
 	// if candidate_shadow_color not transparent, draw candidate shadow first
 	if(COLORNOTTRANSPARENT(m_style.candidate_shadow_color))
-		for (size_t i = 0; i < candidatesize && i < MAX_CANDIDATES_COUNT; ++i) {
+		for (size_t i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
 			if (i == m_ctx.cinfo.highlighted) continue;	// draw non hilited candidates only 
-			bkType = CalcBacktype(i, candidatesize);
+			bkType = CalcBacktype(i, m_candidateCount);
 			rect = m_layout->GetCandidateRect((int)i);
 			rect.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
 			_HighlightText(dc, rect, 0x00000000, m_style.candidate_shadow_color, m_style.round_corner, bkType);
 			drawn = true;
 		}
 	// draw non highlighted candidates, without shadow
-	for (size_t i = 0; i < candidatesize && i < MAX_CANDIDATES_COUNT; ++i) {
+	for (size_t i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
 		if (i == m_ctx.cinfo.highlighted) continue;
 		if (COLORNOTTRANSPARENT(m_style.candidate_back_color))	// if transparent not to draw
 		{
-			bkType = CalcBacktype(i, candidatesize);
+			bkType = CalcBacktype(i, m_candidateCount);
 			rect = m_layout->GetCandidateRect((int)i);
 			rect.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
 			IsToRoundStruct rd = m_layout->GetRoundInfo(i);
@@ -394,62 +390,49 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 	}
 	// draw highlighted back ground and shadow
 	{
-		bkType = CalcBacktype(m_ctx.cinfo.highlighted, candidatesize);
+		bkType = CalcBacktype(m_ctx.cinfo.highlighted, m_candidateCount);
 		rect = m_layout->GetHighlightRect();
 		rect.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
 		IsToRoundStruct rd = m_layout->GetRoundInfo(m_ctx.cinfo.highlighted);
 		_HighlightText(dc, rect, m_style.hilited_candidate_back_color, m_style.hilited_candidate_shadow_color, m_style.round_corner, bkType, true, rd);
 	}
 	// begin draw candidate texts
-	if(m_style.color_font) {
-		pDWR->pRenderTarget->BindDC(dc, &rcw);
-		pDWR->pRenderTarget->BeginDraw();
-	}
-	for (size_t i = 0; i < candidatesize && i < MAX_CANDIDATES_COUNT; ++i) {
-		if (i == m_ctx.cinfo.highlighted) continue;
+	int label_text_color, candidate_text_color, comment_text_color;
+	_BeginDrawDW(dc);
+	for (size_t i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
+		if (i == m_ctx.cinfo.highlighted) 
+		{
+			label_text_color = m_style.hilited_label_text_color;
+			candidate_text_color = m_style.hilited_candidate_text_color;
+			comment_text_color = m_style.hilited_comment_text_color;
+		}
+		else
+		{
+			label_text_color = m_style.label_text_color;
+			candidate_text_color = m_style.candidate_text_color;
+			comment_text_color = m_style.comment_text_color;
+		}
 		// Draw label
 		std::wstring label = m_layout->GetLabelText(labels, (int)i, m_style.label_text_format.c_str());
 		if(!label.empty()) {
 			rect = m_layout->GetCandidateLabelRect((int)i);
-			_TextOut(dc, rect, label.c_str(), label.length(), &pFonts->m_LabelFont, m_style.label_text_color, labeltxtFormat);
+			_TextOut(dc, rect, label.c_str(), label.length(), &pFonts->m_LabelFont, label_text_color, labeltxtFormat);
 		}
 		// Draw text
 		std::wstring text = candidates.at(i).str;
 		if(!text.empty()) {
 			rect = m_layout->GetCandidateTextRect((int)i);
-			_TextOut(dc, rect, text.c_str(), text.length(), &pFonts->m_TextFont, m_style.candidate_text_color, txtFormat);
+			_TextOut(dc, rect, text.c_str(), text.length(), &pFonts->m_TextFont, candidate_text_color, txtFormat);
 		}
 		// Draw comment
 		std::wstring comment = comments.at(i).str;
 		if (!comment.empty()) {
 			rect = m_layout->GetCandidateCommentRect((int)i);
-			_TextOut(dc, rect, comment.c_str(), comment.length(), &pFonts->m_CommentFont, m_style.comment_text_color, commenttxtFormat);
+			_TextOut(dc, rect, comment.c_str(), comment.length(), &pFonts->m_CommentFont, comment_text_color, commenttxtFormat);
 		}
 		drawn = true;
 	}
-	// draw highlighted candidate, on top of others
-	{
-		// Draw label
-		std::wstring label = m_layout->GetLabelText(labels, m_ctx.cinfo.highlighted, m_style.label_text_format.c_str());
-		if(!label.empty()) {
-			rect = m_layout->GetCandidateLabelRect(m_ctx.cinfo.highlighted);
-			_TextOut(dc, rect, label.c_str(), label.length(), &pFonts->m_LabelFont, m_style.hilited_label_text_color, labeltxtFormat);
-		}
-		// Draw text
-		std::wstring text = candidates.at(m_ctx.cinfo.highlighted).str;
-		if(!text.empty()) {
-			rect = m_layout->GetCandidateTextRect((int)m_ctx.cinfo.highlighted);
-			_TextOut(dc, rect, text.c_str(), text.length(), &pFonts->m_TextFont, m_style.hilited_candidate_text_color, txtFormat);
-		}
-		// Draw comment
-		std::wstring comment = comments.at(m_ctx.cinfo.highlighted).str;
-		if (!comment.empty()) {
-			rect = m_layout->GetCandidateCommentRect((int)m_ctx.cinfo.highlighted);
-			_TextOut(dc, rect, comment.c_str(), comment.length(), &pFonts->m_CommentFont, m_style.hilited_comment_text_color, commenttxtFormat);
-		}
-		drawn = true;
-	}
-	if(m_style.color_font) pDWR->pRenderTarget->EndDraw();
+	_EndDrawDW();
 	return drawn;
 }
 

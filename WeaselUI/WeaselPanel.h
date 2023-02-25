@@ -119,10 +119,11 @@ private:
 
 	void _LayerUpdate(const CRect& rc, CDCHandle dc);
 	void _BlurBacktround(CRect& rc);
+	void _BeginDrawDW(CDCHandle& dc);
+	void _EndDrawDW();
 
 	weasel::Layout *m_layout;
 	weasel::Context &m_ctx;
-	weasel::Context &m_octx;
 	weasel::Status &m_status;
 	weasel::UIStyle &m_style;
 	weasel::UIStyle &m_ostyle;

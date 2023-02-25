@@ -297,6 +297,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 	else
 		height -= _style.spacing;
 	height += real_margin_y;
+	width += real_margin_x;
 
 	if (!_context.preedit.str.empty() && !candidates.empty())
 	{

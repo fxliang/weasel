@@ -51,7 +51,6 @@ namespace weasel
 		void Update(Context const& ctx, Status const& status);
 
 		Context& ctx() { return ctx_; } 
-		Context& octx() { return octx_; } 
 		Status& status() { return status_; } 
 		UIStyle& style() { return style_; }
 		UIStyle& ostyle() { return ostyle_; }
@@ -62,7 +61,6 @@ namespace weasel
 
 		HMODULE m_hUser32Module;
 		Context ctx_;
-		Context octx_;
 		Status status_;
 		UIStyle style_;
 		UIStyle ostyle_;
