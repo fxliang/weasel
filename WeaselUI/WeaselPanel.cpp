@@ -131,8 +131,10 @@ void WeaselPanel::InitFontRes(void)
 	}
 	else
 	{
-		delete pFonts;
-		pFonts = new GDIFonts(m_style);
+		if(pFonts == NULL)
+			pFonts = new GDIFonts(m_style);
+		else if(m_style != m_ostyle)
+			pFonts->InitResources(m_style);
 	}
 	m_ostyle = m_style;
 }
