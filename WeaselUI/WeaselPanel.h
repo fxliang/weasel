@@ -113,7 +113,7 @@ private:
 	bool _DrawPreedit(weasel::Text const& text, CDCHandle dc, CRect const& rc);
 	bool _DrawCandidates(CDCHandle dc);
 	void _HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORREF shadowColor, int radius, BackType type, bool highlighted, 
-		IsToRoundStruct rd);
+		IsToRoundStruct rd, COLORREF bordercolor);
 	void _TextOut(CDCHandle dc, CRect const& rc, LPCWSTR psz, size_t cch, FontInfo* pFontInfo, int inColor, IDWriteTextFormat* pTextFormat = NULL);
 	bool _TextOutWithFallbackDW(CDCHandle dc, CRect const rc, std::wstring psz, size_t cch, COLORREF gdiColor, IDWriteTextFormat* pTextFormat);
 

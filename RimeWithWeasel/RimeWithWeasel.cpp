@@ -957,6 +957,14 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 		{
 			style.candidate_shadow_color = style.shadow_color & 0x00ffffff;
 		}
+		if (!RimeConfigGetColor32b(config, (prefix + "/candidate_border_color").c_str(), &style.candidate_border_color))
+		{
+			style.candidate_border_color = 0x00000000;
+		}
+		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_candidate_border_color").c_str(), &style.hilited_candidate_border_color))
+		{
+			style.hilited_candidate_border_color = 0x00000000;
+		}
 		if (!RimeConfigGetColor32b(config, (prefix + "/label_color").c_str(), &style.label_text_color))
 		{
 			style.label_text_color = blend_colors(style.candidate_text_color, style.back_color);
@@ -1001,6 +1009,15 @@ static bool _UpdateUIStyleColor(RimeConfig* config, weasel::UIStyle& style, bool
 		if (!RimeConfigGetColor32b(config, (prefix + "/candidate_back_color").c_str(), &style.candidate_back_color))
 		{
 			style.candidate_back_color = style.back_color & 0x00ffffff;
+		}
+
+		if (!RimeConfigGetColor32b(config, (prefix + "/candidate_border_color").c_str(), &style.candidate_border_color))
+		{
+			style.candidate_border_color = 0x00000000;
+		}
+		if (!RimeConfigGetColor32b(config, (prefix + "/hilited_candidate_border_color").c_str(), &style.hilited_candidate_border_color))
+		{
+			style.hilited_candidate_border_color = 0x00000000;
 		}
 
 		if (!RimeConfigGetColor32b(config, (prefix + "/border_color").c_str(), &style.border_color))
@@ -1071,6 +1088,8 @@ static void CopyColorScheme(weasel::UIStyle& style, weasel::UIStyle src)
 	style.back_color = src.back_color;
 	style.shadow_color = src.shadow_color;
 	style.border_color = src.border_color;
+	style.candidate_border_color = src.candidate_border_color;
+	style.hilited_candidate_border_color = src.hilited_candidate_border_color;
 	style.hilited_text_color = src.hilited_text_color;
 	style.hilited_back_color = src.hilited_back_color;
 	style.hilited_shadow_color = src.hilited_shadow_color;

@@ -158,8 +158,9 @@ void WeaselPanel::CleanUp()
 }
 
 void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORREF shadowColor, int radius, BackType type = BackType::TEXT, bool highlighted = false, 
-	IsToRoundStruct rd = IsToRoundStruct())
+	IsToRoundStruct rd = IsToRoundStruct(), COLORREF bordercolor=0)
 {
+	if(m_candidateCount == 0) return;
 	Gdiplus::Graphics g_back(dc);
 	g_back.SetSmoothingMode(Gdiplus::SmoothingMode::SmoothingModeHighQuality);
 
@@ -205,11 +206,11 @@ void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORRE
 		delete pBitmapDropShadow;
 		pBitmapDropShadow = NULL;
 	}
+	GraphicsRoundRectPath* hiliteBackPath;
 	// 必须back_color非完全透明才绘制
 	if COLORNOTTRANSPARENT(color)	{
 		Gdiplus::Color back_color = Gdiplus::Color::MakeARGB((color >> 24), GetRValue(color), GetGValue(color), GetBValue(color));
 		Gdiplus::SolidBrush back_brush(back_color);
-		GraphicsRoundRectPath* hiliteBackPath;
 		// candidates only, and current candidate background out of window background
 		if (rd.Hemispherical && type!= BackType::BACKGROUND  && m_style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN && m_style.layout_type != UIStyle::LAYOUT_VERTICAL_FULLSCREEN) {
 			int rr = m_style.round_corner_ex - m_style.border / 2 + (m_style.border % 2 == 0);
@@ -219,11 +220,9 @@ void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORRE
 		else
 			hiliteBackPath = new GraphicsRoundRectPath(rc, radius);
 		g_back.FillPath(&back_brush, hiliteBackPath);
-		delete hiliteBackPath;
-		hiliteBackPath = NULL;
 	}
 	// draw hilited mark
-	if (highlighted && COLORNOTTRANSPARENT(m_style.hilited_mark_color))
+	if (highlighted && COLORNOTTRANSPARENT(m_style.hilited_mark_color) && COLORNOTTRANSPARENT(color) && type != BackType::BACKGROUND)
 	{
 		if (m_style.mark_text.empty())
 		{
@@ -235,25 +234,23 @@ void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORRE
 			Gdiplus::SolidBrush hl_brush(hlcl);
 			g_back.FillPath(&hl_brush, &hlp);
 		}
-		else
-		{
-			IDWriteTextFormat1* txtFormat = (m_style.color_font) ? pDWR->pTextFormat : NULL;
-			int vgap = m_layout->MARK_HEIGHT ? (rc.Height() - m_layout->MARK_HEIGHT) / 2 : 0;
-			CRect hlRc(rc.left + m_style.hilite_padding + (m_layout->MARK_GAP - m_layout->MARK_WIDTH) / 2 + 1, rc.top + vgap, 
-				rc.left + m_style.hilite_padding + (m_layout->MARK_GAP - m_layout->MARK_WIDTH) / 2 + 1 + m_layout->MARK_WIDTH, rc.bottom - vgap);
-			_BeginDrawDW(dc);
-			_TextOut(dc, hlRc, m_style.mark_text.c_str(), m_style.mark_text.length(), &pFonts->m_TextFont, m_style.hilited_mark_color, txtFormat);
-			_EndDrawDW();
-		}
 	}
 	// draw border
-	if (type == BackType::BACKGROUND && m_style.border != 0 && COLORNOTTRANSPARENT(m_style.border_color)) {
+	if (type == BackType::BACKGROUND && m_style.border != 0 && COLORNOTTRANSPARENT(bordercolor)) {
 		GraphicsRoundRectPath bgPath(rc, m_style.round_corner_ex);
-		int alpha = ((m_style.border_color >> 24) & 0xff);
-		Gdiplus::Color border_color = Gdiplus::Color::MakeARGB(alpha, GetRValue(m_style.border_color), GetGValue(m_style.border_color), GetBValue(m_style.border_color));
+		int alpha = ((bordercolor >> 24) & 0xff);
+		Gdiplus::Color border_color = Gdiplus::Color::MakeARGB(alpha, GetRValue(bordercolor), GetGValue(bordercolor), GetBValue(bordercolor));
 		Gdiplus::Pen gPenBorder(border_color, (Gdiplus::REAL)m_style.border);
 		g_back.DrawPath(&gPenBorder, &bgPath);
 	}
+	else if (type != BackType::BACKGROUND && m_style.border != 0 && COLORNOTTRANSPARENT(bordercolor)) {
+		int alpha = ((bordercolor >> 24) & 0xff);
+		Gdiplus::Color border_color = Gdiplus::Color::MakeARGB(alpha, GetRValue(bordercolor), GetGValue(bordercolor), GetBValue(bordercolor));
+		Gdiplus::Pen gPenBorder(border_color, (Gdiplus::REAL)m_style.border);
+		g_back.DrawPath(&gPenBorder, hiliteBackPath);
+	}
+	delete hiliteBackPath;
+	hiliteBackPath = NULL;
 }
 
 void WeaselPanel::_BeginDrawDW(CDCHandle& dc)
@@ -320,7 +317,7 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 				if (rc_hi.left > rc.left && rd.Hemispherical)
 					rd.IsTopLeftNeedToRound = false;
 				_HighlightText(dc, rc_hi, m_style.hilited_back_color, m_style.hilited_shadow_color,
-					m_style.round_corner, BackType::TEXT, false, rd);
+					m_style.round_corner, BackType::TEXT, false, rd, 0);
 				_BeginDrawDW(dc);
 				_TextOut(dc, rct, str_highlight.c_str(), str_highlight.length(), &pFonts->m_TextFont, m_style.hilited_text_color, txtFormat);
 				_EndDrawDW();
@@ -376,7 +373,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 			bkType = CalcBacktype(i, m_candidateCount);
 			rect = m_layout->GetCandidateRect((int)i);
 			rect.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
-			_HighlightText(dc, rect, 0x00000000, m_style.candidate_shadow_color, m_style.round_corner, bkType);
+			_HighlightText(dc, rect, 0x00000000, m_style.candidate_shadow_color, m_style.round_corner, bkType, 0);
 			drawn = true;
 		}
 	// draw non highlighted candidates, without shadow
@@ -388,7 +385,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 			rect = m_layout->GetCandidateRect((int)i);
 			rect.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
 			IsToRoundStruct rd = m_layout->GetRoundInfo(i);
-			_HighlightText(dc, rect, m_style.candidate_back_color, 0x00000000, m_style.round_corner, bkType, false, rd);
+			_HighlightText(dc, rect, m_style.candidate_back_color, 0x00000000, m_style.round_corner, bkType, false, rd, m_style.candidate_border_color);
 		}
 		drawn = true;
 	}
@@ -398,7 +395,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 		rect = m_layout->GetHighlightRect();
 		rect.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
 		IsToRoundStruct rd = m_layout->GetRoundInfo(m_ctx.cinfo.highlighted);
-		_HighlightText(dc, rect, m_style.hilited_candidate_back_color, m_style.hilited_candidate_shadow_color, m_style.round_corner, bkType, true, rd);
+		_HighlightText(dc, rect, m_style.hilited_candidate_back_color, m_style.hilited_candidate_shadow_color, m_style.round_corner, bkType, true, rd, m_style.hilited_candidate_border_color);
 	}
 	// begin draw candidate texts
 	int label_text_color, candidate_text_color, comment_text_color;
@@ -415,6 +412,16 @@ bool WeaselPanel::_DrawCandidates(CDCHandle dc)
 			label_text_color = m_style.label_text_color;
 			candidate_text_color = m_style.candidate_text_color;
 			comment_text_color = m_style.comment_text_color;
+		}
+		if (!m_style.mark_text.empty())
+		{
+			CRect rc = m_layout->GetHighlightRect();
+			rc.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
+			IDWriteTextFormat1* mtxtFormat = (m_style.color_font) ? pDWR->pTextFormat : NULL;
+			int vgap = m_layout->MARK_HEIGHT ? (rc.Height() - m_layout->MARK_HEIGHT) / 2 : 0;
+			CRect hlRc(rc.left + m_style.hilite_padding + (m_layout->MARK_GAP - m_layout->MARK_WIDTH) / 2 + 1, rc.top + vgap, 
+				rc.left + m_style.hilite_padding + (m_layout->MARK_GAP - m_layout->MARK_WIDTH) / 2 + 1 + m_layout->MARK_WIDTH, rc.bottom - vgap);
+			_TextOut(dc, hlRc, m_style.mark_text.c_str(), m_style.mark_text.length(), &pFonts->m_TextFont, m_style.hilited_mark_color, mtxtFormat);
 		}
 		// Draw label
 		std::wstring label = m_layout->GetLabelText(labels, (int)i, m_style.label_text_format.c_str());
@@ -499,7 +506,7 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 		// background start
 		if (!m_ctx.empty()) {
 			CRect backrc = m_layout->GetContentRect();
-			_HighlightText(memDC, backrc, m_style.back_color, m_style.shadow_color, m_style.round_corner_ex, BackType::BACKGROUND);
+			_HighlightText(memDC, backrc, m_style.back_color, m_style.shadow_color, m_style.round_corner_ex, BackType::BACKGROUND, m_style.border_color);
 		}
 		// background end
 		// draw auxiliary string
