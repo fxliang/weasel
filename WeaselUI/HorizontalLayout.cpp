@@ -8,7 +8,7 @@ HorizontalLayout::HorizontalLayout(const UIStyle &style, const Context &context,
 {
 }
 
-void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResources* pDWR )
+void HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 {
 	const std::vector<Text> &candidates(_context.cinfo.candies);
 	const std::vector<Text> &comments(_context.cinfo.comments);
@@ -21,27 +21,11 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 	int real_margin_y = (abs(_style.margin_y) > _style.hilite_padding) ? abs(_style.margin_y) : _style.hilite_padding;
 	int width = 0, height = real_margin_y;
 
-	CFont labelFont, textFont, commentFont;
-	CFontHandle oldFont;
-	/* create CFont for GDI mode */
-	if (!_style.color_font)
-	{
-		long hlabel = -MulDiv(pFonts->m_LabelFont.m_FontPoint, dc.GetDeviceCaps(LOGPIXELSY), 72);
-		long htext = -MulDiv(pFonts->m_TextFont.m_FontPoint, dc.GetDeviceCaps(LOGPIXELSY), 72);
-		long hcmmt = -MulDiv(pFonts->m_CommentFont.m_FontPoint, dc.GetDeviceCaps(LOGPIXELSY), 72);
-		labelFont.CreateFontW(hlabel, 0, 0, 0, pFonts->m_LabelFont.m_FontWeight, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, pFonts->m_LabelFont.m_FontFace.c_str());
-		textFont.CreateFontW(htext, 0, 0, 0, pFonts->m_TextFont.m_FontWeight, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, pFonts->m_TextFont.m_FontFace.c_str());
-		commentFont.CreateFontW(hcmmt, 0, 0, 0, pFonts->m_CommentFont.m_FontWeight, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, pFonts->m_CommentFont.m_FontFace.c_str());
-		oldFont = dc.SelectFont(textFont);
-	}
 	/* calc mark_text sizes */
 	if (!_style.mark_text.empty() && (_style.hilited_mark_color & 0xff000000))
 	{
 		CSize sg;
-		if (_style.color_font)
-			GetTextSizeDW(_style.mark_text, _style.mark_text.length(), pDWR->pTextFormat, pDWR, &sg);
-		else
-			GetTextExtentDCMultiline(dc, _style.mark_text, _style.mark_text.length(), &sg);
+		GetTextSizeDW(_style.mark_text, _style.mark_text.length(), pDWR->pTextFormat, pDWR, &sg);
 		MARK_WIDTH = sg.cx;
 		MARK_HEIGHT = sg.cy;
 		MARK_GAP = MARK_WIDTH + 4;
@@ -51,10 +35,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 	/* Preedit */
 	if (!IsInlinePreedit() && !_context.preedit.str.empty())
 	{
-		if (_style.color_font)
-			size = GetPreeditSize(dc, _context.preedit, pDWR->pTextFormat, pDWR);
-		else
-			size = GetPreeditSize(dc, _context.preedit);
+		size = GetPreeditSize(dc, _context.preedit, pDWR->pTextFormat, pDWR);
 		if(STATUS_ICON_SIZE/ 2 >= (height + size.cy / 2) && ShouldDisplayStatusIcon())
 		{
 			height += (STATUS_ICON_SIZE - size.cy) / 2;
@@ -73,10 +54,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 	/* Auxiliary */
 	if (!_context.aux.str.empty())
 	{
-		if (_style.color_font)
-			size = GetPreeditSize(dc, _context.aux, pDWR->pTextFormat, pDWR);
-		else
-			size = GetPreeditSize(dc, _context.aux);
+		size = GetPreeditSize(dc, _context.aux, pDWR->pTextFormat, pDWR);
 		if(STATUS_ICON_SIZE/ 2 >= (height + size.cy / 2) && ShouldDisplayStatusIcon())
 		{
 			height += (STATUS_ICON_SIZE - size.cy) / 2 ;
@@ -102,9 +80,9 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 		int w = real_margin_x;
 		int wrap = 0;
 		int height_of_rows[MAX_CANDIDATES_COUNT] = {0};
-		int labelSizeValid = (pFonts->m_LabelFont.m_FontPoint > 0) ? 1 : 0;
-		int textSizeValid = (pFonts->m_TextFont.m_FontPoint > 0) ? 1 : 0;
-		int commentSizeValid = (pFonts->m_TextFont.m_FontPoint > 0) ? 1 : 0;
+		int labelSizeValid = (pDWR->pLabelTextFormat->GetFontSize() > 0) ? 1 : 0;
+		int textSizeValid = (pDWR->pTextFormat->GetFontSize() > 0) ? 1 : 0;
+		int commentSizeValid = (pDWR->pCommentTextFormat->GetFontSize() > 0) ? 1 : 0;
 		for (size_t i = 0; i < candidate_cnt && i < MAX_CANDIDATES_COUNT; ++i)
 		{
 			if (i == id)
@@ -114,14 +92,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 			int tmp = w;
 			/* Label */
 			std::wstring label = GetLabelText(labels, i, _style.label_text_format.c_str());
-			if (_style.color_font)
-				GetTextSizeDW(label, label.length(), pDWR->pLabelTextFormat, pDWR, &size);
-			else
-			{
-				oldFont = dc.SelectFont(labelFont);
-				GetTextExtentDCMultiline(dc, label, label.length(), &size);
-			}
-
+			GetTextSizeDW(label, label.length(), pDWR->pLabelTextFormat, pDWR, &size);
 			_candidateLabelRects[i].SetRect(w, height, w + size.cx * labelSizeValid, height + size.cy);
 			_candidateLabelRects[i].OffsetRect(offsetX, offsetY);
 			w += (size.cx + space) * labelSizeValid;
@@ -130,13 +101,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 
 			/* Text */
 			const std::wstring& text = candidates.at(i).str;
-			if (_style.color_font)
-				GetTextSizeDW(text, text.length(), pDWR->pTextFormat, pDWR, &size);
-			else
-			{
-				oldFont = dc.SelectFont(textFont);
-				GetTextExtentDCMultiline(dc, text, text.length(), &size);
-			}
+			GetTextSizeDW(text, text.length(), pDWR->pTextFormat, pDWR, &size);
 
 			_candidateTextRects[i].SetRect(w, height, w + size.cx * textSizeValid, height + size.cy);
 			_candidateTextRects[i].OffsetRect(offsetX, offsetY);
@@ -144,16 +109,10 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 			height_of_rows[row_cnt] = max(height_of_rows[row_cnt], size.cy);
 
 			/* Comment */
-			if (!comments.at(i).str.empty() && pFonts->m_CommentFont.m_FontPoint > 0)
+			if (!comments.at(i).str.empty() && commentSizeValid )
 			{
 				const std::wstring& comment = comments.at(i).str;
-				if (_style.color_font)
-					GetTextSizeDW(comment, comment.length(), pDWR->pCommentTextFormat, pDWR, &size);
-				else
-				{
-					oldFont = dc.SelectFont(commentFont);
-					GetTextExtentDCMultiline(dc, comment, comment.length(), &size);
-				}
+				GetTextSizeDW(comment, comment.length(), pDWR->pCommentTextFormat, pDWR, &size);
 
 				_candidateCommentRects[i].SetRect(w, height, w + size.cx + space, height + size.cy);
 				w += (size.cx + space) * commentSizeValid;
@@ -232,9 +191,6 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 			rows[i] = row_cnt;
 			width = max(width, wrap);
 		}
-
-		if(!_style.color_font)
-			dc.SelectFont(oldFont);
 
 		int newhs[MAX_CANDIDATES_COUNT] = {0};
 		for (size_t i = 0; i < candidate_cnt && i < MAX_CANDIDATES_COUNT; ++i)
@@ -374,9 +330,4 @@ void HorizontalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResou
 	_contentRect.DeflateRect(deflatex, deflatey);
 	if (_style.border % 2 == 0)	_contentRect.DeflateRect(1, 1);
 	// calc roundings end
-	
-	labelFont.DeleteObject();
-	textFont.DeleteObject();
-	commentFont.DeleteObject();
-	oldFont.DeleteObject();
 }

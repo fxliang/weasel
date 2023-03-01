@@ -8,7 +8,7 @@ VerticalLayout::VerticalLayout(const UIStyle &style, const Context &context, con
 {
 }
 
-void weasel::VerticalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResources* pDWR)
+void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 {
 	const std::vector<Text> &candidates(_context.cinfo.candies);
 	const std::vector<Text> &comments(_context.cinfo.comments);
@@ -19,27 +19,10 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWrit
 	int real_margin_x = (abs(_style.margin_x) > _style.hilite_padding) ? abs(_style.margin_x) : _style.hilite_padding;
 	int real_margin_y = (abs(_style.margin_y) > _style.hilite_padding) ? abs(_style.margin_y) : _style.hilite_padding;
 	int width = 0, height = real_margin_y;
-	CFont labelFont, textFont, commentFont;
-	CFontHandle oldFont;
-	if (!_style.color_font)
-	{
-		long hlabel = -MulDiv(pFonts->m_LabelFont.m_FontPoint, dc.GetDeviceCaps(LOGPIXELSY), 72);
-		long htext = -MulDiv(pFonts->m_TextFont.m_FontPoint, dc.GetDeviceCaps(LOGPIXELSY), 72);
-		long hcmmt = -MulDiv(pFonts->m_CommentFont.m_FontPoint, dc.GetDeviceCaps(LOGPIXELSY), 72);
-
-		labelFont.CreateFontW(hlabel, 0, 0, 0, pFonts->m_LabelFont.m_FontWeight, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, pFonts->m_LabelFont.m_FontFace.c_str());
-		textFont.CreateFontW(htext, 0, 0, 0, pFonts->m_TextFont.m_FontWeight, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, pFonts->m_TextFont.m_FontFace.c_str());
-		commentFont.CreateFontW(hcmmt, 0, 0, 0, pFonts->m_CommentFont.m_FontWeight, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, pFonts->m_CommentFont.m_FontFace.c_str());
-		oldFont = dc.SelectFont(textFont);
-	}
-
 	if (!_style.mark_text.empty() && (_style.hilited_mark_color & 0xff000000))
 	{
 		CSize sg;
-		if (_style.color_font)
-			GetTextSizeDW(_style.mark_text, _style.mark_text.length(), pDWR->pTextFormat, pDWR, &sg);
-		else
-			GetTextExtentDCMultiline(dc, _style.mark_text, _style.mark_text.length(), &sg);
+		GetTextSizeDW(_style.mark_text, _style.mark_text.length(), pDWR->pTextFormat, pDWR, &sg);
 		MARK_WIDTH = sg.cx;
 		MARK_HEIGHT = sg.cy;
 		MARK_GAP = MARK_WIDTH + 4;
@@ -49,10 +32,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWrit
 	/* Preedit */
 	if (!IsInlinePreedit() && !_context.preedit.str.empty())
 	{
-		if (_style.color_font)
-			size = GetPreeditSize(dc, _context.preedit, pDWR->pTextFormat, pDWR);
-		else
-			size = GetPreeditSize(dc, _context.preedit);
+		size = GetPreeditSize(dc, _context.preedit, pDWR->pTextFormat, pDWR);
 		if(STATUS_ICON_SIZE/ 2 >= (height + size.cy / 2) && ShouldDisplayStatusIcon())
 		{
 			height += (STATUS_ICON_SIZE - size.cy) / 2;
@@ -71,10 +51,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWrit
 	/* Auxiliary */
 	if (!_context.aux.str.empty())
 	{
-		if (_style.color_font)
-			size = GetPreeditSize(dc, _context.aux, pDWR->pTextFormat, pDWR);
-		else
-			size = GetPreeditSize(dc, _context.aux);
+		size = GetPreeditSize(dc, _context.aux, pDWR->pTextFormat, pDWR);
 		if(STATUS_ICON_SIZE/ 2 >= (height + size.cy / 2) && ShouldDisplayStatusIcon())
 		{
 			height += (STATUS_ICON_SIZE - size.cy) / 2 ;
@@ -103,48 +80,29 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWrit
 		int candidate_width = 0, comment_width = 0;
 		/* Label */
 		std::wstring label = GetLabelText(labels, i, _style.label_text_format.c_str());
-		if (_style.color_font)
 		GetTextSizeDW(label, label.length(), pDWR->pLabelTextFormat, pDWR, &size);
-		else
-		{
-			oldFont = dc.SelectFont(labelFont);
-			GetTextExtentDCMultiline(dc, label, label.length(), &size);
-		}
-		_candidateLabelRects[i].SetRect(w, height, w + size.cx * ((int)(pFonts->m_LabelFont.m_FontPoint > 0)), height + size.cy);
+		_candidateLabelRects[i].SetRect(w, height, w + size.cx * ((int)(pDWR->pLabelTextFormat->GetFontSize() > 0)), height + size.cy);
 		_candidateLabelRects[i].OffsetRect(offsetX, offsetY);
-		w += (size.cx + space) * ((int)(pFonts->m_LabelFont.m_FontPoint > 0)), h = max(h, size.cy);
-		candidate_width += (size.cx + space) * ((int)(pFonts->m_LabelFont.m_FontPoint > 0));
+		w += (size.cx + space) * ((int)(pDWR->pLabelTextFormat->GetFontSize() > 0)), h = max(h, size.cy);
+		candidate_width += (size.cx + space) * ((int)(pDWR->pLabelTextFormat->GetFontSize() > 0));
 
 		/* Text */
 		const std::wstring& text = candidates.at(i).str;
-		if (_style.color_font)
-			GetTextSizeDW(text, text.length(), pDWR->pTextFormat, pDWR, &size);
-		else
-		{
-			oldFont = dc.SelectFont(textFont);
-			GetTextExtentDCMultiline(dc, text, text.length(), &size);
-		}
-
-		_candidateTextRects[i].SetRect(w, height, w + size.cx * ((int)(pFonts->m_TextFont.m_FontPoint > 0)), height + size.cy);
+		GetTextSizeDW(text, text.length(), pDWR->pTextFormat, pDWR, &size);
+		_candidateTextRects[i].SetRect(w, height, w + size.cx * ((int)(pDWR->pTextFormat->GetFontSize() > 0)), height + size.cy);
 		_candidateTextRects[i].OffsetRect(offsetX, offsetY);
-		w += size.cx * ((int)(pFonts->m_LabelFont.m_FontPoint > 0)), h = max(h, size.cy);
-		candidate_width += size.cx * ((int)(pFonts->m_TextFont.m_FontPoint > 0));
+		w += size.cx * ((int)(pDWR->pTextFormat->GetFontSize() > 0)), h = max(h, size.cy);
+		candidate_width += size.cx * ((int)(pDWR->pTextFormat->GetFontSize() > 0));
 		max_candidate_width = max(max_candidate_width, candidate_width);
 
 		/* Comment */
-		if (!comments.at(i).str.empty() && pFonts->m_CommentFont.m_FontPoint > 0)
+		if (!comments.at(i).str.empty() && pDWR->pCommentTextFormat->GetFontSize() > 0)
 		{
 			w += space;
 			comment_shift_width = max(comment_shift_width, w - real_margin_x);
 
 			const std::wstring& comment = comments.at(i).str;
-			if (_style.color_font)
-				GetTextSizeDW(comment, comment.length(), pDWR->pCommentTextFormat, pDWR, &size);
-			else
-			{
-				oldFont = dc.SelectFont(commentFont);
-				GetTextExtentDCMultiline(dc, comment, comment.length(), &size);
-			}
+			GetTextSizeDW(comment, comment.length(), pDWR->pCommentTextFormat, pDWR, &size);
 			_candidateCommentRects[i].SetRect(0, height, size.cx, height + size.cy);
 			_candidateCommentRects[i].OffsetRect(offsetX, offsetY);
 			w += size.cx, h = max(h, size.cy);
@@ -172,8 +130,6 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWrit
 		//width = max(width, w);
 		height += h - 1;
 	}
-	if(!_style.color_font)
-		dc.SelectFont(oldFont);
 	/* comments are left-aligned to the right of the longest candidate who has a comment */
 	int max_content_width = max(max_candidate_width, comment_shift_width + max_comment_width);
 	width = max(width, max_content_width + 2 * real_margin_x);
@@ -232,8 +188,4 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWrit
 	int deflatey = offsetY - _style.border / 2;
 	_contentRect.DeflateRect(deflatex, deflatey);
 	if (_style.border % 2 == 0)	_contentRect.DeflateRect(1, 1);
-	labelFont.DeleteObject();
-	textFont.DeleteObject();
-	commentFont.DeleteObject();
-	oldFont.DeleteObject();
 }

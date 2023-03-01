@@ -18,7 +18,7 @@ namespace weasel
 
 		/* Layout */
 
-		virtual void DoLayout(CDCHandle dc, GDIFonts* pFonts = NULL, DirectWriteResources* pDWR = NULL) = 0;
+		virtual void DoLayout(CDCHandle dc, DirectWriteResources* pDWR = NULL) = 0;
 		virtual CSize GetContentSize() const { return _contentSize; }
 		virtual CRect GetPreeditRect() const { return _preeditRect; }
 		virtual CRect GetAuxiliaryRect() const { return _auxiliaryRect; }
@@ -35,14 +35,13 @@ namespace weasel
 		virtual IsToRoundStruct GetTextRoundInfo() { return _textRoundInfo; }
 		virtual CRect GetContentRect() { return _contentRect; }
 
-		void GetTextExtentDCMultiline(CDCHandle dc, std::wstring wszString, int nCount, LPSIZE lpSize) const;
 		void GetTextSizeDW(const std::wstring text, int nCount, IDWriteTextFormat* pTextFormat, DirectWriteResources* pDWR, LPSIZE lpSize) const;
 
 	protected:
 		/* Utility functions */
 		CSize GetPreeditSize(CDCHandle dc, const weasel::Text& text, IDWriteTextFormat* pTextFormat = NULL, DirectWriteResources* pDWR = NULL) const;
-		bool _IsHighlightOverCandidateWindow(CRect rc, CDCHandle dc);
-		void _PrepareRoundInfo(CDCHandle dc);
+		bool _IsHighlightOverCandidateWindow(CRect& rc, CDCHandle& dc);
+		void _PrepareRoundInfo(CDCHandle& dc);
 
 		void UpdateStatusIconLayout(int* width, int* height);
 

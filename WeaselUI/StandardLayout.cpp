@@ -13,7 +13,7 @@ std::wstring StandardLayout::GetLabelText(const std::vector<Text> &labels, int i
 	swprintf_s<128>(buffer, format, labels.at(id).str.c_str());
 	return std::wstring(buffer);
 }
-
+#if 0
 void weasel::StandardLayout::GetTextExtentDCMultiline(CDCHandle dc, std::wstring wszString, int nCount, LPSIZE lpSize) const
 {
 	RECT TextArea = { 0, 0, 0, 0 };
@@ -21,6 +21,7 @@ void weasel::StandardLayout::GetTextExtentDCMultiline(CDCHandle dc, std::wstring
 	lpSize->cx = TextArea.right - TextArea.left;
 	lpSize->cy = TextArea.bottom - TextArea.top;
 }
+#endif
 
 void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, int nCount, IDWriteTextFormat* pTextFormat, DirectWriteResources* pDWR,  LPSIZE lpSize) const
 {
@@ -73,11 +74,7 @@ CSize StandardLayout::GetPreeditSize(CDCHandle dc, const weasel::Text& text, IDW
 	CSize size(0, 0);
 	if (!preedit.empty())
 	{
-		//if(pTextFormat == NULL && pDWR->pDWFactory == NULL)
-		if(!_style.color_font)// && pTextFormat == NULL && pDWR->pDWFactory == NULL)
-			GetTextExtentDCMultiline(dc, preedit, preedit.length(), &size);
-		else
-			GetTextSizeDW(preedit, preedit.length(), pTextFormat, pDWR, &size);
+		GetTextSizeDW(preedit, preedit.length(), pTextFormat, pDWR, &size);
 		for (size_t i = 0; i < attrs.size(); i++)
 		{
 			if (attrs[i].type == weasel::HIGHLIGHTED)
@@ -99,7 +96,7 @@ CSize StandardLayout::GetPreeditSize(CDCHandle dc, const weasel::Text& text, IDW
 	}
 	return size;
 }
-bool weasel::StandardLayout::_IsHighlightOverCandidateWindow(CRect rc, CDCHandle dc)
+bool weasel::StandardLayout::_IsHighlightOverCandidateWindow(CRect& rc, CDCHandle& dc)
 {
 	GraphicsRoundRectPath bgPath(_bgRect, _style.round_corner_ex);
 	GraphicsRoundRectPath hlPath(rc, _style.round_corner);
@@ -118,7 +115,7 @@ bool weasel::StandardLayout::_IsHighlightOverCandidateWindow(CRect rc, CDCHandle
 	return res;
 }
 
-void weasel::StandardLayout::_PrepareRoundInfo(CDCHandle dc)
+void weasel::StandardLayout::_PrepareRoundInfo(CDCHandle& dc)
 {
 	int m_candidateCount = _context.cinfo.candies.size();
 	bool textHemispherical = false, cand0Hemispherical = false;

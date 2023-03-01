@@ -114,8 +114,8 @@ private:
 	bool _DrawCandidates(CDCHandle dc);
 	void _HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORREF shadowColor, int radius, BackType type, bool highlighted, 
 		IsToRoundStruct rd, COLORREF bordercolor);
-	void _TextOut(CDCHandle dc, CRect const& rc, LPCWSTR psz, size_t cch, FontInfo* pFontInfo, int inColor, IDWriteTextFormat* pTextFormat = NULL);
-	bool _TextOutWithFallbackDW(CDCHandle dc, CRect const rc, std::wstring psz, size_t cch, COLORREF gdiColor, IDWriteTextFormat* pTextFormat);
+	void _TextOut(CRect const& rc, LPCWSTR psz, size_t cch, int inColor, IDWriteTextFormat* pTextFormat = NULL);
+	bool _TextOutWithFallbackDW(CRect const rc, std::wstring psz, size_t cch, COLORREF gdiColor, IDWriteTextFormat* pTextFormat);
 
 	void _LayerUpdate(const CRect& rc, CDCHandle dc);
 	void _BlurBacktround(CRect& rc);
@@ -148,7 +148,6 @@ private:
 	// for multi font_face & font_point
 	GdiplusBlur* m_blurer;
 	DirectWriteResources* pDWR;
-	GDIFonts* pFonts;
 	ID2D1SolidColorBrush* pBrush;
 	// for blur window
 	HMODULE& hUser;

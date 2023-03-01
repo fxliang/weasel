@@ -13,7 +13,7 @@ FullScreenLayout::~FullScreenLayout()
 	delete m_layout;
 }
 
-void weasel::FullScreenLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWriteResources* pDWR)
+void weasel::FullScreenLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 {
 	if (_context.empty())
 	{
@@ -37,23 +37,17 @@ void weasel::FullScreenLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWr
 
 	int step = 256;
 	do {
-		if(_style.color_font)
-			m_layout->DoLayout(dc, pFonts, pDWR);
-		else
-			m_layout->DoLayout(dc, pFonts);
+			m_layout->DoLayout(dc, pDWR);
 		if (!_style.mark_text.empty() && (_style.hilited_mark_color & 0xff000000))
 		{
 			CSize sg;
-			if (_style.color_font)
-				GetTextSizeDW(_style.mark_text, _style.mark_text.length(), pDWR->pTextFormat, pDWR, &sg);
-			else
-				GetTextExtentDCMultiline(dc, _style.mark_text, _style.mark_text.length(), &sg);
+			GetTextSizeDW(_style.mark_text, _style.mark_text.length(), pDWR->pTextFormat, pDWR, &sg);
 			MARK_WIDTH = sg.cx;
 			MARK_HEIGHT = sg.cy;
 			MARK_GAP = MARK_WIDTH + 4;
 		}
 	}
-	while (AdjustFontPoint(dc, workArea, pFonts, step, pDWR));
+	while (AdjustFontPoint(dc, workArea, step, pDWR));
 
 	int offsetx = (workArea.Width() - m_layout->GetContentSize().cx) / 2;
 	int offsety = (workArea.Height() - m_layout->GetContentSize().cy) / 2;
@@ -81,11 +75,10 @@ void weasel::FullScreenLayout::DoLayout(CDCHandle dc, GDIFonts* pFonts, DirectWr
 	_contentRect.DeflateRect(offsetX, offsetY);
 }
 
-bool FullScreenLayout::AdjustFontPoint(CDCHandle dc, const CRect& workArea, GDIFonts* pFonts, int& step, DirectWriteResources* pDWR)
+bool FullScreenLayout::AdjustFontPoint(CDCHandle dc, const CRect& workArea, int& step, DirectWriteResources* pDWR)
 {
 	if (_context.empty() || step == 0)
 		return false;
-	if (_style.color_font)
 	{
 		int fontPointLabel;
 		int fontPoint;
@@ -126,35 +119,6 @@ bool FullScreenLayout::AdjustFontPoint(CDCHandle dc, const CRect& workArea, GDIF
 			fontPointLabel += step;
 			fontPointComment += step;
 			pDWR->InitResources(_style.label_font_face, fontPointLabel, _style.font_face, fontPoint, _style.comment_font_face, fontPointComment);
-			return true;
-		}
-
-		return false;
-	}
-	else
-	{
-
-		CSize sz = m_layout->GetContentSize();
-		if (sz.cx > workArea.Width() - offsetX * 2 || sz.cy > workArea.Height() - offsetY * 2)
-		{
-			if (step > 0)
-			{
-				step = -(step >> 1);
-			}
-			pFonts->m_LabelFont.m_FontPoint += step;
-			pFonts->m_TextFont.m_FontPoint += step;
-			pFonts->m_CommentFont.m_FontPoint += step;
-			return true;
-		}
-		else if (sz.cx <= (workArea.Width() - offsetX * 2) * 31 / 32 && sz.cy <= (workArea.Height() - offsetY * 2) * 31 / 32)
-		{
-			if (step < 0)
-			{
-				step = -step >> 1;
-			}
-			pFonts->m_LabelFont.m_FontPoint += step;
-			pFonts->m_TextFont.m_FontPoint += step;
-			pFonts->m_CommentFont.m_FontPoint += step;
 			return true;
 		}
 

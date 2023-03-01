@@ -9,6 +9,6 @@ namespace weasel
 	public:
 		HorizontalLayout(const UIStyle &style, const Context &context, const Status &status);
 
-		virtual void DoLayout(CDCHandle dc, GDIFonts* pFonts = NULL, DirectWriteResources* pDWR = NULL);
+		virtual void DoLayout(CDCHandle dc, DirectWriteResources* pDWR = NULL);
 	};
 };
