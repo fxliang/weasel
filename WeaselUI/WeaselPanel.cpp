@@ -645,10 +645,14 @@ bool WeaselPanel::_TextOutWithFallbackDW (CRect const rc, std::wstring psz, size
 		if (omt.left > 0)
 			offsetx += omt.left;
 		if (pDWR->pTextLayout != NULL)
-			if(m_style.color_font)
+		{
+			if (m_style.color_font)
 				pDWR->pRenderTarget->DrawTextLayout({ offsetx, offsety }, pDWR->pTextLayout, pBrush, D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT);
 			else
 				pDWR->pRenderTarget->DrawTextLayout({ offsetx, offsety }, pDWR->pTextLayout, pBrush);
+			//D2D1_RECT_F rectf =  D2D1::RectF(offsetx, offsety, offsetx + rc.Width(), offsety + rc.Height());
+			//pDWR->pRenderTarget->DrawRectangle(&rectf, pBrush);
+		}
 		SafeRelease(&pDWR->pTextLayout);
 	}
 	else

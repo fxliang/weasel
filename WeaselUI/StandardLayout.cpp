@@ -13,23 +13,13 @@ std::wstring StandardLayout::GetLabelText(const std::vector<Text> &labels, int i
 	swprintf_s<128>(buffer, format, labels.at(id).str.c_str());
 	return std::wstring(buffer);
 }
-#if 0
-void weasel::StandardLayout::GetTextExtentDCMultiline(CDCHandle dc, std::wstring wszString, int nCount, LPSIZE lpSize) const
-{
-	RECT TextArea = { 0, 0, 0, 0 };
-	DrawText(dc, wszString.c_str(), nCount, &TextArea, DT_CALCRECT);
-	lpSize->cx = TextArea.right - TextArea.left;
-	lpSize->cy = TextArea.bottom - TextArea.top;
-}
-#endif
 
 void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, int nCount, IDWriteTextFormat* pTextFormat, DirectWriteResources* pDWR,  LPSIZE lpSize) const
 {
 	D2D1_SIZE_F sz;
 	HRESULT hr = S_OK;
-	pDWR->pTextLayout = NULL;
+	//pDWR->pTextLayout = NULL;
 
-	IDWriteTextLayout* tmpLayout = NULL;
 	if (pTextFormat == NULL)
 	{
 		lpSize->cx = 0;
@@ -39,17 +29,17 @@ void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, int nCount, 
 
 	// 创建文本布局 
 	if (pTextFormat != NULL)
-		hr = pDWR->pDWFactory->CreateTextLayout(text.c_str(), nCount, pTextFormat, _style.max_width, 0, &tmpLayout);
+		hr = pDWR->pDWFactory->CreateTextLayout(text.c_str(), nCount, pTextFormat, _style.max_width, 0, &pDWR->pTextLayout);
 	if (SUCCEEDED(hr))
 	{
 		// 获取文本尺寸  
 		DWRITE_TEXT_METRICS textMetrics;
-		hr = tmpLayout->GetMetrics(&textMetrics);
+		hr = pDWR->pTextLayout->GetMetrics(&textMetrics);
 		sz = D2D1::SizeF(ceil(textMetrics.width), ceil(textMetrics.height));
 		lpSize->cx = (int)sz.width;
 		lpSize->cy = (int)sz.height;
 
-		pDWR->pTextLayout = NULL;
+		SafeRelease(&pDWR->pTextLayout);
 		size_t max_width = _style.max_width == 0 ? textMetrics.widthIncludingTrailingWhitespace : _style.max_width;
 		hr = pDWR->pDWFactory->CreateTextLayout(text.c_str(), nCount, pTextFormat, max_width, textMetrics.height, &pDWR->pTextLayout);
 		DWRITE_OVERHANG_METRICS overhangMetrics;
@@ -63,7 +53,6 @@ void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, int nCount, 
 		if (overhangMetrics.bottom > 0)
 			lpSize->cy += overhangMetrics.bottom + 1;
 	}
-	SafeRelease(&tmpLayout);
 	SafeRelease(&pDWR->pTextLayout);
 }
 
@@ -91,6 +80,8 @@ CSize StandardLayout::GetPreeditSize(CDCHandle dc, const weasel::Text& text, IDW
 					else
 						size.cx += _style.hilite_padding;
 				}
+				// only one highlighted, break to save time
+				break;
 			}
 		}
 	}
@@ -142,7 +133,7 @@ void weasel::StandardLayout::_PrepareRoundInfo(CDCHandle& dc)
 			// level 1: m_style.inline_preedit 
 			// level 2: BackType
 			// level 3: IsTopLeftNeedToRound, IsBottomLeftNeedToRound, IsTopRightNeedToRound, IsBottomRightNeedToRound
-			const bool is_to_round_corner[2][2][5][4] =
+			const static bool is_to_round_corner[2][2][5][4] =
 			{
 				// LAYOUT_VERTICAL
 				{

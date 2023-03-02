@@ -78,25 +78,28 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 
 		int w = real_margin_x + base_offset, h = 0;
 		int candidate_width = 0, comment_width = 0;
+		int labelFontValid = !!(_style.label_font_point > 0);
+		int textFontValid = !!(_style.font_point > 0);
+		int cmtFontValid = !!(_style.comment_font_point > 0);
 		/* Label */
 		std::wstring label = GetLabelText(labels, i, _style.label_text_format.c_str());
 		GetTextSizeDW(label, label.length(), pDWR->pLabelTextFormat, pDWR, &size);
-		_candidateLabelRects[i].SetRect(w, height, w + size.cx * ((int)(pDWR->pLabelTextFormat->GetFontSize() > 0)), height + size.cy);
+		_candidateLabelRects[i].SetRect(w, height, w + size.cx * labelFontValid, height + size.cy);
 		_candidateLabelRects[i].OffsetRect(offsetX, offsetY);
-		w += (size.cx + space) * ((int)(pDWR->pLabelTextFormat->GetFontSize() > 0)), h = max(h, size.cy);
-		candidate_width += (size.cx + space) * ((int)(pDWR->pLabelTextFormat->GetFontSize() > 0));
+		w += (size.cx + space) * labelFontValid, h = max(h, size.cy);
+		candidate_width += (size.cx + space) * labelFontValid;
 
 		/* Text */
 		const std::wstring& text = candidates.at(i).str;
 		GetTextSizeDW(text, text.length(), pDWR->pTextFormat, pDWR, &size);
-		_candidateTextRects[i].SetRect(w, height, w + size.cx * ((int)(pDWR->pTextFormat->GetFontSize() > 0)), height + size.cy);
+		_candidateTextRects[i].SetRect(w, height, w + size.cx * textFontValid, height + size.cy);
 		_candidateTextRects[i].OffsetRect(offsetX, offsetY);
-		w += size.cx * ((int)(pDWR->pTextFormat->GetFontSize() > 0)), h = max(h, size.cy);
-		candidate_width += size.cx * ((int)(pDWR->pTextFormat->GetFontSize() > 0));
+		w += size.cx * textFontValid, h = max(h, size.cy);
+		candidate_width += size.cx * textFontValid;
 		max_candidate_width = max(max_candidate_width, candidate_width);
 
 		/* Comment */
-		if (!comments.at(i).str.empty() && pDWR->pCommentTextFormat->GetFontSize() > 0)
+		if (!comments.at(i).str.empty() && cmtFontValid)
 		{
 			w += space;
 			comment_shift_width = max(comment_shift_width, w - real_margin_x);

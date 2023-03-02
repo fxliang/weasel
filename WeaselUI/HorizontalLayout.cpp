@@ -80,9 +80,9 @@ void HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 		int w = real_margin_x;
 		int wrap = 0;
 		int height_of_rows[MAX_CANDIDATES_COUNT] = {0};
-		int labelSizeValid = (pDWR->pLabelTextFormat->GetFontSize() > 0) ? 1 : 0;
-		int textSizeValid = (pDWR->pTextFormat->GetFontSize() > 0) ? 1 : 0;
-		int commentSizeValid = (pDWR->pCommentTextFormat->GetFontSize() > 0) ? 1 : 0;
+		int labelFontValid = !!(_style.label_font_point > 0);
+		int textFontValid = !!(_style.font_point > 0);
+		int cmtFontValid = !!(_style.comment_font_point > 0);
 		for (size_t i = 0; i < candidate_cnt && i < MAX_CANDIDATES_COUNT; ++i)
 		{
 			if (i == id)
@@ -93,9 +93,9 @@ void HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 			/* Label */
 			std::wstring label = GetLabelText(labels, i, _style.label_text_format.c_str());
 			GetTextSizeDW(label, label.length(), pDWR->pLabelTextFormat, pDWR, &size);
-			_candidateLabelRects[i].SetRect(w, height, w + size.cx * labelSizeValid, height + size.cy);
+			_candidateLabelRects[i].SetRect(w, height, w + size.cx * labelFontValid, height + size.cy);
 			_candidateLabelRects[i].OffsetRect(offsetX, offsetY);
-			w += (size.cx + space) * labelSizeValid;
+			w += (size.cx + space) * labelFontValid;
 			//h = max(h, size.cy);
 			height_of_rows[row_cnt] = max(height_of_rows[row_cnt], size.cy);
 
@@ -103,19 +103,19 @@ void HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 			const std::wstring& text = candidates.at(i).str;
 			GetTextSizeDW(text, text.length(), pDWR->pTextFormat, pDWR, &size);
 
-			_candidateTextRects[i].SetRect(w, height, w + size.cx * textSizeValid, height + size.cy);
+			_candidateTextRects[i].SetRect(w, height, w + size.cx * textFontValid, height + size.cy);
 			_candidateTextRects[i].OffsetRect(offsetX, offsetY);
-			w += (size.cx + space) * textSizeValid;
+			w += (size.cx + space) * textFontValid;
 			height_of_rows[row_cnt] = max(height_of_rows[row_cnt], size.cy);
 
 			/* Comment */
-			if (!comments.at(i).str.empty() && commentSizeValid )
+			if (!comments.at(i).str.empty() && cmtFontValid )
 			{
 				const std::wstring& comment = comments.at(i).str;
 				GetTextSizeDW(comment, comment.length(), pDWR->pCommentTextFormat, pDWR, &size);
 
 				_candidateCommentRects[i].SetRect(w, height, w + size.cx + space, height + size.cy);
-				w += (size.cx + space) * commentSizeValid;
+				w += (size.cx + space) * cmtFontValid;
 				height_of_rows[row_cnt] = max(height_of_rows[row_cnt], size.cy);
 			}
 			else /* Used for highlighted candidate calculation below */
@@ -148,8 +148,8 @@ void HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 				_candidateLabelRects[i].OffsetRect(ofx, height_of_rows[row_cnt - 1] + _style.candidate_spacing);
 				_candidateTextRects[i].OffsetRect(ofx, height_of_rows[row_cnt - 1] + _style.candidate_spacing);
 				_candidateCommentRects[i].OffsetRect(ofx, height_of_rows[row_cnt - 1] + _style.candidate_spacing);
-				w += _candidateTextRects[i].Width()*textSizeValid + space + _candidateLabelRects[i].Width() * labelSizeValid + space 
-					+ _candidateCommentRects[i].Width() * commentSizeValid;
+				w += _candidateTextRects[i].Width()*textFontValid + space + _candidateLabelRects[i].Width() * labelFontValid + space 
+					+ _candidateCommentRects[i].Width() * cmtFontValid;
 				height_of_rows[row_cnt] = max(height_of_rows[row_cnt], _candidateLabelRects[i].Height());
 				height_of_rows[row_cnt] = max(height_of_rows[row_cnt], _candidateTextRects[i].Height());
 				height_of_rows[row_cnt] = max(height_of_rows[row_cnt], _candidateCommentRects[i].Height());
