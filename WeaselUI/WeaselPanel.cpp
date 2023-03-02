@@ -148,7 +148,6 @@ void WeaselPanel::CleanUp()
 void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORREF shadowColor, int radius, BackType type = BackType::TEXT, bool highlighted = false, 
 	IsToRoundStruct rd = IsToRoundStruct(), COLORREF bordercolor=0)
 {
-	if(m_candidateCount == 0) return;
 	Gdiplus::Graphics g_back(dc);
 	g_back.SetSmoothingMode(Gdiplus::SmoothingMode::SmoothingModeHighQuality);
 
@@ -486,7 +485,8 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 		if (!m_layout->IsInlinePreedit())
 			drawn |= _DrawPreedit(m_ctx.preedit, memDC, m_layout->GetPreeditRect());
 		// draw candidates
-		drawn |= _DrawCandidates(memDC);
+		if(m_candidateCount)
+			drawn |= _DrawCandidates(memDC);
 		// status icon (I guess Metro IME stole my idea :)
 		if (m_layout->ShouldDisplayStatusIcon()) {
 			if (!m_style.current_icon.empty())
