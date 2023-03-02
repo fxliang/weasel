@@ -43,6 +43,7 @@ namespace weasel
 		ID2D1Factory* pD2d1Factory;
 		IDWriteFactory2* pDWFactory;
 		ID2D1DCRenderTarget* pRenderTarget;
+		IDWriteTextFormat1* pPreeditTextFormat;
 		IDWriteTextFormat1* pTextFormat;
 		IDWriteTextFormat1* pLabelTextFormat;
 		IDWriteTextFormat1* pCommentTextFormat;

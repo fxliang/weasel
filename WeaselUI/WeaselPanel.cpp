@@ -208,20 +208,6 @@ void WeaselPanel::_HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORRE
 			hiliteBackPath = new GraphicsRoundRectPath(rc, radius);
 		g_back.FillPath(&back_brush, hiliteBackPath);
 	}
-	// draw hilited mark
-	if (highlighted && COLORNOTTRANSPARENT(m_style.hilited_mark_color) && COLORNOTTRANSPARENT(color) && type != BackType::BACKGROUND)
-	{
-		if (m_style.mark_text.empty())
-		{
-			int topm = (rc.Height() - ((double)rc.Height() - (double)max(m_style.hilite_padding, m_style.round_corner) * 2) * 0.7) / 2;
-			CRect hlRc(rc.left + m_style.hilite_padding + (m_layout->MARK_GAP - m_layout->MARK_WIDTH) / 2 + 1, rc.top + topm, 
-				rc.left + m_style.hilite_padding + (m_layout->MARK_GAP + m_layout->MARK_WIDTH) / 2 + 1, rc.bottom - topm);
-			GraphicsRoundRectPath hlp(hlRc, 4);
-			Gdiplus::Color hlcl = Gdiplus::Color::MakeARGB(0xff, GetRValue(m_style.hilited_mark_color), GetGValue(m_style.hilited_mark_color), GetBValue(m_style.hilited_mark_color));
-			Gdiplus::SolidBrush hl_brush(hlcl);
-			g_back.FillPath(&hl_brush, &hlp);
-		}
-	}
 	// draw border
 	if (type == BackType::BACKGROUND && m_style.border != 0 && COLORNOTTRANSPARENT(bordercolor)) {
 		GraphicsRoundRectPath bgPath(rc, m_style.round_corner_ex);
@@ -255,7 +241,7 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 {
 	bool drawn = false;
 	std::wstring const& t = text.str;
-	IDWriteTextFormat1* txtFormat = pDWR->pTextFormat;
+	IDWriteTextFormat1* txtFormat = pDWR->pPreeditTextFormat;
 
 	if (!t.empty()) {
 		weasel::TextRange range;
@@ -269,40 +255,37 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 			m_layout->GetTextSizeDW(t, range.start, pDWR->pTextFormat, pDWR, &selStart);
 			m_layout->GetTextSizeDW(t, range.end, pDWR->pTextFormat, pDWR, &selEnd);
 			int x = rc.left;
+			int xx = range.start > 0 ? x + selStart.cx + m_style.hilite_spacing : x;
+			CRect rc_hi(xx, rc.top, xx + (selEnd.cx - selStart.cx), rc.bottom);
+			CRect rct = rc_hi;
+			rc_hi.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
+			IsToRoundStruct rd = m_layout->GetTextRoundInfo();
+			if (rc_hi.left > rc.left && rd.Hemispherical)
+				rd.IsTopLeftNeedToRound = false;
+			_HighlightText(dc, rc_hi, m_style.hilited_back_color, m_style.hilited_shadow_color,
+				m_style.round_corner, BackType::TEXT, false, rd, 0);
+			_BeginDrawDW(dc);
 			if (range.start > 0) {
 				// zzz
 				std::wstring str_before(t.substr(0, range.start));
 				CRect rc_before(x, rc.top, rc.left + selStart.cx, rc.bottom);
-				_BeginDrawDW(dc);
 				_TextOut(rc_before, str_before.c_str(), str_before.length(), m_style.text_color, txtFormat);
-				_EndDrawDW();
 				x += selStart.cx + m_style.hilite_spacing;
 			}
 			{
 				// zzz[yyy]
 				std::wstring str_highlight(t.substr(range.start, range.end - range.start));
-				CRect rc_hi(x, rc.top, x + (selEnd.cx - selStart.cx), rc.bottom);
-				CRect rct = rc_hi;
-				rc_hi.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
-				IsToRoundStruct rd = m_layout->GetTextRoundInfo();
-				if (rc_hi.left > rc.left && rd.Hemispherical)
-					rd.IsTopLeftNeedToRound = false;
-				_HighlightText(dc, rc_hi, m_style.hilited_back_color, m_style.hilited_shadow_color,
-					m_style.round_corner, BackType::TEXT, false, rd, 0);
-				_BeginDrawDW(dc);
+				CRect rc_before(x, rc.top, rc.left + selStart.cx, rc.bottom);
 				_TextOut(rct, str_highlight.c_str(), str_highlight.length(), m_style.hilited_text_color, txtFormat);
-				_EndDrawDW();
 				x += (selEnd.cx - selStart.cx);
 			}
 			if (range.end < static_cast<int>(t.length())) {
 				// zzz[yyy]xxx
-				x += m_style.hilite_spacing;
 				std::wstring str_after(t.substr(range.end));
 				CRect rc_after(x, rc.top, rc.right, rc.bottom);
-				_BeginDrawDW(dc);
 				_TextOut(rc_after, str_after.c_str(), str_after.length(), m_style.text_color, txtFormat);
-				_EndDrawDW();
 			}
+			_EndDrawDW();
 		}
 		else {
 			CRect rcText(rc.left, rc.top, rc.right, rc.bottom);
@@ -461,18 +444,15 @@ void WeaselPanel::_BlurBacktround(CRect& rc)
 //draw client area
 void WeaselPanel::DoPaint(CDCHandle dc)
 {
-	CRect rc;
-	GetClientRect(&rc);
-	rcw = rc;
+	GetClientRect(&rcw);
 	// prepare memDC
 	CDCHandle hdc = ::GetDC(m_hWnd);
 	CDCHandle memDC = ::CreateCompatibleDC(hdc);
-	HBITMAP memBitmap = ::CreateCompatibleBitmap(hdc, rc.Width(), rc.Height());
+	HBITMAP memBitmap = ::CreateCompatibleBitmap(hdc, rcw.Width(), rcw.Height());
 	::SelectObject(memDC, memBitmap);
 	ReleaseDC(hdc);
 	bool drawn = false;
-	if (!hide_candidates) {
-		CRect trc(rc);
+	{
 		// background start
 		if (!m_ctx.empty()) {
 			CRect backrc = m_layout->GetContentRect();
@@ -506,18 +486,18 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 		if (!drawn)
 			ShowWindow(SW_HIDE);
 	}
-	_LayerUpdate(rc, memDC);
+	_LayerUpdate(rcw, memDC);
 
 	// blur_window swiching between enable and disable
 	if (!m_style.blur_window) {
 		accent.AccentState = ACCENT_DISABLED;
-		SetWindowRgn(CreateRectRgn(rc.left, rc.top, rc.right, rc.bottom), true);
+		SetWindowRgn(CreateRectRgn(rcw.left, rcw.top, rcw.right, rcw.bottom), true);
 		setWindowCompositionAttribute(m_hWnd, &data);
 	}
 	else
 	{
 		accent.AccentState = ACCENT_ENABLE_BLURBEHIND;
-		_BlurBacktround(rc);
+		_BlurBacktround(rcw);
 	}
 	::DeleteDC(memDC);
 	::DeleteObject(memBitmap);

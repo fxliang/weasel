@@ -10,6 +10,7 @@ DirectWriteResources::DirectWriteResources(weasel::UIStyle& style) :
 	pDWFactory(NULL),
 	pRenderTarget(NULL),
 	pTextFormat(NULL),
+	pPreeditTextFormat(NULL),
 	pLabelTextFormat(NULL),
 	pCommentTextFormat(NULL)
 {
@@ -40,6 +41,7 @@ DirectWriteResources::DirectWriteResources(weasel::UIStyle& style) :
 
 DirectWriteResources::~DirectWriteResources()
 {
+	SafeRelease(&pPreeditTextFormat);
 	SafeRelease(&pTextFormat);
 	SafeRelease(&pLabelTextFormat);
 	SafeRelease(&pCommentTextFormat);
@@ -54,6 +56,7 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 	std::wstring comment_font_face, int comment_font_point) 
 {
 	// prepare d2d1 resources
+	SafeRelease(&pPreeditTextFormat);
 	SafeRelease(&pTextFormat);
 	SafeRelease(&pLabelTextFormat);
 	SafeRelease(&pCommentTextFormat);
@@ -76,6 +79,18 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 		pTextFormat->SetWordWrapping(wrapping);
 		if (fontFaceStrVector.size() > 1)
 			_SetFontFallback(pTextFormat, fontFaceStrVector);
+	}
+
+	hResult = pDWFactory->CreateTextFormat(mainFontFace.c_str(), NULL,
+			fontWeight, fontStyle, DWRITE_FONT_STRETCH_NORMAL,
+			font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(&pPreeditTextFormat));
+	if( pPreeditTextFormat != NULL)
+	{
+		pPreeditTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
+		pPreeditTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
+		pPreeditTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
+		if (fontFaceStrVector.size() > 1)
+			_SetFontFallback(pPreeditTextFormat, fontFaceStrVector);
 	}
 	fontFaceStrVector.swap(std::vector<std::wstring>());
 
