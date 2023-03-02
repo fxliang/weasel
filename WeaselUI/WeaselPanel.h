@@ -111,16 +111,14 @@ private:
 	void _ResizeWindow();
 	void _RepositionWindow(bool adj = false);
 	bool _DrawPreedit(weasel::Text const& text, CDCHandle dc, CRect const& rc);
-	bool _DrawCandidates(CDCHandle dc);
-	void _HighlightText(CDCHandle dc, CRect rc, COLORREF color, COLORREF shadowColor, int radius, BackType type, bool highlighted, 
-		IsToRoundStruct rd, COLORREF bordercolor);
+	bool _DrawPreeditBack(weasel::Text const& text, CDCHandle dc, CRect const& rc);
+	bool _DrawCandidates(CDCHandle &dc, bool back = false);
+	void _HighlightText(CDCHandle &dc, CRect rc, COLORREF color, COLORREF shadowColor, int radius, BackType type, bool highlighted, IsToRoundStruct rd, COLORREF bordercolor);
 	void _TextOut(CRect const& rc, LPCWSTR psz, size_t cch, int inColor, IDWriteTextFormat* pTextFormat = NULL);
 	bool _TextOutWithFallbackDW(CRect const rc, std::wstring psz, size_t cch, COLORREF gdiColor, IDWriteTextFormat* pTextFormat);
 
 	void _LayerUpdate(const CRect& rc, CDCHandle dc);
 	void _BlurBacktround(CRect& rc);
-	void _BeginDrawDW(CDCHandle& dc);
-	void _EndDrawDW();
 
 	weasel::Layout *m_layout;
 	weasel::Context &m_ctx;
