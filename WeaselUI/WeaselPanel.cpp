@@ -458,7 +458,7 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	::SelectObject(memDC, memBitmap);
 	ReleaseDC(hdc);
 	bool drawn = false;
-	{
+	if(!hide_candidates){
 		// background start
 		if (!m_ctx.empty()) {
 			CRect backrc = m_layout->GetContentRect();
