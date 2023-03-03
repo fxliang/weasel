@@ -53,7 +53,7 @@ DirectWriteResources::~DirectWriteResources()
 
 HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int label_font_point,
 	std::wstring font_face, int font_point,
-	std::wstring comment_font_face, int comment_font_point) 
+	std::wstring comment_font_face, int comment_font_point, bool vertical_text) 
 {
 	// prepare d2d1 resources
 	SafeRelease(&pPreeditTextFormat);
@@ -74,7 +74,15 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 			font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(&pTextFormat));
 	if( pTextFormat != NULL)
 	{
-		pTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
+		if (vertical_text)
+		{
+			pTextFormat->SetFlowDirection(DWRITE_FLOW_DIRECTION_RIGHT_TO_LEFT);
+			pTextFormat->SetReadingDirection(DWRITE_READING_DIRECTION_TOP_TO_BOTTOM);
+			pTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER);
+		}
+		else
+			pTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
+
 		pTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
 		pTextFormat->SetWordWrapping(wrapping);
 		if (fontFaceStrVector.size() > 1)
@@ -86,7 +94,14 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 			font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(&pPreeditTextFormat));
 	if( pPreeditTextFormat != NULL)
 	{
-		pPreeditTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
+		if (vertical_text)
+		{
+			pPreeditTextFormat->SetFlowDirection(DWRITE_FLOW_DIRECTION_RIGHT_TO_LEFT);
+			pPreeditTextFormat->SetReadingDirection(DWRITE_READING_DIRECTION_TOP_TO_BOTTOM);
+			pPreeditTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER);
+		}
+		else
+			pPreeditTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
 		pPreeditTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
 		pPreeditTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
 		if (fontFaceStrVector.size() > 1)
@@ -104,7 +119,14 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 			label_font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(&pLabelTextFormat));
 	if( pLabelTextFormat != NULL)
 	{
-		pLabelTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
+		if (vertical_text)
+		{
+			pLabelTextFormat->SetFlowDirection(DWRITE_FLOW_DIRECTION_RIGHT_TO_LEFT);
+			pLabelTextFormat->SetReadingDirection(DWRITE_READING_DIRECTION_TOP_TO_BOTTOM);
+			pLabelTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER);
+		}
+		else
+			pLabelTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
 		pLabelTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
 		pLabelTextFormat->SetWordWrapping(wrapping);
 		if (fontFaceStrVector.size() > 1)
@@ -122,7 +144,14 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 			comment_font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(&pCommentTextFormat));
 	if( pCommentTextFormat != NULL)
 	{
-		pCommentTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
+		if (vertical_text)
+		{
+			pCommentTextFormat->SetFlowDirection(DWRITE_FLOW_DIRECTION_RIGHT_TO_LEFT);
+			pCommentTextFormat->SetReadingDirection(DWRITE_READING_DIRECTION_TOP_TO_BOTTOM);
+			pCommentTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER);
+		}
+		else
+			pCommentTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
 		pCommentTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
 		pCommentTextFormat->SetWordWrapping(wrapping);
 		if (fontFaceStrVector.size() > 1)
@@ -135,7 +164,8 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 HRESULT DirectWriteResources::InitResources(UIStyle& style)
 {
 	_style = style;
-	return InitResources(style.label_font_face, style.label_font_point, style.font_face, style.font_point, style.comment_font_face, style.comment_font_point);
+	return InitResources(style.label_font_face, style.label_font_point, style.font_face, _style.font_point, 
+		style.comment_font_face, style.comment_font_point, style.layout_type==UIStyle::LAYOUT_VERTICAL_TEXT);
 }
 
 void DirectWriteResources::_ParseFontFace(const std::wstring fontFaceStr,

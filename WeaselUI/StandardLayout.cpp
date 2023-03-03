@@ -29,29 +29,63 @@ void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, int nCount, 
 
 	// 创建文本布局 
 	if (pTextFormat != NULL)
-		hr = pDWR->pDWFactory->CreateTextLayout(text.c_str(), nCount, pTextFormat, _style.max_width, 0, &pDWR->pTextLayout);
+		hr = pDWR->pDWFactory->CreateTextLayout(text.c_str(), nCount, pTextFormat, 0, 0, &pDWR->pTextLayout);
+
 	if (SUCCEEDED(hr))
 	{
+		if (_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
+		{
+			pDWR->pTextLayout->SetReadingDirection(DWRITE_READING_DIRECTION_TOP_TO_BOTTOM);
+			pDWR->pTextLayout->SetFlowDirection(DWRITE_FLOW_DIRECTION_RIGHT_TO_LEFT);
+		}
 		// 获取文本尺寸  
 		DWRITE_TEXT_METRICS textMetrics;
 		hr = pDWR->pTextLayout->GetMetrics(&textMetrics);
 		sz = D2D1::SizeF(ceil(textMetrics.width), ceil(textMetrics.height));
-		lpSize->cx = (int)sz.width;
-		lpSize->cy = (int)sz.height;
 
+		//if (_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
+		//{
+		//	lpSize->cy = (int)sz.width;
+		//	lpSize->cx = (int)sz.height;
+		//}
+		//else
+		{
+			lpSize->cx = (int)sz.width;
+			lpSize->cy = (int)sz.height;
+		}
 		SafeRelease(&pDWR->pTextLayout);
 		size_t max_width = _style.max_width == 0 ? textMetrics.widthIncludingTrailingWhitespace : _style.max_width;
 		hr = pDWR->pDWFactory->CreateTextLayout(text.c_str(), nCount, pTextFormat, max_width, textMetrics.height, &pDWR->pTextLayout);
+		if (_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
+		{
+			pDWR->pTextLayout->SetReadingDirection(DWRITE_READING_DIRECTION_TOP_TO_BOTTOM);
+			pDWR->pTextLayout->SetFlowDirection(DWRITE_FLOW_DIRECTION_RIGHT_TO_LEFT);
+		}
+
 		DWRITE_OVERHANG_METRICS overhangMetrics;
 		hr = pDWR->pTextLayout->GetOverhangMetrics(&overhangMetrics);
-		if (overhangMetrics.left > 0)
-			lpSize->cx += overhangMetrics.left + 1;
-		if (overhangMetrics.right > 0)
-			lpSize->cx += overhangMetrics.right + 1;
-		if (overhangMetrics.top > 0)
-			lpSize->cy += overhangMetrics.top + 1;
-		if (overhangMetrics.bottom > 0)
-			lpSize->cy += overhangMetrics.bottom + 1;
+		if (_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
+		{
+			if (overhangMetrics.left > 0)
+				lpSize->cy += overhangMetrics.left + 1;
+			if (overhangMetrics.right > 0)
+				lpSize->cy += overhangMetrics.right + 1;
+			if (overhangMetrics.top > 0)
+				lpSize->cx += overhangMetrics.top + 1;
+			if (overhangMetrics.bottom > 0)
+				lpSize->cx += overhangMetrics.bottom + 1;
+		}
+		else
+		{
+			if (overhangMetrics.left > 0)
+				lpSize->cx += overhangMetrics.left + 1;
+			if (overhangMetrics.right > 0)
+				lpSize->cx += overhangMetrics.right + 1;
+			if (overhangMetrics.top > 0)
+				lpSize->cy += overhangMetrics.top + 1;
+			if (overhangMetrics.bottom > 0)
+				lpSize->cy += overhangMetrics.bottom + 1;
+		}
 	}
 	SafeRelease(&pDWR->pTextLayout);
 }

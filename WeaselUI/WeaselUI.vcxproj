@@ -259,6 +259,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="VerticalLayout.cpp" />
+    <ClCompile Include="VHorizontalLayout.cpp" />
     <ClCompile Include="WeaselPanel.cpp" />
     <ClCompile Include="WeaselUI.cpp" />
   </ItemGroup>
@@ -273,6 +274,7 @@
     <ClInclude Include="targetver.h" />
     <ClInclude Include="..\include\WeaselCommon.h" />
     <ClInclude Include="VerticalLayout.h" />
+    <ClInclude Include="VHorizontalLayout.h" />
     <ClInclude Include="WeaselPanel.h" />
     <ClInclude Include="..\include\WeaselUI.h" />
   </ItemGroup>

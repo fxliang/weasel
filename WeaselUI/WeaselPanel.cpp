@@ -5,6 +5,7 @@
 #include "VerticalLayout.h"
 #include "HorizontalLayout.h"
 #include "FullScreenLayout.h"
+#include "VHorizontalLayout.h"
 
 // for IDI_ZH, IDI_EN
 #include <resource.h>
@@ -75,8 +76,13 @@ void WeaselPanel::_CreateLayout()
 	{
 		layout = new HorizontalLayout(m_style, m_ctx, m_status);
 	}
-	if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN ||
-		m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN)
+	else if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
+	{
+		layout = new VHorizontalLayout(m_style, m_ctx, m_status);
+	}
+
+	if ((m_style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN ||
+		m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN) && m_style.layout_type != UIStyle::LAYOUT_VERTICAL_TEXT)
 	{
 		layout = new FullScreenLayout(m_style, m_ctx, m_status, m_inputPos, layout);
 	}
@@ -637,21 +643,30 @@ bool WeaselPanel::_TextOutWithFallbackDW (CRect const rc, std::wstring psz, size
 
 	if (NULL != pBrush && NULL != pTextFormat) {
 		pDWR->pDWFactory->CreateTextLayout( psz.c_str(), (UINT32)psz.size(), pTextFormat, (float)rc.Width(), (float)rc.Height(), &pDWR->pTextLayout);
+		if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
+		{
+			pDWR->pTextLayout->SetReadingDirection(DWRITE_READING_DIRECTION_TOP_TO_BOTTOM);
+			pDWR->pTextLayout->SetFlowDirection(DWRITE_FLOW_DIRECTION_RIGHT_TO_LEFT);
+		}
+
 		// offsetx for font glyph over left
 		float offsetx = rc.left;
 		float offsety = rc.top;
 		DWRITE_OVERHANG_METRICS omt;
 		pDWR->pTextLayout->GetOverhangMetrics(&omt);
-		if (omt.left > 0)
+		if (m_style.layout_type != UIStyle::LAYOUT_VERTICAL_TEXT && omt.left > 0)
 			offsetx += omt.left;
+		if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT && omt.top > 0)
+			offsety += omt.top;
+
 		if (pDWR->pTextLayout != NULL)
 		{
 			if (m_style.color_font)
 				pDWR->pRenderTarget->DrawTextLayout({ offsetx, offsety }, pDWR->pTextLayout, pBrush, D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT);
 			else
 				pDWR->pRenderTarget->DrawTextLayout({ offsetx, offsety }, pDWR->pTextLayout, pBrush);
-			//D2D1_RECT_F rectf =  D2D1::RectF(offsetx, offsety, offsetx + rc.Width(), offsety + rc.Height());
-			//pDWR->pRenderTarget->DrawRectangle(&rectf, pBrush);
+			D2D1_RECT_F rectf =  D2D1::RectF(offsetx, offsety, offsetx + rc.Width(), offsety + rc.Height());
+			pDWR->pRenderTarget->DrawRectangle(&rectf, pBrush);
 		}
 		SafeRelease(&pDWR->pTextLayout);
 	}
