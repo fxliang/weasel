@@ -121,7 +121,7 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 		_candidateCommentRects[i].OffsetRect(offsetX, offsetY);
 	}
 
-#if 1
+#if 0
 	int neww = 0;
 	int mintop = _candidateTextRects[0].bottom;
 	int maxbot = _candidateTextRects[0].top;
@@ -156,7 +156,6 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 		//neww = min(neww, oc);
 	}
 	//w -= neww;
-#endif
 	w += real_margin_x;
 
 	/* Highlighted Candidate */
@@ -184,6 +183,7 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 		_candidateRects[i].SetRect(hlLeft, mintop, hlRight, maxbot);
 	}
 
+#endif
 	width = max(width, w);
 	width += ww;
 	//height += h;

@@ -35,11 +35,11 @@ namespace weasel
 		virtual IsToRoundStruct GetTextRoundInfo() { return _textRoundInfo; }
 		virtual CRect GetContentRect() { return _contentRect; }
 
-		void GetTextSizeDW(const std::wstring text, int nCount, IDWriteTextFormat* pTextFormat, DirectWriteResources* pDWR, LPSIZE lpSize) const;
+		void GetTextSizeDW(const std::wstring text, int nCount, IDWriteTextFormat1* pTextFormat, DirectWriteResources* pDWR, LPSIZE lpSize) const;
 
 	protected:
 		/* Utility functions */
-		CSize GetPreeditSize(CDCHandle dc, const weasel::Text& text, IDWriteTextFormat* pTextFormat = NULL, DirectWriteResources* pDWR = NULL) const;
+		CSize GetPreeditSize(CDCHandle dc, const weasel::Text& text, IDWriteTextFormat1* pTextFormat = NULL, DirectWriteResources* pDWR = NULL) const;
 		bool _IsHighlightOverCandidateWindow(CRect& rc, CDCHandle& dc);
 		void _PrepareRoundInfo(CDCHandle& dc);
 
