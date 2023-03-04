@@ -276,9 +276,9 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 					rc_hi = CRect(x, rc.top, x + (selEnd.cx - selStart.cx), rc.bottom);
 				_TextOut(rc_hi, str_highlight.c_str(), str_highlight.length(), m_style.hilited_text_color, txtFormat);
 				if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
-					y += selStart.cy + m_style.hilite_spacing;
+					y += rc_hi.Height() + m_style.hilite_spacing;
 				else
-					x += selStart.cx + m_style.hilite_spacing;
+					x += rc_hi.Width() + m_style.hilite_spacing;
 			}
 #endif
 #if 1
@@ -288,11 +288,11 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 				//CRect rc_after(x, rc.top, rc.right, rc.bottom);
 				CRect rc_after;
 				if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
-					rc_after = CRect(rc.left, y, rc.right, rc.bottom);
+					rc_after = CRect(x, y, rc.right, rc.bottom);
 				else
-					rc_after = CRect(x, rc.top, rc.right, rc.bottom);
+				rc_after = CRect(x, rc.top, rc.right, rc.bottom);
 
-				//_TextOut(rc_after, str_after.c_str(), str_after.length(), m_style.text_color, txtFormat);
+				_TextOut(rc_after, str_after.c_str(), str_after.length(), m_style.text_color, txtFormat);
 			}
 #endif
 		}
@@ -329,13 +329,13 @@ bool WeaselPanel::_DrawPreeditBack(Text const& text, CDCHandle dc, CRect const& 
 			else
 				rc_hi = CRect(x, rc.top, x + (selEnd.cx - selStart.cx), rc.bottom);
 			rc_hi.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
-			/*
+			///*
 			IsToRoundStruct rd = m_layout->GetTextRoundInfo();
 			if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
 				if (rc_hi.top > rc.top && rd.Hemispherical) rd.IsTopLeftNeedToRound = false;
 			else
 				if (rc_hi.left > rc.left && rd.Hemispherical) rd.IsTopLeftNeedToRound = false;
-			*/
+			//*/
 			_HighlightText(dc, rc_hi, m_style.hilited_back_color, m_style.hilited_shadow_color, m_style.round_corner, BackType::TEXT); // , false, rd, 0);
 			drawn = true;
 		}

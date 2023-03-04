@@ -78,7 +78,7 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 		{
 			pTextFormat->SetFlowDirection(DWRITE_FLOW_DIRECTION_RIGHT_TO_LEFT);
 			pTextFormat->SetReadingDirection(DWRITE_READING_DIRECTION_TOP_TO_BOTTOM);
-			pTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER);
+			pTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
 		}
 		else
 			pTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
@@ -98,7 +98,7 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 		{
 			pPreeditTextFormat->SetFlowDirection(DWRITE_FLOW_DIRECTION_RIGHT_TO_LEFT);
 			pPreeditTextFormat->SetReadingDirection(DWRITE_READING_DIRECTION_TOP_TO_BOTTOM);
-			pPreeditTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER);
+			pPreeditTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
 		}
 		else
 			pPreeditTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
@@ -123,7 +123,7 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 		{
 			pLabelTextFormat->SetFlowDirection(DWRITE_FLOW_DIRECTION_RIGHT_TO_LEFT);
 			pLabelTextFormat->SetReadingDirection(DWRITE_READING_DIRECTION_TOP_TO_BOTTOM);
-			pLabelTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER);
+			pLabelTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
 		}
 		else
 			pLabelTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
@@ -148,7 +148,7 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 		{
 			pCommentTextFormat->SetFlowDirection(DWRITE_FLOW_DIRECTION_RIGHT_TO_LEFT);
 			pCommentTextFormat->SetReadingDirection(DWRITE_READING_DIRECTION_TOP_TO_BOTTOM);
-			pCommentTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER);
+			pCommentTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
 		}
 		else
 			pCommentTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
