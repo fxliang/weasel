@@ -20,7 +20,7 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 	const int space = _style.hilite_spacing;
 	int real_margin_x = (abs(_style.margin_x) > _style.hilite_padding) ? abs(_style.margin_x) : _style.hilite_padding;
 	int real_margin_y = (abs(_style.margin_y) > _style.hilite_padding) ? abs(_style.margin_y) : _style.hilite_padding;
-	int width = 0, height = real_margin_y;
+	int width = real_margin_x, height = real_margin_y;
 
 	if (!_style.mark_text.empty() && (_style.hilited_mark_color & 0xff000000))
 	{
@@ -38,168 +38,122 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 	if (!IsInlinePreedit() && !_context.preedit.str.empty())
 	{
 		size = GetPreeditSize(dc, _context.preedit, pDWR->pTextFormat, pDWR);
-		if(STATUS_ICON_SIZE/ 2 >= (height + size.cy / 2) && ShouldDisplayStatusIcon())
+		if(STATUS_ICON_SIZE/ 2 >= (width + size.cx / 2) && ShouldDisplayStatusIcon())
 		{
-			height += (STATUS_ICON_SIZE - size.cy) / 2;
-			_preeditRect.SetRect(real_margin_x , height, real_margin_x  + size.cx, height + size.cy);
-			height += size.cy + (STATUS_ICON_SIZE - size.cy) / 2 + _style.spacing;
+			width += (STATUS_ICON_SIZE - size.cx) / 2;
+			_preeditRect.SetRect(width , height, width  + size.cx, height + size.cy);
+			width += size.cx + (STATUS_ICON_SIZE - size.cx) / 2 + _style.spacing;
 		}
 		else
 		{
 			_preeditRect.SetRect(real_margin_x , height, real_margin_x  + size.cx, height + size.cy);
-			height += size.cy + _style.spacing;
+			width += size.cx + _style.spacing;
 		}
 		_preeditRect.OffsetRect(offsetX, offsetY);
-		width = max(width, real_margin_x + size.cx + real_margin_x);
+		//width = max(width, real_margin_x + size.cx + real_margin_x);
+		height = max(height, real_margin_y + size.cy + real_margin_y);
 	}
 
 	/* Auxiliary */
 	if (!_context.aux.str.empty())
 	{
 		size = GetPreeditSize(dc, _context.aux, pDWR->pTextFormat, pDWR);
-		if(STATUS_ICON_SIZE/ 2 >= (height + size.cy / 2) && ShouldDisplayStatusIcon())
+		if(STATUS_ICON_SIZE/ 2 >= (width + size.cx / 2) && ShouldDisplayStatusIcon())
 		{
-			height += (STATUS_ICON_SIZE - size.cy) / 2 ;
+			width += (STATUS_ICON_SIZE - size.cx) / 2;
 			_auxiliaryRect.SetRect(real_margin_x , height, real_margin_x  + size.cx, height + size.cy);
-			height += size.cy + (STATUS_ICON_SIZE - size.cy) / 2 + _style.spacing;
+			width += size.cx + (STATUS_ICON_SIZE - size.cx) / 2 + _style.spacing;
 		}
 		else
 		{
 			_auxiliaryRect.SetRect(real_margin_x , height, real_margin_x  + size.cx, height + size.cy);
-			height += size.cy + _style.spacing;
+			width += size.cx + _style.spacing;
 		}
 		_auxiliaryRect.OffsetRect(offsetX, offsetY);
-		width = max(width, real_margin_x + size.cx + real_margin_x);
+		height = max(height, real_margin_y + size.cy + real_margin_y);
 	}
 	/* Candidates */
-	int w = real_margin_x, h = height, ww = 0;
-	for (size_t i = 0; i < candidates.size() && i < MAX_CANDIDATES_COUNT; ++i)
+	int w = width, h = real_margin_y, hh = 0, max_bot_candidate_rect = 0;
+	if (candidates.size() == 0)
+		w -= _style.spacing;
+	else
 	{
-		h = real_margin_y;
-		//if (i == id) w += base_offset;
-		if (i > 0)
-			w += ww + _style.candidate_spacing - 1;
-
-		/* Label */
-		std::wstring label = GetLabelText(labels, i, _style.label_text_format.c_str());
-		GetTextSizeDW(label, label.length(), pDWR->pLabelTextFormat, pDWR, &size);
-
-		_candidateLabelRects[i].SetRect(w, h, w + size.cx * labelFontValid, h + size.cy);
-		_candidateLabelRects[i].OffsetRect(offsetX, offsetY);
-		//w += (size.cx + space) * ((int)(pFonts->m_LabelFont.m_FontPoint > 0)), h = max(h, size.cy);
-		h += (size.cy + space) * labelFontValid;
-		ww = max(ww, size.cx);
-		height = max(height, h);
-
-		/* Text */
-		const std::wstring& text = candidates.at(i).str;
-		GetTextSizeDW(text, text.length(), pDWR->pTextFormat, pDWR, &size);
-
-		_candidateTextRects[i].SetRect(w, h, w + size.cx * textFontValid, h + size.cy);
-		_candidateTextRects[i].OffsetRect(offsetX, offsetY);
-		//w += (size.cx + space) * ((int)(pFonts->m_TextFont.m_FontPoint > 0)), h = max(h, size.cy);
-		h += (size.cy + space) * textFontValid;
-		ww = max(ww, size.cx);
-		height = max(height, h);
-
-		/* Comment */
-		if (!comments.at(i).str.empty() && cmtFontValid)
+		for (size_t i = 0; i < candidates.size() && i < MAX_CANDIDATES_COUNT; ++i)
 		{
-			const std::wstring& comment = comments.at(i).str;
-			GetTextSizeDW(comment, comment.length(), pDWR->pCommentTextFormat, pDWR, &size);
-
-			_candidateCommentRects[i].SetRect(w, h, w + size.cx + space, h + size.cy);
-			//w += (size.cx + space) * ((int)(pFonts->m_CommentFont.m_FontPoint > 0)), h = max(h, size.cy);
-			h += (size.cy + space) * cmtFontValid;
-			ww = max(ww, size.cx);
+			int wid = 0;
+			h = real_margin_y;
+			/* Label */
+			std::wstring label = GetLabelText(labels, i, _style.label_text_format.c_str());
+			GetTextSizeDW(label, label.length(), pDWR->pLabelTextFormat, pDWR, &size);
+			_candidateLabelRects[i].SetRect(w, h, w + size.cx * labelFontValid, h + size.cy);
+			_candidateLabelRects[i].OffsetRect(offsetX, offsetY);
+			h += (size.cy + space) * labelFontValid;
 			height = max(height, h);
+			wid = max(wid, size.cx);
+
+			/* Text */
+			const std::wstring& text = candidates.at(i).str;
+			GetTextSizeDW(text, text.length(), pDWR->pTextFormat, pDWR, &size);
+
+			_candidateTextRects[i].SetRect(w, h, w + size.cx * textFontValid, h + size.cy);
+			_candidateTextRects[i].OffsetRect(offsetX, offsetY);
+			h += (size.cy + space) * textFontValid;
+			height = max(height, h);
+			wid = max(wid, size.cx);
+
+			/* Comment */
+			if (!comments.at(i).str.empty() && cmtFontValid)
+			{
+				const std::wstring& comment = comments.at(i).str;
+				GetTextSizeDW(comment, comment.length(), pDWR->pCommentTextFormat, pDWR, &size);
+
+				_candidateCommentRects[i].SetRect(w, h, w + size.cx, h + size.cy);
+				h += size.cy * cmtFontValid;
+				height = max(height, h);
+				wid = max(wid, size.cx);
+			}
+			else /* Used for highlighted candidate calculation below */
+			{
+				h -= space;
+				_candidateCommentRects[i].SetRect(w, h, w, h);
+				wid = max(wid, size.cx);
+			}
+			_candidateCommentRects[i].OffsetRect(offsetX, offsetY);
+
+			_candidateRects[i].left = min(_candidateLabelRects[i].left, _candidateTextRects[i].left);
+			_candidateRects[i].left = min(_candidateRects[i].left, _candidateCommentRects[i].left);
+			_candidateRects[i].right = max(_candidateLabelRects[i].right, _candidateTextRects[i].right);
+			_candidateRects[i].right = max(_candidateRects[i].right, _candidateCommentRects[i].right);
+			_candidateRects[i].top = _candidateLabelRects[i].top;
+			if (!comments.at(i).str.empty() && cmtFontValid)
+				_candidateRects[i].bottom = _candidateCommentRects[i].bottom;
+			else
+				_candidateRects[i].bottom = _candidateTextRects[i].bottom;
+				
+
+			max_bot_candidate_rect = max(max_bot_candidate_rect, _candidateRects[i].bottom);
+			w += wid + _style.candidate_spacing;
 		}
-		else /* Used for highlighted candidate calculation below */
+		for (size_t i = 0; i < candidates.size() && i < MAX_CANDIDATES_COUNT; ++i)
 		{
-			_candidateCommentRects[i].SetRect(w, h, w, h + size.cy);
+			if (max_bot_candidate_rect > _style.min_height - real_margin_y)
+				_candidateRects[i].bottom = max_bot_candidate_rect;
+			else
+			{
+				_candidateRects[i].bottom = _style.min_height - real_margin_y;
+				height = _candidateRects[0].bottom;
+			}
 		}
-		_candidateCommentRects[i].OffsetRect(offsetX, offsetY);
+		w -= _style.candidate_spacing;
 	}
-
-#if 0
-	int neww = 0;
-	int mintop = _candidateTextRects[0].bottom;
-	int maxbot = _candidateTextRects[0].top;
-	for (size_t i = 0; i < candidates.size() && i < MAX_CANDIDATES_COUNT; ++i)
-	{
-		//int ol = 0, ot = 0, oc = 0;
-		//if (_style.align_type == UIStyle::ALIGN_CENTER)
-		//{
-		//	ol = (h - _candidateLabelRects[i].Height()) / 2;
-		//	ot = (h - _candidateTextRects[i].Height()) / 2;
-		//	oc = (h - _candidateCommentRects[i].Height()) / 2;
-		//}
-		//else if (_style.align_type == UIStyle::ALIGN_BOTTOM)
-		//{
-		//	ol = (h - _candidateLabelRects[i].Height()) ;
-		//	ot = (h - _candidateTextRects[i].Height()) ;
-		//	oc = (h - _candidateCommentRects[i].Height()) ;
-
-		//}
-		//_candidateLabelRects[i].OffsetRect(0, ol);
-		//_candidateTextRects[i].OffsetRect(0, ot);
-		//_candidateCommentRects[i].OffsetRect(0, oc);
-
-		mintop = min(mintop, _candidateLabelRects[i].top);
-		mintop = min(mintop, _candidateTextRects[i].top);
-		mintop = min(mintop, _candidateCommentRects[i].top);
-		maxbot = max(maxbot, _candidateLabelRects[i].bottom);
-		maxbot = max(maxbot, _candidateTextRects[i].bottom);
-		maxbot = max(maxbot, _candidateCommentRects[i].bottom);
-		//neww = min(neww, ol);
-		//neww = min(neww, ot);
-		//neww = min(neww, oc);
-	}
-	//w -= neww;
-	w += real_margin_x;
-
-	/* Highlighted Candidate */
-	for (size_t i = 0; i < candidates.size() && i < MAX_CANDIDATES_COUNT; ++i)
-	{
-		int hlLeft = _candidateTextRects[i].left;
-		int hlRight = _candidateTextRects[i].right;
-
-		if (_candidateLabelRects[i].Width() > 0)
-		{
-			hlLeft = min(_candidateLabelRects[i].left, hlLeft);
-			hlRight = max(_candidateLabelRects[i].right, hlRight);
-		}
-		if (_candidateCommentRects[i].Height() > 0)
-		{
-			hlLeft = min(hlLeft, _candidateCommentRects[i].left);
-			hlRight = max(hlRight, _candidateCommentRects[i].right);
-		}
-		//hlTop = min(mintop, hlTop);
-		//hlBot = max(maxbot, hlBot);
-		int gap = (_style.hilited_mark_color & 0xff000000)!=0 && id == i ? base_offset : 0;
-		int hlTop = min(_candidateLabelRects[i].top, mintop);
-		int hlBot = max(_candidateCommentRects[i].bottom, maxbot);
-		//_candidateRects[i].SetRect(_candidateLabelRects[i].left - gap, hlTop, _candidateCommentRects[i].right, hlBot);
-		_candidateRects[i].SetRect(hlLeft, mintop, hlRight, maxbot);
-	}
-
-#endif
+	//height = max(height, h);
 	width = max(width, w);
-	width += ww;
-	//height += h;
-
-	if (candidates.size())
-		height += _style.spacing;
 
 	/* Trim the last spacing */
-	//if (height > 0) height -= _style.spacing;
 	height += real_margin_y;
+	width += real_margin_x;
 
-	if (!_context.preedit.str.empty() && !candidates.empty())
-	{
-		width = max(width, _style.min_width);
-		height = max(height, _style.min_height);
-	}
+	_highlightRect = _candidateRects[id];
 	UpdateStatusIconLayout(&width, &height);
 	_contentSize.SetSize(width + 2 * offsetX, height + 2 * offsetY);
 
@@ -212,7 +166,7 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 	if (_style.border % 2 == 0)	_contentRect.DeflateRect(1, 1);
 
 	//_candidateRects[candidates.size() - 1].right = width - real_margin_x + offsetX;
-	_highlightRect = _candidateRects[id];
+	//_highlightRect = _candidateRects[id];
 
 }
 

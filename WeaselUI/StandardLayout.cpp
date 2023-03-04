@@ -101,17 +101,30 @@ CSize StandardLayout::GetPreeditSize(CDCHandle dc, const weasel::Text& text, IDW
 				const weasel::TextRange &range = attrs[i].range;
 				if (range.start < range.end)
 				{
-					if (range.start > 0)
-						size.cx += _style.hilite_spacing;
+					if (_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
+					{
+						if (range.start > 0)
+							size.cy += _style.hilite_spacing;
+						else
+							size.cy += _style.hilite_padding;
+						if (range.end < static_cast<int>(preedit.length()))
+							size.cy += _style.hilite_spacing;
+						else
+							size.cy += _style.hilite_padding;
+					}
 					else
-						size.cx += _style.hilite_padding;
-					if (range.end < static_cast<int>(preedit.length()))
-						size.cx += _style.hilite_spacing;
-					else
-						size.cx += _style.hilite_padding;
+					{
+						if (range.start > 0)
+							size.cx += _style.hilite_spacing;
+						else
+							size.cx += _style.hilite_padding;
+						if (range.end < static_cast<int>(preedit.length()))
+							size.cx += _style.hilite_spacing;
+						else
+							size.cx += _style.hilite_padding;
+					}
 				}
-				// only one highlighted, break to save time
-				break;
+				// only one highlighted, break to save time break;
 			}
 		}
 	}
@@ -163,7 +176,7 @@ void weasel::StandardLayout::_PrepareRoundInfo(CDCHandle& dc)
 			// level 1: m_style.inline_preedit 
 			// level 2: BackType
 			// level 3: IsTopLeftNeedToRound, IsBottomLeftNeedToRound, IsTopRightNeedToRound, IsBottomRightNeedToRound
-			const static bool is_to_round_corner[2][2][5][4] =
+			const static bool is_to_round_corner[3][2][5][4] =
 			{
 				// LAYOUT_VERTICAL
 				{
@@ -202,7 +215,26 @@ void weasel::StandardLayout::_PrepareRoundInfo(CDCHandle& dc)
 						{false, false, true, true},		// LAST_CAND
 						{true, true, true, true},		// ONLY_CAND
 					}
-				}
+				},
+				// LAYOUT_VERTICAL_TEXT
+				{
+					// not inline_preedit
+					{
+						{current_hemispherical_dome_status, current_hemispherical_dome_status && (!m_candidateCount), false, false},		// TEXT
+						{false, true, false, false},		// FIRST_CAND
+						{false, false, false, false},	// MID_CAND
+						{false, false, false, true},		// LAST_CAND
+						{false, true, false, true},		// ONLY_CAND
+					} ,
+					// inline_preedit
+					{
+						{true, true, true, true},		// TEXT
+						{true, true, false, false},		// FIRST_CAND
+						{false, false, false, false},	// MID_CAND
+						{false, false, true, true},		// LAST_CAND
+						{true, true, true, true},		// ONLY_CAND
+					}
+				} ,
 			};
 			int type = 1;
 			if (m_candidateCount == 1)
@@ -211,18 +243,20 @@ void weasel::StandardLayout::_PrepareRoundInfo(CDCHandle& dc)
 				type = 2;
 			else if (i == m_candidateCount - 1)
 				type = 3;
-			_roundInfo[i].IsTopLeftNeedToRound = is_to_round_corner[_style.layout_type == UIStyle::LAYOUT_HORIZONTAL][_style.inline_preedit][type][0];
-			_roundInfo[i].IsBottomLeftNeedToRound = is_to_round_corner[_style.layout_type == UIStyle::LAYOUT_HORIZONTAL][_style.inline_preedit][type][1];
-			_roundInfo[i].IsTopRightNeedToRound = is_to_round_corner[_style.layout_type == UIStyle::LAYOUT_HORIZONTAL][_style.inline_preedit][type][2];
-			_roundInfo[i].IsBottomRightNeedToRound = is_to_round_corner[_style.layout_type == UIStyle::LAYOUT_HORIZONTAL][_style.inline_preedit][type][3];
+			const int tmp[5]= { UIStyle::LAYOUT_VERTICAL, UIStyle::LAYOUT_HORIZONTAL, UIStyle::LAYOUT_VERTICAL_TEXT, UIStyle::LAYOUT_VERTICAL, UIStyle::LAYOUT_HORIZONTAL };
+			int layout_type = tmp[_style.layout_type];
+			_roundInfo[i].IsTopLeftNeedToRound = is_to_round_corner[layout_type][_style.inline_preedit][type][0];
+			_roundInfo[i].IsBottomLeftNeedToRound = is_to_round_corner[layout_type][_style.inline_preedit][type][1];
+			_roundInfo[i].IsTopRightNeedToRound = is_to_round_corner[layout_type][_style.inline_preedit][type][2];
+			_roundInfo[i].IsBottomRightNeedToRound = is_to_round_corner[layout_type][_style.inline_preedit][type][3];
 			_roundInfo[i].Hemispherical = current_hemispherical_dome_status;
 			if (i == m_candidateCount - 1)
 			{
 				type = 0;
-				_textRoundInfo.IsTopLeftNeedToRound = is_to_round_corner[_style.layout_type == UIStyle::LAYOUT_HORIZONTAL][_style.inline_preedit][type][0];
-				_textRoundInfo.IsBottomLeftNeedToRound = is_to_round_corner[_style.layout_type == UIStyle::LAYOUT_HORIZONTAL][_style.inline_preedit][type][1];
-				_textRoundInfo.IsTopRightNeedToRound = is_to_round_corner[_style.layout_type == UIStyle::LAYOUT_HORIZONTAL][_style.inline_preedit][type][2];
-				_textRoundInfo.IsBottomRightNeedToRound = is_to_round_corner[_style.layout_type == UIStyle::LAYOUT_HORIZONTAL][_style.inline_preedit][type][3];
+				_textRoundInfo.IsTopLeftNeedToRound = is_to_round_corner[layout_type][_style.inline_preedit][type][0];
+				_textRoundInfo.IsBottomLeftNeedToRound = is_to_round_corner[layout_type][_style.inline_preedit][type][1];
+				_textRoundInfo.IsTopRightNeedToRound = is_to_round_corner[layout_type][_style.inline_preedit][type][2];
+				_textRoundInfo.IsBottomRightNeedToRound = is_to_round_corner[layout_type][_style.inline_preedit][type][3];
 				_textRoundInfo.Hemispherical = textHemispherical;
 			}
 		}
