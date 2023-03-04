@@ -129,16 +129,12 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 				_candidateRects[i].bottom = _candidateCommentRects[i].bottom;
 			else
 				_candidateRects[i].bottom = _candidateTextRects[i].bottom;
-				
 
 			max_bot_candidate_rect = max(max_bot_candidate_rect, _candidateRects[i].bottom);
 			w += wid + _style.candidate_spacing;
 		}
 		for (size_t i = 0; i < candidates.size() && i < MAX_CANDIDATES_COUNT; ++i)
-		{
 			_candidateRects[i].bottom = max_bot_candidate_rect;
-		}
-		//height = _candidateRects[0].bottom;
 		w -= _style.candidate_spacing;
 	}
 	//height = max(height, h);
@@ -153,8 +149,47 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 		if(_candidateRects[i].bottom < height - real_margin_y)
 			_candidateRects[i].bottom = height - real_margin_y;
 	}
+
+	if (!IsInlinePreedit() && !_context.preedit.str.empty())
+		_preeditRect.OffsetRect((width - real_margin_x) - _preeditRect.right, 0);
+	if (!_context.aux.str.empty())
+		_auxiliaryRect.OffsetRect((width - real_margin_x - _auxiliaryRect.right), 0);
+	if (candidates.size())
+	{
+		for (size_t i = 0; i < candidates.size() && i < MAX_CANDIDATES_COUNT; ++i)
+		{
+			if (i == 0)
+			{
+				if (!IsInlinePreedit() && !_context.preedit.str.empty())
+				{
+					_candidateLabelRects[i].OffsetRect((_preeditRect.left - _style.spacing) - _candidateRects[i].right, 0);
+					_candidateTextRects[i].OffsetRect((_preeditRect.left - _style.spacing) - _candidateRects[i].right, 0);
+					_candidateCommentRects[i].OffsetRect((_preeditRect.left - _style.spacing) - _candidateRects[i].right, 0);
+					_candidateRects[i].OffsetRect((_preeditRect.left - _style.spacing) - _candidateRects[i].right, 0);
+				}
+				else
+				{
+					_candidateLabelRects[i].OffsetRect((width - real_margin_x) - _candidateRects[i].right, 0);
+					_candidateTextRects[i].OffsetRect((width - real_margin_x) - _candidateRects[i].right, 0);
+					_candidateLabelRects[i].OffsetRect((width - real_margin_x) - _candidateRects[i].right, 0);
+					_candidateRects[i].OffsetRect((width - real_margin_x) - _candidateRects[i].right, 0);
+				}
+			}
+			else
+			{
+				_candidateLabelRects[i].OffsetRect((_candidateRects[i-1].left - _style.candidate_spacing) - _candidateRects[i].right, 0);
+				_candidateTextRects[i].OffsetRect((_candidateRects[i-1].left - _style.candidate_spacing) - _candidateRects[i].right, 0);
+				_candidateCommentRects[i].OffsetRect((_candidateRects[i-1].left - _style.candidate_spacing) - _candidateRects[i].right, 0);
+				_candidateRects[i].OffsetRect((_candidateRects[i-1].left - _style.candidate_spacing) - _candidateRects[i].right, 0);
+			}
+		}
+	}
+
 	_highlightRect = _candidateRects[id];
 	UpdateStatusIconLayout(&width, &height);
+
+
+
 	_contentSize.SetSize(width + 2 * offsetX, height + 2 * offsetY);
 
 	_contentRect.SetRect(0, 0, _contentSize.cx, _contentSize.cy);
