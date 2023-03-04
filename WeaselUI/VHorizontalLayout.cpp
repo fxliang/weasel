@@ -94,7 +94,6 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 			/* Text */
 			const std::wstring& text = candidates.at(i).str;
 			GetTextSizeDW(text, text.length(), pDWR->pTextFormat, pDWR, &size);
-
 			_candidateTextRects[i].SetRect(w, h, w + size.cx * textFontValid, h + size.cy);
 			_candidateTextRects[i].OffsetRect(offsetX, offsetY);
 			h += (size.cy + space) * textFontValid;
@@ -116,6 +115,7 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 			{
 				h -= space;
 				_candidateCommentRects[i].SetRect(w, h, w, h);
+				height = max(height, h);
 				wid = max(wid, size.cx);
 			}
 			_candidateCommentRects[i].OffsetRect(offsetX, offsetY);
@@ -136,14 +136,9 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 		}
 		for (size_t i = 0; i < candidates.size() && i < MAX_CANDIDATES_COUNT; ++i)
 		{
-			if (max_bot_candidate_rect > _style.min_height - real_margin_y)
-				_candidateRects[i].bottom = max_bot_candidate_rect;
-			else
-			{
-				_candidateRects[i].bottom = _style.min_height - real_margin_y;
-				height = _candidateRects[0].bottom;
-			}
+			_candidateRects[i].bottom = max_bot_candidate_rect;
 		}
+		//height = _candidateRects[0].bottom;
 		w -= _style.candidate_spacing;
 	}
 	//height = max(height, h);
@@ -153,6 +148,11 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 	height += real_margin_y;
 	width += real_margin_x;
 
+	for (size_t i = 0; i < candidates.size() && i < MAX_CANDIDATES_COUNT; ++i)
+	{
+		if(_candidateRects[i].bottom < height - real_margin_y)
+			_candidateRects[i].bottom = height - real_margin_y;
+	}
 	_highlightRect = _candidateRects[id];
 	UpdateStatusIconLayout(&width, &height);
 	_contentSize.SetSize(width + 2 * offsetX, height + 2 * offsetY);
