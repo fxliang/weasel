@@ -21,14 +21,6 @@ namespace weasel
 			*ppT = NULL;
 		}
 	}
-	class FontInfo
-	{
-	public:
-		std::wstring m_FontFace;
-		int m_FontPoint;
-		int m_FontWeight;
-		int m_FontStyle;
-	};
 	class DirectWriteResources
 	{
 	public:
@@ -52,17 +44,5 @@ namespace weasel
 		UIStyle& _style;
 		void _ParseFontFace(const std::wstring fontFaceStr, std::wstring& fontFace, DWRITE_FONT_WEIGHT& fontWeight, DWRITE_FONT_STYLE& fontStyle);
 		void _SetFontFallback(IDWriteTextFormat1* pTextFormat, std::vector<std::wstring> fontVector);
-	};
-	class GDIFonts
-	{
-	public:
-		~GDIFonts() {}
-		//GDIFonts(wstring labelFontFace, int labelFontPoint, std::wstring textFontFace, int textFontPoint, std::wstring commentFontFace, int commentFontPoint);
-		GDIFonts(const UIStyle& style);
-		void InitResources(const UIStyle& style);
-		void _ParseFontFace(const std::wstring fontFaceStr, std::wstring& fontFace, int& fontWeight);
-		FontInfo m_LabelFont;
-		FontInfo m_TextFont;
-		FontInfo m_CommentFont;
 	};
 };

@@ -135,8 +135,6 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 			max_bot_candidate_rect = max(max_bot_candidate_rect, _candidateRects[i].bottom);
 			w += wid + _style.candidate_spacing;
 		}
-		for (size_t i = 0; i < candidates.size() && i < MAX_CANDIDATES_COUNT; ++i)
-			_candidateRects[i].bottom = max_bot_candidate_rect;
 		w -= _style.candidate_spacing;
 	}
 	width = max(width, w);
@@ -166,6 +164,7 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 			_candidateLabelRects[i].OffsetRect(offset, 0);
 			_candidateTextRects[i].OffsetRect(offset, 0);
 			_candidateCommentRects[i].OffsetRect(offset, 0);
+			_candidateRects[i].bottom = max_bot_candidate_rect;
 		}
 		if (!IsInlinePreedit() && !_context.preedit.str.empty())
 			_preeditRect.OffsetRect(_candidateRects[0].right + _style.spacing - _preeditRect.left, 0);
