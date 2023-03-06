@@ -17,7 +17,7 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 	int id = _context.cinfo.highlighted;
 	CSize size;
 
-	const int space = _style.hilite_spacing;
+	//const int space = _style.hilite_spacing;
 	int real_margin_x = (abs(_style.margin_x) > _style.hilite_padding) ? abs(_style.margin_x) : _style.hilite_padding;
 	int real_margin_y = (abs(_style.margin_y) > _style.hilite_padding) ? abs(_style.margin_y) : _style.hilite_padding;
 	int width = real_margin_x, height = real_margin_y;
@@ -86,7 +86,7 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 			GetTextSizeDW(label, label.length(), pDWR->pLabelTextFormat, pDWR, &size);
 			_candidateLabelRects[i].SetRect(w, h, w + size.cx * labelFontValid, h + size.cy);
 			_candidateLabelRects[i].OffsetRect(offsetX, offsetY);
-			h += (size.cy + space) * labelFontValid;
+			h += (size.cy + _style.hilite_spacing) * labelFontValid;
 			height = max(height, h);
 			wid = max(wid, size.cx);
 
@@ -95,7 +95,7 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 			GetTextSizeDW(text, text.length(), pDWR->pTextFormat, pDWR, &size);
 			_candidateTextRects[i].SetRect(w, h, w + size.cx * textFontValid, h + size.cy);
 			_candidateTextRects[i].OffsetRect(offsetX, offsetY);
-			h += (size.cy + space) * textFontValid;
+			h += (size.cy + _style.hilite_spacing*(!comments.at(i).str.empty() && cmtFontValid)) * textFontValid;
 			height = max(height, h);
 			wid = max(wid, size.cx);
 
@@ -104,7 +104,6 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 			{
 				const std::wstring& comment = comments.at(i).str;
 				GetTextSizeDW(comment, comment.length(), pDWR->pCommentTextFormat, pDWR, &size);
-
 				_candidateCommentRects[i].SetRect(w, h, w + size.cx, h + size.cy);
 				h += size.cy * cmtFontValid;
 				height = max(height, h);
@@ -112,7 +111,6 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 			}
 			else /* Used for highlighted candidate calculation below */
 			{
-				h -= space;
 				_candidateCommentRects[i].SetRect(w, h, w, h);
 				height = max(height, h);
 				wid = max(wid, size.cx);
@@ -124,10 +122,7 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 			_candidateRects[i].right = max(_candidateLabelRects[i].right, _candidateTextRects[i].right);
 			_candidateRects[i].right = max(_candidateRects[i].right, _candidateCommentRects[i].right);
 			_candidateRects[i].top = _candidateLabelRects[i].top - base_offset;
-			if (!comments.at(i).str.empty() && cmtFontValid)
-				_candidateRects[i].bottom = _candidateCommentRects[i].bottom;
-			else
-				_candidateRects[i].bottom = _candidateTextRects[i].bottom;
+			_candidateRects[i].bottom = _candidateCommentRects[i].bottom;
 
 			int ol = 0, ot = 0, oc = 0;
 			ol = (wid - _candidateLabelRects[i].Width()) / 2;

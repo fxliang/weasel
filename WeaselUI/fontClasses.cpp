@@ -60,7 +60,7 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 	SafeRelease(&pTextFormat);
 	SafeRelease(&pLabelTextFormat);
 	SafeRelease(&pCommentTextFormat);
-	DWRITE_WORD_WRAPPING wrapping = _style.max_width == 0 ? DWRITE_WORD_WRAPPING_NO_WRAP : DWRITE_WORD_WRAPPING_WHOLE_WORD;
+	DWRITE_WORD_WRAPPING wrapping = (_style.max_width == 0 || _style.max_height == 0) ? DWRITE_WORD_WRAPPING_NO_WRAP : DWRITE_WORD_WRAPPING_WHOLE_WORD;
 	HRESULT hResult = S_OK;
 	std::vector<std::wstring> fontFaceStrVector;
 	// text font text format set up
