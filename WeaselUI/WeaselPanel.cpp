@@ -66,7 +66,11 @@ void WeaselPanel::_CreateLayout()
 		delete m_layout;
 
 	Layout* layout = NULL;
-	if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL ||
+	if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
+	{
+		layout = new VHorizontalLayout(m_style, m_ctx, m_status);
+	}
+	else if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL ||
 		m_style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN)
 	{
 		layout = new VerticalLayout(m_style, m_ctx, m_status);
@@ -75,10 +79,6 @@ void WeaselPanel::_CreateLayout()
 		m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN)
 	{
 		layout = new HorizontalLayout(m_style, m_ctx, m_status);
-	}
-	else if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
-	{
-		layout = new VHorizontalLayout(m_style, m_ctx, m_status);
 	}
 
 	if ((m_style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN ||
