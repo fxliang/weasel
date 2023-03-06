@@ -280,6 +280,7 @@ namespace weasel
 		int min_width;
 		int max_width;
 		int min_height;
+		int max_height;
 		int border;
 		int margin_x;
 		int margin_y;
@@ -336,6 +337,7 @@ namespace weasel
 			min_width(0),
 			max_width(0),
 			min_height(0),
+			max_height(0),
 			border(0),
 			margin_x(0),
 			margin_y(0),
@@ -393,6 +395,7 @@ namespace weasel
 					|| min_width != st.min_width
 					|| max_width != st.max_width
 					|| min_height != st.min_height
+					|| max_height != st.max_height
 					|| border != st.border
 					|| margin_x != st.margin_x
 					|| margin_y != st.margin_y
@@ -455,6 +458,7 @@ namespace boost {
 			ar & s.min_width;
 			ar & s.max_width;
 			ar & s.min_height;
+			ar & s.max_height;
 			ar & s.border;
 			ar & s.margin_x;
 			ar & s.margin_y;

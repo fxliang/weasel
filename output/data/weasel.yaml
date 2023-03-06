@@ -29,9 +29,10 @@ style:
   mark_text: ""
   layout:
     align_type: bottom
-    max_width: 0
+    max_width: 1080
     min_width: 160
     min_height: 0
+    max_height: 600
     border_width: 3
     margin_x: 12
     margin_y: 12

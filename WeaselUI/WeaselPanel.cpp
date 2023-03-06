@@ -420,7 +420,13 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 				CRect rc = m_layout->GetHighlightRect();
 				rc.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
 				int vgap = m_layout->MARK_HEIGHT ? (rc.Height() - m_layout->MARK_HEIGHT) / 2 : 0;
-				CRect hlRc(rc.left + m_style.hilite_padding + (m_layout->MARK_GAP - m_layout->MARK_WIDTH) / 2 + 1, rc.top + vgap,
+				int hgap = m_layout->MARK_WIDTH ? (rc.Width() - m_layout->MARK_WIDTH) / 2 : 0;
+				CRect hlRc;
+				if(m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
+					hlRc = CRect(rc.left + hgap, rc.top + m_style.hilite_padding + (m_layout->MARK_GAP - m_layout->MARK_HEIGHT) / 2 + 1,
+					rc.left + hgap + m_layout->MARK_WIDTH, rc.top + m_style.hilite_padding + (m_layout->MARK_GAP - m_layout->MARK_HEIGHT) / 2 + 1 + m_layout->MARK_HEIGHT);
+				else
+					hlRc = CRect(rc.left + m_style.hilite_padding + (m_layout->MARK_GAP - m_layout->MARK_WIDTH) / 2 + 1, rc.top + vgap,
 					rc.left + m_style.hilite_padding + (m_layout->MARK_GAP - m_layout->MARK_WIDTH) / 2 + 1 + m_layout->MARK_WIDTH, rc.bottom - vgap);
 				_TextOut(hlRc, m_style.mark_text.c_str(), m_style.mark_text.length(), m_style.hilited_mark_color, pDWR->pTextFormat);
 			}
@@ -506,8 +512,9 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 			CRect backrc = m_layout->GetContentRect();
 			_HighlightText(memDC, backrc, m_style.back_color, m_style.shadow_color, m_style.round_corner_ex, BackType::BACKGROUND, m_style.border_color);
 		}
-		drawn |= _DrawPreeditBack(m_ctx.aux, memDC, m_layout->GetAuxiliaryRect());
-		if (!m_layout->IsInlinePreedit())
+		if(!m_ctx.aux.str.empty())
+			drawn |= _DrawPreeditBack(m_ctx.aux, memDC, m_layout->GetAuxiliaryRect());
+		if (!m_layout->IsInlinePreedit() && !m_ctx.preedit.str.empty())
 			drawn |= _DrawPreeditBack(m_ctx.preedit, memDC, m_layout->GetPreeditRect());
 		if (m_candidateCount)
 			drawn |= _DrawCandidates(memDC, true);
@@ -517,9 +524,10 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 		pDWR->pRenderTarget->BindDC(memDC, &rcw);
 		pDWR->pRenderTarget->BeginDraw();
 		// draw auxiliary string
+		if(!m_ctx.aux.str.empty())
 		drawn |= _DrawPreedit(m_ctx.aux, memDC, m_layout->GetAuxiliaryRect());
 		// draw preedit string
-		if (!m_layout->IsInlinePreedit())
+		if (!m_layout->IsInlinePreedit() && !m_ctx.preedit.str.empty())
 			drawn |= _DrawPreedit(m_ctx.preedit, memDC, m_layout->GetPreeditRect());
 		// draw candidates string
 		if(m_candidateCount)
