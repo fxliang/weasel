@@ -70,21 +70,24 @@ void WeaselPanel::_CreateLayout()
 	{
 		layout = new VHorizontalLayout(m_style, m_ctx, m_status);
 	}
-	else if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL ||
-		m_style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN)
+	else
 	{
-		layout = new VerticalLayout(m_style, m_ctx, m_status);
-	}
-	else if (m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL ||
-		m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN)
-	{
-		layout = new HorizontalLayout(m_style, m_ctx, m_status);
-	}
+		if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL ||
+				m_style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN)
+		{
+			layout = new VerticalLayout(m_style, m_ctx, m_status);
+		}
+		else if (m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL ||
+				m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN)
+		{
+			layout = new HorizontalLayout(m_style, m_ctx, m_status);
+		}
 
-	if ((m_style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN ||
-		m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN) && m_style.layout_type != UIStyle::LAYOUT_VERTICAL_TEXT)
-	{
-		layout = new FullScreenLayout(m_style, m_ctx, m_status, m_inputPos, layout);
+		if ((m_style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN ||
+					m_style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN) && m_style.layout_type != UIStyle::LAYOUT_VERTICAL_TEXT)
+		{
+			layout = new FullScreenLayout(m_style, m_ctx, m_status, m_inputPos, layout);
+		}
 	}
 	m_layout = layout;
 }
@@ -282,12 +285,11 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 			if (range.end < static_cast<int>(t.length())) {
 				// zzz[yyy]xxx
 				std::wstring str_after(t.substr(range.end));
-				//CRect rc_after(x, rc.top, rc.right, rc.bottom);
 				CRect rc_after;
 				if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
-					rc_after = CRect(x, y, rc.right, rc.bottom);
+					rc_after = CRect(x, y, rc.right, max(rc.bottom, y));
 				else
-				rc_after = CRect(x, rc.top, rc.right, rc.bottom);
+					rc_after = CRect(x, rc.top, max(rc.right, x), rc.bottom);
 
 				_TextOut(rc_after, str_after.c_str(), str_after.length(), m_style.text_color, txtFormat);
 			}

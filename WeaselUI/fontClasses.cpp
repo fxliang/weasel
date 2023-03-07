@@ -33,8 +33,8 @@ DirectWriteResources::DirectWriteResources(weasel::UIStyle& style) :
 	}
 	//get the dpi information
 	pD2d1Factory->GetDesktopDpi(&dpiScaleX_, &dpiScaleY_);
-	dpiScaleX_ /= 72.0f;
-	dpiScaleY_ /= 72.0f;
+	dpiScaleX_ /= 96.0f;
+	dpiScaleY_ /= 96.0f;
 
 	InitResources(style);
 }
@@ -103,7 +103,7 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 		else
 			pPreeditTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
 		pPreeditTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
-		pPreeditTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
+		pPreeditTextFormat->SetWordWrapping(wrapping);
 		if (fontFaceStrVector.size() > 1)
 			_SetFontFallback(pPreeditTextFormat, fontFaceStrVector);
 	}
