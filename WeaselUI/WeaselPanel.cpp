@@ -656,7 +656,7 @@ void WeaselPanel::_RepositionWindow(bool adj)
 			y -= m_style.shadow_radius / 2;
 		}
 	}
-	if(m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
+	if(m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT && !m_style.vertical_text_left_to_right)
 	{
 		x -= width;
 	}
@@ -691,8 +691,9 @@ bool WeaselPanel::_TextOutWithFallbackDW (CRect const rc, std::wstring psz, size
 		pDWR->pDWFactory->CreateTextLayout( psz.c_str(), (UINT32)psz.size(), pTextFormat, (float)rc.Width(), (float)rc.Height(), reinterpret_cast<IDWriteTextLayout**>(&pDWR->pTextLayout));
 		if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
 		{
+			DWRITE_FLOW_DIRECTION flow = m_style.vertical_text_left_to_right ? DWRITE_FLOW_DIRECTION_LEFT_TO_RIGHT : DWRITE_FLOW_DIRECTION_RIGHT_TO_LEFT;
 			pDWR->pTextLayout->SetReadingDirection(DWRITE_READING_DIRECTION_TOP_TO_BOTTOM);
-			pDWR->pTextLayout->SetFlowDirection(DWRITE_FLOW_DIRECTION_RIGHT_TO_LEFT);
+			pDWR->pTextLayout->SetFlowDirection(flow);
 		}
 
 		// offsetx for font glyph over left

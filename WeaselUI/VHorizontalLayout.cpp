@@ -147,30 +147,33 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 		}
 		height = max(height, _candidateRects[0].Height() + 2*real_margin_y);
 
-		// re position right to left
-		int base_left;
-		if ((!IsInlinePreedit() && !_context.preedit.str.empty()))
-			base_left = _preeditRect.left;
-		else if( !_context.aux.str.empty())
-			base_left = _auxiliaryRect.left;	
-		else
-			base_left = _candidateRects[0].left;
-		for(int i = candidates.size() - 1; i>=0 ; i --)
+		if(!_style.vertical_text_left_to_right)
 		{
-			int offset;
-			if(i == candidates.size() - 1)
-				offset = base_left - _candidateRects[i].left;
+			// re position right to left
+			int base_left;
+			if ((!IsInlinePreedit() && !_context.preedit.str.empty()))
+				base_left = _preeditRect.left;
+			else if( !_context.aux.str.empty())
+				base_left = _auxiliaryRect.left;	
 			else
-				offset = _candidateRects[i+1].right + _style.candidate_spacing - _candidateRects[i].left;
-			_candidateRects[i].OffsetRect(offset, 0);
-			_candidateLabelRects[i].OffsetRect(offset, 0);
-			_candidateTextRects[i].OffsetRect(offset, 0);
-			_candidateCommentRects[i].OffsetRect(offset, 0);
+				base_left = _candidateRects[0].left;
+			for(int i = candidates.size() - 1; i>=0 ; i --)
+			{
+				int offset;
+				if(i == candidates.size() - 1)
+					offset = base_left - _candidateRects[i].left;
+				else
+					offset = _candidateRects[i+1].right + _style.candidate_spacing - _candidateRects[i].left;
+				_candidateRects[i].OffsetRect(offset, 0);
+				_candidateLabelRects[i].OffsetRect(offset, 0);
+				_candidateTextRects[i].OffsetRect(offset, 0);
+				_candidateCommentRects[i].OffsetRect(offset, 0);
+			}
+			if (!IsInlinePreedit() && !_context.preedit.str.empty())
+				_preeditRect.OffsetRect(_candidateRects[0].right + _style.spacing - _preeditRect.left, 0);
+			if (!_context.aux.str.empty())
+				_auxiliaryRect.OffsetRect(_candidateRects[0].right + _style.spacing - _auxiliaryRect.left, 0);
 		}
-		if (!IsInlinePreedit() && !_context.preedit.str.empty())
-			_preeditRect.OffsetRect(_candidateRects[0].right + _style.spacing - _preeditRect.left, 0);
-		if (!_context.aux.str.empty())
-			_auxiliaryRect.OffsetRect(_candidateRects[0].right + _style.spacing - _auxiliaryRect.left, 0);
 	}
 
 	_highlightRect = _candidateRects[id];

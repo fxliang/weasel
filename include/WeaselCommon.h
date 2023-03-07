@@ -262,6 +262,7 @@ namespace weasel
 		LayoutAlignType align_type;
 		PreeditType preedit_type;
 		LayoutType layout_type;
+		bool vertical_text_left_to_right;
 		std::wstring font_face;
 		std::wstring label_font_face;
 		std::wstring comment_font_face;
@@ -334,6 +335,7 @@ namespace weasel
 			label_text_format(L"%s."),
 			mark_text(),
 			layout_type(LAYOUT_VERTICAL),
+			vertical_text_left_to_right(true),
 			min_width(0),
 			max_width(0),
 			min_height(0),
@@ -378,6 +380,7 @@ namespace weasel
 					align_type != st.align_type
 					|| preedit_type != st.preedit_type
 					|| layout_type != st.layout_type
+					|| vertical_text_left_to_right != st.vertical_text_left_to_right
 					|| font_face != st.font_face
 					|| label_font_face != st.label_font_face
 					|| comment_font_face != st.comment_font_face
@@ -455,6 +458,7 @@ namespace boost {
 			ar & s.mark_text;
 			// layout
 			ar & s.layout_type;
+			ar & s.vertical_text_left_to_right;
 			ar & s.min_width;
 			ar & s.max_width;
 			ar & s.min_height;

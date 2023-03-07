@@ -833,6 +833,11 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 		if(vertical_text)
 			style.layout_type = weasel::UIStyle::LAYOUT_VERTICAL_TEXT;
 	}
+	Bool vertical_text_left_to_right = False;
+	if ( RimeConfigGetBool(config, "style/vertical_text_left_to_right", &vertical_text_left_to_right))
+	{
+		style.vertical_text_left_to_right = !!vertical_text_left_to_right;
+	}
 
 	Bool fullscreen = False;
 	if (RimeConfigGetBool(config, "style/fullscreen", &fullscreen) && fullscreen)

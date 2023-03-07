@@ -61,6 +61,7 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 	SafeRelease(&pLabelTextFormat);
 	SafeRelease(&pCommentTextFormat);
 	DWRITE_WORD_WRAPPING wrapping = (_style.max_width == 0 || _style.max_height == 0) ? DWRITE_WORD_WRAPPING_NO_WRAP : DWRITE_WORD_WRAPPING_WHOLE_WORD;
+	DWRITE_FLOW_DIRECTION flow = _style.vertical_text_left_to_right ? DWRITE_FLOW_DIRECTION_LEFT_TO_RIGHT : DWRITE_FLOW_DIRECTION_RIGHT_TO_LEFT;
 	HRESULT hResult = S_OK;
 	std::vector<std::wstring> fontFaceStrVector;
 	// text font text format set up
@@ -76,7 +77,7 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 	{
 		if (vertical_text)
 		{
-			pTextFormat->SetFlowDirection(DWRITE_FLOW_DIRECTION_RIGHT_TO_LEFT);
+			pTextFormat->SetFlowDirection(flow);
 			pTextFormat->SetReadingDirection(DWRITE_READING_DIRECTION_TOP_TO_BOTTOM);
 			pTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
 		}
@@ -96,7 +97,7 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 	{
 		if (vertical_text)
 		{
-			pPreeditTextFormat->SetFlowDirection(DWRITE_FLOW_DIRECTION_RIGHT_TO_LEFT);
+			pPreeditTextFormat->SetFlowDirection(flow);
 			pPreeditTextFormat->SetReadingDirection(DWRITE_READING_DIRECTION_TOP_TO_BOTTOM);
 			pPreeditTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
 		}
@@ -121,7 +122,7 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 	{
 		if (vertical_text)
 		{
-			pLabelTextFormat->SetFlowDirection(DWRITE_FLOW_DIRECTION_RIGHT_TO_LEFT);
+			pLabelTextFormat->SetFlowDirection(flow);
 			pLabelTextFormat->SetReadingDirection(DWRITE_READING_DIRECTION_TOP_TO_BOTTOM);
 			pLabelTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
 		}
@@ -146,7 +147,7 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 	{
 		if (vertical_text)
 		{
-			pCommentTextFormat->SetFlowDirection(DWRITE_FLOW_DIRECTION_RIGHT_TO_LEFT);
+			pCommentTextFormat->SetFlowDirection(flow);
 			pCommentTextFormat->SetReadingDirection(DWRITE_READING_DIRECTION_TOP_TO_BOTTOM);
 			pCommentTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
 		}

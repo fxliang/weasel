@@ -37,8 +37,9 @@ void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, int nCount, 
 	{
 		if (_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
 		{
+			DWRITE_FLOW_DIRECTION flow = _style.vertical_text_left_to_right ? DWRITE_FLOW_DIRECTION_LEFT_TO_RIGHT : DWRITE_FLOW_DIRECTION_RIGHT_TO_LEFT;
 			pDWR->pTextLayout->SetReadingDirection(DWRITE_READING_DIRECTION_TOP_TO_BOTTOM);
-			pDWR->pTextLayout->SetFlowDirection(DWRITE_FLOW_DIRECTION_RIGHT_TO_LEFT);
+			pDWR->pTextLayout->SetFlowDirection(flow);
 		}
 		// 获取文本尺寸  
 		DWRITE_TEXT_METRICS textMetrics;

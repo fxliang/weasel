@@ -27,6 +27,8 @@ style:
   display_tray_icon: false
   label_format: "%s."
   mark_text: ""
+  vertical_text: false
+  vertical_text_left_to_right: false
   layout:
     align_type: bottom
     max_width: 1080
