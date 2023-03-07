@@ -33,8 +33,8 @@ DirectWriteResources::DirectWriteResources(weasel::UIStyle& style) :
 	}
 	//get the dpi information
 	pD2d1Factory->GetDesktopDpi(&dpiScaleX_, &dpiScaleY_);
-	dpiScaleX_ /= 96.0f;
-	dpiScaleY_ /= 96.0f;
+	dpiScaleX_ /= 72.0f;
+	dpiScaleY_ /= 72.0f;
 
 	InitResources(style);
 }
