@@ -659,6 +659,7 @@ void WeaselPanel::_RepositionWindow(bool adj)
 	if(m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT && !m_style.vertical_text_left_to_right)
 	{
 		x -= width;
+		x += m_layout->offsetX;
 	}
 	if (x > rcWorkArea.right)
 		x = rcWorkArea.right;

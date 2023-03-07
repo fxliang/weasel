@@ -33,6 +33,7 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 	int labelFontValid = !!(_style.label_font_point > 0);
 	int textFontValid = !!(_style.font_point > 0);
 	int cmtFontValid = !!(_style.comment_font_point > 0);
+	int candidates_count = candidates.size();
 	/* Preedit */
 	if (!IsInlinePreedit() && !_context.preedit.str.empty())
 	{
@@ -74,11 +75,9 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 	int wids[MAX_CANDIDATES_COUNT] = {0};
 	int w = width, h = real_margin_y, hh = 0, max_bot_candidate_rect = 0;
 	int max_comment_heihgt = 0, max_content_height =  0, comment_shift_heihgt = 0;
-	if (candidates.size() == 0)
-		w -= _style.spacing;
-	else
+	if (candidates_count)
 	{
-		for (size_t i = 0; i < candidates.size() && i < MAX_CANDIDATES_COUNT; ++i)
+		for (size_t i = 0; i < candidates_count && i < MAX_CANDIDATES_COUNT; ++i)
 		{
 			int wid = 0;
 			h = real_margin_y + base_offset;
@@ -125,9 +124,9 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 	width += real_margin_x;
 
 	// reposition candidates
-	if (candidates.size())
+	if (candidates_count)
 	{
-		for (size_t i = 0; i < candidates.size() && i < MAX_CANDIDATES_COUNT; ++i)
+		for (size_t i = 0; i < candidates_count && i < MAX_CANDIDATES_COUNT; ++i)
 		{
 			int ol = 0, ot = 0, oc = 0;
 			ol = (wids[i] - _candidateLabelRects[i].Width()) / 2;
@@ -146,6 +145,9 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 			_candidateRects[i].bottom = _candidateCommentRects[i].top + max_comment_heihgt;
 		}
 		height = max(height, _candidateRects[0].Height() + 2*real_margin_y);
+		if((_candidateRects[0].top - real_margin_y + height - real_margin_y) > _candidateRects[0].bottom)
+			for (size_t i = 0; i < candidates_count && i < MAX_CANDIDATES_COUNT; ++i)
+				_candidateRects[i].bottom = (_candidateRects[0].top - real_margin_y + height - real_margin_y);
 
 		if(!_style.vertical_text_left_to_right)
 		{
@@ -157,10 +159,10 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 				base_left = _auxiliaryRect.left;	
 			else
 				base_left = _candidateRects[0].left;
-			for(int i = candidates.size() - 1; i>=0 ; i --)
+			for(int i = candidates_count - 1; i>=0 ; i --)
 			{
 				int offset;
-				if(i == candidates.size() - 1)
+				if(i == candidates_count - 1)
 					offset = base_left - _candidateRects[i].left;
 				else
 					offset = _candidateRects[i+1].right + _style.candidate_spacing - _candidateRects[i].left;
@@ -175,6 +177,8 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 				_auxiliaryRect.OffsetRect(_candidateRects[0].right + _style.spacing - _auxiliaryRect.left, 0);
 		}
 	}
+	else
+		width -= _style.spacing;
 
 	_highlightRect = _candidateRects[id];
 	UpdateStatusIconLayout(&width, &height);
