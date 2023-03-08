@@ -112,11 +112,11 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 
 			const std::wstring& comment = comments.at(i).str;
 			GetTextSizeDW(comment, comment.length(), pDWR->pCommentTextFormat, pDWR, &size);
-			_candidateCommentRects[i].SetRect(0, height, size.cx, height + size.cy);
+			_candidateCommentRects[i].SetRect(0, height, size.cx * cmtFontValid, height + size.cy);
 			_candidateCommentRects[i].OffsetRect(offsetX, offsetY);
-			w += size.cx;
+			w += size.cx * cmtFontValid;
 			max_height_curren_candidate = max(max_height_curren_candidate, size.cy);
-			comment_width += size.cx;
+			comment_width += size.cx * cmtFontValid;
 			max_comment_width = max(max_comment_width, comment_width);
 		}
 		int ol = 0, ot = 0, oc = 0;
@@ -159,28 +159,11 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 
 	/* Align comments */
 	for (size_t i = 0; i < candidates_count && i < MAX_CANDIDATES_COUNT; ++i)
-		_candidateCommentRects[i].OffsetRect(real_margin_x + comment_shift_width, 0);
-
-	/* Trim the last spacing if no candidates */
-	if(candidates_count == 0) height -= _style.spacing;
-
-	height += real_margin_y;
-
-	if (!_context.preedit.str.empty() && !candidates.empty())
-	{
-		width = max(width, _style.min_width);
-		height = max(height, _style.min_height);
-	}
-	UpdateStatusIconLayout(&width, &height);
-	_contentSize.SetSize(width + offsetX * 2, height + offsetY * 2);
-
-	/* Highlighted Candidate */
-	int id = _context.cinfo.highlighted;
-	for (size_t i = 0; i < candidates_count && i < MAX_CANDIDATES_COUNT; ++i)
 	{
 		int hlTop = _candidateTextRects[i].top;
 		int hlBot = _candidateTextRects[i].bottom;
 
+		_candidateCommentRects[i].OffsetRect(real_margin_x + comment_shift_width, 0);
 		if (_candidateLabelRects[i].Height() > 0)
 		{
 			hlTop = min(_candidateLabelRects[i].top, hlTop);
@@ -194,6 +177,26 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 
 		_candidateRects[i].SetRect(real_margin_x + offsetX, hlTop, width - real_margin_x + offsetX, hlBot);
 	}
+
+	/* Trim the last spacing if no candidates */
+	if(candidates_count == 0) height -= _style.spacing;
+
+	height += real_margin_y;
+
+	if (!_context.preedit.str.empty() && !candidates.empty())
+	{
+		width = max(width, _style.min_width);
+		height = max(height, _style.min_height);
+	}
+	UpdateStatusIconLayout(&width, &height);
+	for (size_t i = 0; i < candidates_count && i < MAX_CANDIDATES_COUNT; ++i)
+		_candidateRects[i].right = max(_candidateRects[i].right, _candidateRects[i].left - real_margin_x + width - real_margin_x);
+
+	_contentSize.SetSize(width + offsetX * 2, height + offsetY * 2);
+
+	/* Highlighted Candidate */
+	int id = _context.cinfo.highlighted;
+
 	_highlightRect = _candidateRects[id];
 
 	// calc roundings start

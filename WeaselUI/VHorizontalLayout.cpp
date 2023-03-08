@@ -90,7 +90,7 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 			wid = max(wid, size.cx);
 
 			/* Text */
-			h += _style.hilite_spacing;
+			h += _style.hilite_spacing * labelFontValid;
 			const std::wstring& text = candidates.at(i).str;
 			GetTextSizeDW(text, text.length(), pDWR->pTextFormat, pDWR, &size);
 			_candidateTextRects[i].SetRect(w, h, w + size.cx * textFontValid, h + size.cy);
