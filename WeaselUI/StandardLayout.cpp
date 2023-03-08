@@ -61,18 +61,6 @@ void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, int nCount, 
 		}
 		DWRITE_OVERHANG_METRICS overhangMetrics;
 		hr = pDWR->pTextLayout->GetOverhangMetrics(&overhangMetrics);
-		if (_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
-		{
-			if (overhangMetrics.left > 0)
-				lpSize->cy += overhangMetrics.left + 1;
-			if (overhangMetrics.right > 0)
-				lpSize->cy += overhangMetrics.right + 1;
-			if (overhangMetrics.top > 0)
-				lpSize->cx += overhangMetrics.top + 1;
-			if (overhangMetrics.bottom > 0)
-				lpSize->cx += overhangMetrics.bottom + 1;
-		}
-		else
 		{
 			if (overhangMetrics.left > 0)
 				lpSize->cx += overhangMetrics.left + 1;
