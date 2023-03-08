@@ -10,18 +10,8 @@ VerticalLayout::VerticalLayout(const UIStyle &style, const Context &context, con
 
 void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 {
-	const std::vector<Text> &candidates(_context.cinfo.candies);
-	const std::vector<Text> &comments(_context.cinfo.comments);
-	const std::vector<Text> &labels(_context.cinfo.labels);
-
 	const int space = _style.hilite_spacing;
-	int real_margin_x = (abs(_style.margin_x) > _style.hilite_padding) ? abs(_style.margin_x) : _style.hilite_padding;
-	int real_margin_y = (abs(_style.margin_y) > _style.hilite_padding) ? abs(_style.margin_y) : _style.hilite_padding;
 	int width = 0, height = real_margin_y;
-	int candidates_count = candidates.size();
-	int labelFontValid = !!(_style.label_font_point > 0);
-	int textFontValid = !!(_style.font_point > 0);
-	int cmtFontValid = !!(_style.comment_font_point > 0);
 
 	if (!_style.mark_text.empty() && (_style.hilited_mark_color & 0xff000000))
 	{
@@ -195,7 +185,6 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 	_contentSize.SetSize(width + offsetX * 2, height + offsetY * 2);
 
 	/* Highlighted Candidate */
-	int id = _context.cinfo.highlighted;
 
 	_highlightRect = _candidateRects[id];
 

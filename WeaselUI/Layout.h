@@ -79,5 +79,15 @@ namespace weasel
 		const UIStyle &_style;
 		const Context &_context;
 		const Status &_status;
+		const std::vector<Text> &candidates;
+		const std::vector<Text> &comments;
+		const std::vector<Text> &labels;
+		const int &id;
+		const int candidates_count;
+		const int real_margin_x;
+		const int real_margin_y;
+		const int labelFontValid;
+		const int textFontValid;
+		const int cmtFontValid;
 	};
 };

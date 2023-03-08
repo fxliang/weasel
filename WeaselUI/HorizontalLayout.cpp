@@ -10,15 +10,8 @@ HorizontalLayout::HorizontalLayout(const UIStyle &style, const Context &context,
 
 void HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 {
-	const std::vector<Text> &candidates(_context.cinfo.candies);
-	const std::vector<Text> &comments(_context.cinfo.comments);
-	const std::vector<Text> &labels(_context.cinfo.labels);
-	int candidate_cnt = candidates.size();
-	int id = _context.cinfo.highlighted;
 	CSize size;
 	const int space = _style.hilite_spacing;
-	int real_margin_x = (abs(_style.margin_x) > _style.hilite_padding) ? abs(_style.margin_x) : _style.hilite_padding;
-	int real_margin_y = (abs(_style.margin_y) > _style.hilite_padding) ? abs(_style.margin_y) : _style.hilite_padding;
 	int width = 0, height = real_margin_y;
 
 	/* calc mark_text sizes */
@@ -73,17 +66,14 @@ void HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 	/* Candidates */
 	int row_cnt = 0;
 	int rows[MAX_CANDIDATES_COUNT] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-	if(candidate_cnt)
+	if(candidates_count)
 	{
 		int mintops[MAX_CANDIDATES_COUNT] = { 0 };
 		int maxbots[MAX_CANDIDATES_COUNT] = { 0 };
 		int w = real_margin_x;
 		int wrap = 0;
 		int height_of_rows[MAX_CANDIDATES_COUNT] = {0};
-		int labelFontValid = !!(_style.label_font_point > 0);
-		int textFontValid = !!(_style.font_point > 0);
-		int cmtFontValid = !!(_style.comment_font_point > 0);
-		for (size_t i = 0; i < candidate_cnt && i < MAX_CANDIDATES_COUNT; ++i)
+		for (size_t i = 0; i < candidates_count && i < MAX_CANDIDATES_COUNT; ++i)
 		{
 			if (i == id)
 				w += base_offset;
@@ -193,7 +183,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 		}
 
 		int newhs[MAX_CANDIDATES_COUNT] = {0};
-		for (size_t i = 0; i < candidate_cnt && i < MAX_CANDIDATES_COUNT; ++i)
+		for (size_t i = 0; i < candidates_count && i < MAX_CANDIDATES_COUNT; ++i)
 		{
 			int ol = 0, ot = 0, oc = 0;
 			if (_style.align_type == UIStyle::ALIGN_CENTER)
@@ -221,11 +211,11 @@ void HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 			newhs[rows[i]] = min(newhs[rows[i]], ol);
 			newhs[rows[i]] = min(newhs[rows[i]], ot);
 			newhs[rows[i]] = min(newhs[rows[i]], oc);
-			if((i != candidate_cnt - 1 && rows[i+1] > rows[i]) || (i == candidate_cnt - 1)) height_of_rows[rows[i]] -= newhs[rows[i]];
+			if((i != candidates_count - 1 && rows[i+1] > rows[i]) || (i == candidates_count - 1)) height_of_rows[rows[i]] -= newhs[rows[i]];
 		}
 
 		/* Highlighted Candidate */
-		for (size_t i = 0; i < candidate_cnt && i < MAX_CANDIDATES_COUNT; ++i)
+		for (size_t i = 0; i < candidates_count && i < MAX_CANDIDATES_COUNT; ++i)
 		{
 			int hlTop = _candidateTextRects[i].top;
 			int hlBot = _candidateTextRects[i].bottom;
@@ -248,7 +238,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 
 		width = max(width, w);
 		height += height_of_rows[0];
-		height = min(height, _candidateRects[candidate_cnt - 1].bottom);
+		height = min(height, _candidateRects[candidates_count - 1].bottom);
 	}
 	else
 		height -= _style.spacing;
@@ -264,11 +254,11 @@ void HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 	_contentSize.SetSize(width + 2 * offsetX, height + 2 * offsetY);
 
 	/* right of last _candidateRects of every row should be the same */
-	if(candidate_cnt)
+	if(candidates_count)
 	{
-		for(int i = 0; i<candidate_cnt ; i++)
+		for(int i = 0; i<candidates_count ; i++)
 		{
-			if((i != candidate_cnt - 1 && rows[i] != rows[i+1]) || (i == candidate_cnt - 1))
+			if((i != candidates_count - 1 && rows[i] != rows[i+1]) || (i == candidates_count - 1))
 				_candidateRects[i].right = width - real_margin_x + offsetX;
 		}
 		_highlightRect = _candidateRects[id];
@@ -286,28 +276,27 @@ void HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 		textRect.InflateRect(_style.hilite_padding, _style.hilite_padding);
 		textHemispherical = _IsHighlightOverCandidateWindow(textRect, dc);
 	}
-	if(candidate_cnt)
+	if(candidates_count)
 	{
 		CRect cand0Rect(_candidateRects[0]);
 		cand0Rect.InflateRect(_style.hilite_padding, _style.hilite_padding);
 		cand0Hemispherical = _IsHighlightOverCandidateWindow(cand0Rect, dc);
 		if(textHemispherical || cand0Hemispherical)
-			for (int i = 0; i < candidate_cnt; i++)
+			for (int i = 0; i < candidates_count; i++)
 			{
-				if((i != (candidate_cnt - 1)) && (i != 0) && (rows[i+1] == rows[i-1]))	// not the first or last
+				if((i != (candidates_count - 1)) && (i != 0) && (rows[i+1] == rows[i-1]))	// not the first or last
 				{
 					_roundInfo[i].IsTopLeftNeedToRound = false;
 					_roundInfo[i].IsTopRightNeedToRound = false;
 					_roundInfo[i].IsBottomLeftNeedToRound = false;
 					_roundInfo[i].IsBottomRightNeedToRound = false;
 				}
-
 				if (i == 0)	// first cand
 				{
 					_roundInfo[i].IsTopLeftNeedToRound = _roundInfo[i].IsTopLeftNeedToRound && _style.inline_preedit;
 					_roundInfo[i].IsBottomLeftNeedToRound = _roundInfo[i].IsBottomLeftNeedToRound && (row_cnt == 0);
 				}
-				if (i < candidate_cnt - 1 && rows[i] != rows[i + 1])	// row end, not last
+				if (i < candidates_count - 1 && rows[i] != rows[i + 1])	// row end, not last
 				{
 					_roundInfo[i].IsBottomRightNeedToRound = false;
 					_roundInfo[i].IsTopRightNeedToRound = (_style.inline_preedit && rows[i] == 0);
@@ -317,7 +306,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 					_roundInfo[i].IsTopLeftNeedToRound = false;
 					_roundInfo[i].IsBottomLeftNeedToRound = true;
 				}
-				if (i == candidate_cnt - 1)	// last candidate
+				if (i == candidates_count - 1)	// last candidate
 				{
 					if(rows[i])
 						_roundInfo[i].IsTopRightNeedToRound = false;

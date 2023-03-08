@@ -11,14 +11,8 @@ VHorizontalLayout::VHorizontalLayout(const UIStyle &style, const Context &contex
 
 void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 {
-	const std::vector<Text> &candidates(_context.cinfo.candies);
-	const std::vector<Text> &comments(_context.cinfo.comments);
-	const std::vector<Text> &labels(_context.cinfo.labels);
-	int id = _context.cinfo.highlighted;
 	CSize size;
 
-	int real_margin_x = (abs(_style.margin_x) > _style.hilite_padding) ? abs(_style.margin_x) : _style.hilite_padding;
-	int real_margin_y = (abs(_style.margin_y) > _style.hilite_padding) ? abs(_style.margin_y) : _style.hilite_padding;
 	int width = real_margin_x, height = real_margin_y;
 
 	if (!_style.mark_text.empty() && (_style.hilited_mark_color & 0xff000000))
@@ -30,10 +24,6 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 		MARK_GAP = MARK_HEIGHT + 4;
 	}
 	int base_offset =  (_style.hilited_mark_color & 0xff000000) ? MARK_GAP : 0;
-	int labelFontValid = !!(_style.label_font_point > 0);
-	int textFontValid = !!(_style.font_point > 0);
-	int cmtFontValid = !!(_style.comment_font_point > 0);
-	int candidates_count = candidates.size();
 	/* Preedit */
 	if (!IsInlinePreedit() && !_context.preedit.str.empty())
 	{
@@ -187,6 +177,8 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 	_contentRect.SetRect(0, 0, _contentSize.cx, _contentSize.cy);
 	CopyRect(_bgRect, _contentRect);
 	_bgRect.DeflateRect(offsetX + 1, offsetY + 1);
+	_PrepareRoundInfo(dc);
+
 	int deflatex = offsetX - _style.border / 2;
 	int deflatey = offsetY - _style.border / 2;
 	_contentRect.DeflateRect(deflatex, deflatey);

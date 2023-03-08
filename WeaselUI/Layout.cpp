@@ -2,7 +2,17 @@
 #include "Layout.h"
 
 Layout::Layout(const UIStyle& style, const Context& context, const Status& status)
-	: _style(style), _context(context), _status(status)
+	: _style(style), _context(context), _status(status), 
+	candidates(_context.cinfo.candies),
+	comments(_context.cinfo.comments),
+	labels(_context.cinfo.labels),
+	id(_context.cinfo.highlighted),
+	candidates_count(candidates.size()),
+	real_margin_x((abs(_style.margin_x) > _style.hilite_padding) ? abs(_style.margin_x) : _style.hilite_padding),
+	real_margin_y((abs(_style.margin_y) > _style.hilite_padding) ? abs(_style.margin_y) : _style.hilite_padding),
+	labelFontValid(!!(_style.label_font_point > 0)),
+	textFontValid(!!(_style.font_point > 0)),
+	cmtFontValid(!!(_style.comment_font_point > 0))
 {
 	offsetX = offsetY = 0;
 	if(_style.shadow_radius != 0)
