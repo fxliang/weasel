@@ -23,7 +23,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 		MARK_HEIGHT = sg.cy;
 		MARK_GAP = MARK_WIDTH + 4;
 	}
-	int base_offset =  (_style.hilited_mark_color & 0xff000000) ? MARK_GAP : 0;
+	int base_offset =  ((_style.hilited_mark_color & 0xff000000) && !_style.mark_text.empty()) ? MARK_GAP : 0;
 
 	/* Preedit */
 	if (!IsInlinePreedit() && !_context.preedit.str.empty())
@@ -62,51 +62,57 @@ void HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 		_auxiliaryRect.OffsetRect(offsetX, offsetY);
 		width = max(width, real_margin_x + size.cx + real_margin_x);
 	}
-
-	/* Candidates */
+	
 	int row_cnt = 0;
-	int rows[MAX_CANDIDATES_COUNT] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+	int rows[MAX_CANDIDATES_COUNT] = {0};
+	int max_width_of_rows = 0;
+	int height_of_rows[MAX_CANDIDATES_COUNT] = {0};
+	int mintops[MAX_CANDIDATES_COUNT] = {0};
+	int maxbots[MAX_CANDIDATES_COUNT] = {0};
+	int row_of_candidate[MAX_CANDIDATES_COUNT] = {0};
+	int mintop_of_rows[MAX_CANDIDATES_COUNT] = {0};
 	if(candidates_count)
 	{
-		int mintops[MAX_CANDIDATES_COUNT] = { 0 };
-		int maxbots[MAX_CANDIDATES_COUNT] = { 0 };
 		int w = real_margin_x;
 		int wrap = 0;
-		int height_of_rows[MAX_CANDIDATES_COUNT] = {0};
+
 		for (size_t i = 0; i < candidates_count && i < MAX_CANDIDATES_COUNT; ++i)
 		{
-			if (i == id)
+			int current_cand_width = 0;
+			if( id == i )
+			{
 				w += base_offset;
-			if (i > 0)
-				w += _style.candidate_spacing - 1;
-			int tmp = w;
+				current_cand_width += base_offset;
+			}
 			/* Label */
 			std::wstring label = GetLabelText(labels, i, _style.label_text_format.c_str());
 			GetTextSizeDW(label, label.length(), pDWR->pLabelTextFormat, pDWR, &size);
 			_candidateLabelRects[i].SetRect(w, height, w + size.cx * labelFontValid, height + size.cy);
 			_candidateLabelRects[i].OffsetRect(offsetX, offsetY);
-			w += (size.cx + space) * labelFontValid;
-			//h = max(h, size.cy);
-			height_of_rows[row_cnt] = max(height_of_rows[row_cnt], size.cy);
+			w += size.cx * labelFontValid;
+			current_cand_width += size.cx * labelFontValid;
+			//height_of_rows[row_cnt] = max(height_of_rows[row_cnt], size.cy * labelFontValid);
 
 			/* Text */
+			w += _style.hilite_spacing;
 			const std::wstring& text = candidates.at(i).str;
 			GetTextSizeDW(text, text.length(), pDWR->pTextFormat, pDWR, &size);
-
 			_candidateTextRects[i].SetRect(w, height, w + size.cx * textFontValid, height + size.cy);
 			_candidateTextRects[i].OffsetRect(offsetX, offsetY);
-			w += (size.cx + space) * textFontValid;
-			height_of_rows[row_cnt] = max(height_of_rows[row_cnt], size.cy);
+			w += size.cx * textFontValid;
+			current_cand_width += size.cx * textFontValid;
+			//height_of_rows[row_cnt] = max(height_of_rows[row_cnt], size.cy * textFontValid);
 
 			/* Comment */
 			if (!comments.at(i).str.empty() && cmtFontValid )
 			{
 				const std::wstring& comment = comments.at(i).str;
 				GetTextSizeDW(comment, comment.length(), pDWR->pCommentTextFormat, pDWR, &size);
-
-				_candidateCommentRects[i].SetRect(w, height, w + size.cx + space, height + size.cy);
-				w += (size.cx + space) * cmtFontValid;
-				height_of_rows[row_cnt] = max(height_of_rows[row_cnt], size.cy);
+				w += _style.hilite_spacing;
+				_candidateCommentRects[i].SetRect(w, height, w + size.cx * cmtFontValid, height + size.cy);
+				w += size.cx * cmtFontValid;
+				current_cand_width += size.cx * cmtFontValid;
+				//height_of_rows[row_cnt] = max(height_of_rows[row_cnt], size.cy);
 			}
 			else /* Used for highlighted candidate calculation below */
 			{
@@ -114,138 +120,82 @@ void HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 			}
 			_candidateCommentRects[i].OffsetRect(offsetX, offsetY);
 
-			if(i != 0 && _style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN && _style.max_width > 0 &&
-					(  _candidateLabelRects[i].left	+ 2 * offsetX + real_margin_x		> _style.max_width 
-					   || _candidateLabelRects[i].right	+ 2 * offsetX + real_margin_x	> _style.max_width 
-					   || _candidateTextRects[i].left	+ 2 * offsetX + real_margin_x		> _style.max_width 
-					   || _candidateTextRects[i].right	+ 2 * offsetX + real_margin_x		> _style.max_width 
-					   || _candidateCommentRects[i].left + 2 * offsetX + real_margin_x		> _style.max_width 
-					   || _candidateCommentRects[i].right + 2 * offsetX + real_margin_x	> _style.max_width
-					)
-			  )
+			int base_left = (i==id) ? _candidateLabelRects[i].left - base_offset : _candidateLabelRects[i].left;
+			// if not the first candidate of current row, and current_cand_width > _style.max_width
+			if((base_left > real_margin_x + offsetX) && (_candidateCommentRects[i].right - offsetX + real_margin_x > _style.max_width))
 			{
-				row_cnt++;
-				wrap = max(wrap, tmp);
-				w = real_margin_x;
-				if (i == id)
-				{
-					w += base_offset;
-					wrap -= base_offset;
-				}
-
-				height += height_of_rows[row_cnt - 1] + _style.candidate_spacing;
-				int ofx =   w - tmp;
-				_candidateLabelRects[i].OffsetRect(ofx, height_of_rows[row_cnt - 1] + _style.candidate_spacing);
-				_candidateTextRects[i].OffsetRect(ofx, height_of_rows[row_cnt - 1] + _style.candidate_spacing);
-				_candidateCommentRects[i].OffsetRect(ofx, height_of_rows[row_cnt - 1] + _style.candidate_spacing);
-				w += _candidateTextRects[i].Width()*textFontValid + space + _candidateLabelRects[i].Width() * labelFontValid + space 
-					+ _candidateCommentRects[i].Width() * cmtFontValid;
+				max_width_of_rows = max(max_width_of_rows, _candidateCommentRects[i-1].right);
+				w = offsetX + real_margin_x + (i==id? base_offset: 0);
+				int ofx = w - _candidateLabelRects[i].left;
+				int ofy = height_of_rows[row_cnt] + _style.candidate_spacing;
+				height += ofy;
+				w += current_cand_width;
+				if (i < candidates_count - 1)	w += _style.candidate_spacing;
+				
+				_candidateLabelRects[i].OffsetRect(ofx, ofy);
+				_candidateTextRects[i].OffsetRect(ofx, ofy);
+				_candidateCommentRects[i].OffsetRect(ofx, ofy);
+				row_cnt ++;
 				height_of_rows[row_cnt] = max(height_of_rows[row_cnt], _candidateLabelRects[i].Height());
 				height_of_rows[row_cnt] = max(height_of_rows[row_cnt], _candidateTextRects[i].Height());
 				height_of_rows[row_cnt] = max(height_of_rows[row_cnt], _candidateCommentRects[i].Height());
 
-				if(!candidates.at(i).empty())
-					mintops[row_cnt] = _candidateTextRects[i].bottom;
-				if(!label.empty())
-					mintops[row_cnt] = max(mintops[row_cnt], _candidateLabelRects[i].bottom);
-				if(!comments.at(i).empty())
-					mintops[row_cnt] = max(mintops[row_cnt], _candidateCommentRects[i].bottom);
-
-				if(!candidates.at(i).empty())
-					maxbots[row_cnt] = _candidateTextRects[i].top;
-				if(!label.empty())
-					maxbots[row_cnt] = min(maxbots[row_cnt], _candidateLabelRects[i].top);
-				if(!comments.at(i).empty())
-					maxbots[row_cnt] = min(maxbots[row_cnt], _candidateCommentRects[i].top);
 			}
 			else
 			{
-				wrap = _candidateCommentRects[i].right;
+				height_of_rows[row_cnt] = max(height_of_rows[row_cnt], _candidateLabelRects[i].Height());
+				height_of_rows[row_cnt] = max(height_of_rows[row_cnt], _candidateTextRects[i].Height());
+				height_of_rows[row_cnt] = max(height_of_rows[row_cnt], _candidateCommentRects[i].Height());
+				max_width_of_rows = max(max_width_of_rows, w);
+				if (i < candidates_count - 1)	w += _style.candidate_spacing;
 			}
-			if(i == 0)
-			{
-				if(!candidates.at(i).empty())
-					mintops[row_cnt] = _candidateTextRects[i].bottom;
-				if(!label.empty())
-					mintops[row_cnt] = max(mintops[row_cnt], _candidateLabelRects[i].bottom);
-				if(!comments.at(i).empty())
-					mintops[row_cnt] = max(mintops[row_cnt], _candidateCommentRects[i].bottom);
+			row_of_candidate[i] = row_cnt;
+			mintops[i] = _candidateTextRects[i].bottom;
+			mintops[i] = min(mintops[i], _candidateLabelRects[i].top);
+			mintops[i] = min(mintops[i], _candidateCommentRects[i].top);
+			maxbots[i] = _candidateTextRects[i].top;
+			maxbots[i] = max(maxbots[i], _candidateLabelRects[i].bottom);
+			maxbots[i] = max(maxbots[i], _candidateCommentRects[i].bottom);
 
-				if(!candidates.at(i).empty())
-					maxbots[row_cnt] = _candidateTextRects[i].top;
-				if(!label.empty())
-					maxbots[row_cnt] = min(maxbots[row_cnt], _candidateLabelRects[i].top);
-				if(!comments.at(i).empty())
-					maxbots[row_cnt] = min(maxbots[row_cnt], _candidateCommentRects[i].top);
-			}
-			rows[i] = row_cnt;
-			width = max(width, wrap);
-		}
+			mintop_of_rows[row_cnt] = maxbots[i];
+			mintop_of_rows[row_cnt] = min(mintop_of_rows[row_cnt], mintops[i]);
+		}	
 
-		int newhs[MAX_CANDIDATES_COUNT] = {0};
 		for (size_t i = 0; i < candidates_count && i < MAX_CANDIDATES_COUNT; ++i)
 		{
+			int base_left = (i==id) ? _candidateLabelRects[i].left - base_offset : _candidateLabelRects[i].left;
+			_candidateRects[i].SetRect(base_left, mintop_of_rows[row_of_candidate[i]],
+					_candidateCommentRects[i].right, mintop_of_rows[row_of_candidate[i]] + height_of_rows[row_of_candidate[i]]);
 			int ol = 0, ot = 0, oc = 0;
 			if (_style.align_type == UIStyle::ALIGN_CENTER)
 			{
-				ol = (height_of_rows[rows[i]] - _candidateLabelRects[i].Height()) / 2;
-				ot = (height_of_rows[rows[i]] - _candidateTextRects[i].Height()) / 2;
-				oc = (height_of_rows[rows[i]] - _candidateCommentRects[i].Height()) / 2;
+				ol = (height_of_rows[row_of_candidate[i]] - _candidateLabelRects[i].Height()) / 2;
+				ot = (height_of_rows[row_of_candidate[i]] - _candidateTextRects[i].Height()) / 2;
+				oc = (height_of_rows[row_of_candidate[i]] - _candidateCommentRects[i].Height()) / 2;
 			}
 			else if (_style.align_type == UIStyle::ALIGN_BOTTOM)
 			{
-				ol = (height_of_rows[rows[i]] - _candidateLabelRects[i].Height()) ;
-				ot = (height_of_rows[rows[i]] - _candidateTextRects[i].Height()) ;
-				oc = (height_of_rows[rows[i]] - _candidateCommentRects[i].Height()) ;
+				ol = (height_of_rows[row_of_candidate[i]] - _candidateLabelRects[i].Height()) ;
+				ot = (height_of_rows[row_of_candidate[i]] - _candidateTextRects[i].Height()) ;
+				oc = (height_of_rows[row_of_candidate[i]] - _candidateCommentRects[i].Height()) ;
 			}
 			_candidateLabelRects[i].OffsetRect(0, ol);
 			_candidateTextRects[i].OffsetRect(0, ot);
 			_candidateCommentRects[i].OffsetRect(0, oc);
-
-			mintops[rows[i]] = min(mintops[rows[i]], _candidateLabelRects[i].top);
-			mintops[rows[i]] = min(mintops[rows[i]], _candidateTextRects[i].top);
-			mintops[rows[i]] = min(mintops[rows[i]], _candidateCommentRects[i].top);
-			maxbots[rows[i]] = max(maxbots[rows[i]], _candidateLabelRects[i].bottom);
-			maxbots[rows[i]] = max(maxbots[rows[i]], _candidateTextRects[i].bottom);
-			maxbots[rows[i]] = max(maxbots[rows[i]], _candidateCommentRects[i].bottom);
-			newhs[rows[i]] = min(newhs[rows[i]], ol);
-			newhs[rows[i]] = min(newhs[rows[i]], ot);
-			newhs[rows[i]] = min(newhs[rows[i]], oc);
-			if((i != candidates_count - 1 && rows[i+1] > rows[i]) || (i == candidates_count - 1)) height_of_rows[rows[i]] -= newhs[rows[i]];
 		}
-
-		/* Highlighted Candidate */
-		for (size_t i = 0; i < candidates_count && i < MAX_CANDIDATES_COUNT; ++i)
-		{
-			int hlTop = _candidateTextRects[i].top;
-			int hlBot = _candidateTextRects[i].bottom;
-
-			if (_candidateLabelRects[i].Height() > 0)
-			{
-				hlTop = min(_candidateLabelRects[i].top, hlTop);
-				hlBot = max(_candidateLabelRects[i].bottom, _candidateTextRects[i].bottom);
-			}
-			if (_candidateCommentRects[i].Height() > 0)
-			{
-				hlTop = min(hlTop, _candidateCommentRects[i].top);
-				hlBot = max(hlBot, _candidateCommentRects[i].bottom);
-			}
-			hlTop = min(mintops[rows[i]], hlTop);
-			hlBot = max(maxbots[rows[i]], hlBot);
-			_candidateRects[i].SetRect(_candidateLabelRects[i].left, hlTop, _candidateCommentRects[i].right, hlBot);
-			if(id == i) _candidateRects[i].left -= base_offset;
-		}
-
-		width = max(width, w);
-		height += height_of_rows[0];
-		height = min(height, _candidateRects[candidates_count - 1].bottom);
 	}
-	else
-		height -= _style.spacing;
-	height += real_margin_y;
+	
+	_highlightRect = _candidateRects[id];
+	width = max(width, max_width_of_rows);
 	width += real_margin_x;
+	
+	height += height_of_rows[row_cnt];
+	if(!candidates_count)
+		height -= _style.spacing;
 
-	if (!_context.preedit.str.empty() && !candidates.empty())
+	height += real_margin_y;
+
+	if (!_context.preedit.str.empty() && !candidates_count)
 	{
 		width = max(width, _style.min_width);
 		height = max(height, _style.min_height);
@@ -253,67 +203,10 @@ void HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 	UpdateStatusIconLayout(&width, &height);
 	_contentSize.SetSize(width + 2 * offsetX, height + 2 * offsetY);
 
-	/* right of last _candidateRects of every row should be the same */
-	if(candidates_count)
-	{
-		for(int i = 0; i<candidates_count ; i++)
-		{
-			if((i != candidates_count - 1 && rows[i] != rows[i+1]) || (i == candidates_count - 1))
-				_candidateRects[i].right = width - real_margin_x + offsetX;
-		}
-		_highlightRect = _candidateRects[id];
-	}
-
-	// calc roundings start
 	_contentRect.SetRect(0, 0, _contentSize.cx, _contentSize.cy);
 	CopyRect(_bgRect, _contentRect);
 	_bgRect.DeflateRect(offsetX + 1, offsetY + 1);
-	_PrepareRoundInfo(dc);
-	bool textHemispherical = false, cand0Hemispherical = false;
-	if(!_style.inline_preedit)
-	{
-		CRect textRect(_preeditRect);
-		textRect.InflateRect(_style.hilite_padding, _style.hilite_padding);
-		textHemispherical = _IsHighlightOverCandidateWindow(textRect, dc);
-	}
-	if(candidates_count)
-	{
-		CRect cand0Rect(_candidateRects[0]);
-		cand0Rect.InflateRect(_style.hilite_padding, _style.hilite_padding);
-		cand0Hemispherical = _IsHighlightOverCandidateWindow(cand0Rect, dc);
-		if(textHemispherical || cand0Hemispherical)
-			for (int i = 0; i < candidates_count; i++)
-			{
-				if((i != (candidates_count - 1)) && (i != 0) && (rows[i+1] == rows[i-1]))	// not the first or last
-				{
-					_roundInfo[i].IsTopLeftNeedToRound = false;
-					_roundInfo[i].IsTopRightNeedToRound = false;
-					_roundInfo[i].IsBottomLeftNeedToRound = false;
-					_roundInfo[i].IsBottomRightNeedToRound = false;
-				}
-				if (i == 0)	// first cand
-				{
-					_roundInfo[i].IsTopLeftNeedToRound = _roundInfo[i].IsTopLeftNeedToRound && _style.inline_preedit;
-					_roundInfo[i].IsBottomLeftNeedToRound = _roundInfo[i].IsBottomLeftNeedToRound && (row_cnt == 0);
-				}
-				if (i < candidates_count - 1 && rows[i] != rows[i + 1])	// row end, not last
-				{
-					_roundInfo[i].IsBottomRightNeedToRound = false;
-					_roundInfo[i].IsTopRightNeedToRound = (_style.inline_preedit && rows[i] == 0);
-				}
-				if (i > 0 && rows[i] == row_cnt && rows[i - 1] == (row_cnt - 1))	// last line start
-				{
-					_roundInfo[i].IsTopLeftNeedToRound = false;
-					_roundInfo[i].IsBottomLeftNeedToRound = true;
-				}
-				if (i == candidates_count - 1)	// last candidate
-				{
-					if(rows[i])
-						_roundInfo[i].IsTopRightNeedToRound = false;
-				}
 
-			}
-	}
 	int deflatex = offsetX - _style.border / 2;
 	int deflatey = offsetY - _style.border / 2;
 	_contentRect.DeflateRect(deflatex, deflatey);

@@ -23,7 +23,7 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 		MARK_HEIGHT = sg.cy;
 		MARK_GAP = MARK_HEIGHT + 4;
 	}
-	int base_offset =  (_style.hilited_mark_color & 0xff000000) ? MARK_GAP : 0;
+	int base_offset =  ((_style.hilited_mark_color & 0xff000000) && !_style.mark_text.empty()) ? MARK_GAP : 0;
 	/* Preedit */
 	if (!IsInlinePreedit() && !_context.preedit.str.empty())
 	{
