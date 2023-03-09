@@ -4,11 +4,6 @@
 
 using namespace weasel;
 
-VHorizontalLayout::VHorizontalLayout(const UIStyle &style, const Context &context, const Status &status)
-	: StandardLayout(style, context, status)
-{
-}
-
 void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 {
 	CSize size;
@@ -67,7 +62,7 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 	int max_comment_heihgt = 0, max_content_height =  0, comment_shift_heihgt = 0;
 	if (candidates_count)
 	{
-		for (size_t i = 0; i < candidates_count && i < MAX_CANDIDATES_COUNT; ++i)
+		for (auto i = 0; i < candidates_count && i < MAX_CANDIDATES_COUNT; ++i)
 		{
 			int wid = 0;
 			h = real_margin_y + base_offset;
@@ -116,7 +111,7 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 	// reposition candidates
 	if (candidates_count)
 	{
-		for (size_t i = 0; i < candidates_count && i < MAX_CANDIDATES_COUNT; ++i)
+		for (auto i = 0; i < candidates_count && i < MAX_CANDIDATES_COUNT; ++i)
 		{
 			int ol = 0, ot = 0, oc = 0;
 			ol = (wids[i] - _candidateLabelRects[i].Width()) / 2;
@@ -136,7 +131,7 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 		}
 		height = max(height, _candidateRects[0].Height() + 2*real_margin_y);
 		if((_candidateRects[0].top - real_margin_y + height - real_margin_y) > _candidateRects[0].bottom)
-			for (size_t i = 0; i < candidates_count && i < MAX_CANDIDATES_COUNT; ++i)
+			for (auto i = 0; i < candidates_count && i < MAX_CANDIDATES_COUNT; ++i)
 				_candidateRects[i].bottom = (_candidateRects[0].top - real_margin_y + height - real_margin_y);
 
 		if(!_style.vertical_text_left_to_right)

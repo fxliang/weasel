@@ -3,16 +3,6 @@
 
 using namespace weasel;
 
-FullScreenLayout::FullScreenLayout(const UIStyle &style, const Context &context, const Status &status, const CRect& inputPos, Layout* layout)
-	: StandardLayout(style, context, status), mr_inputPos(inputPos), m_layout(layout)
-{
-}
-
-FullScreenLayout::~FullScreenLayout()
-{
-	delete m_layout;
-}
-
 void weasel::FullScreenLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 {
 	if (_context.empty())
@@ -37,7 +27,7 @@ void weasel::FullScreenLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR
 
 	int step = 256;
 	do {
-			m_layout->DoLayout(dc, pDWR);
+		m_layout->DoLayout(dc, pDWR);
 		if (!_style.mark_text.empty() && (_style.hilited_mark_color & 0xff000000))
 		{
 			CSize sg;
@@ -57,7 +47,7 @@ void weasel::FullScreenLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR
 	_auxiliaryRect.OffsetRect(offsetx, offsety);
 	_highlightRect = m_layout->GetHighlightRect();
 	_highlightRect.OffsetRect(offsetx, offsety);
-	for (int i = 0, n = (int)_context.cinfo.candies.size(); i < n && i < MAX_CANDIDATES_COUNT; ++i)
+	for (auto i = 0, n = (int)_context.cinfo.candies.size(); i < n && i < MAX_CANDIDATES_COUNT; ++i)
 	{
 		_candidateLabelRects[i] = m_layout->GetCandidateLabelRect(i);
 		_candidateLabelRects[i].OffsetRect(offsetx, offsety);

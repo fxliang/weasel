@@ -35,7 +35,7 @@ namespace weasel
 		virtual IsToRoundStruct GetTextRoundInfo() { return _textRoundInfo; }
 		virtual CRect GetContentRect() { return _contentRect; }
 
-		void GetTextSizeDW(const std::wstring text, int nCount, IDWriteTextFormat1* pTextFormat, DirectWriteResources* pDWR, LPSIZE lpSize) const;
+		void GetTextSizeDW(const std::wstring text, size_t nCount, IDWriteTextFormat1* pTextFormat, DirectWriteResources* pDWR, LPSIZE lpSize) const;
 
 	protected:
 		/* Utility functions */

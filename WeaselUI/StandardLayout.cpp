@@ -14,7 +14,7 @@ std::wstring StandardLayout::GetLabelText(const std::vector<Text> &labels, int i
 	return std::wstring(buffer);
 }
 
-void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, int nCount, IDWriteTextFormat1* pTextFormat, DirectWriteResources* pDWR,  LPSIZE lpSize) const
+void weasel::StandardLayout::GetTextSizeDW(const std::wstring text, size_t nCount, IDWriteTextFormat1* pTextFormat, DirectWriteResources* pDWR,  LPSIZE lpSize) const
 {
 	D2D1_SIZE_F sz;
 	HRESULT hr = S_OK;
@@ -119,6 +119,7 @@ CSize StandardLayout::GetPreeditSize(CDCHandle dc, const weasel::Text& text, IDW
 	}
 	return size;
 }
+
 bool weasel::StandardLayout::_IsHighlightOverCandidateWindow(CRect& rc, CDCHandle& dc)
 {
 	GraphicsRoundRectPath bgPath(_bgRect, _style.round_corner_ex);
@@ -256,7 +257,7 @@ void weasel::StandardLayout::_PrepareRoundInfo(CDCHandle& dc)
 					type = 2;
 				else if (i == candidates_count - 1)
 					type = 3;
-				if( i <= 0 )	i == 1;
+				if( i <= 0 )	i = 1;
 				_roundInfo[i].IsTopLeftNeedToRound = is_to_round_corner[layout_type][_style.inline_preedit][type - 1][0];
 				_roundInfo[i].IsBottomLeftNeedToRound = is_to_round_corner[layout_type][_style.inline_preedit][type - 1][1];
 				_roundInfo[i].IsTopRightNeedToRound = is_to_round_corner[layout_type][_style.inline_preedit][type - 1][2];

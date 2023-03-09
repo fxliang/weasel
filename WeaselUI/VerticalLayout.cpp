@@ -3,11 +3,6 @@
 
 using namespace weasel;
 
-VerticalLayout::VerticalLayout(const UIStyle &style, const Context &context, const Status &status)
-	: StandardLayout(style, context, status)
-{
-}
-
 void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 {
 	const int space = _style.hilite_spacing;
@@ -68,7 +63,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 	int comment_shift_width = 0;  /* distance to the left of the candidate text */
 	int max_candidate_width = 0;  /* label + text */
 	int max_comment_width = 0;    /* comment, or none */
-	for (size_t i = 0; i < candidates_count && i < MAX_CANDIDATES_COUNT; ++i)
+	for (auto i = 0; i < candidates_count && i < MAX_CANDIDATES_COUNT; ++i)
 	{
 		if (i > 0 )
 			height += _style.candidate_spacing;
@@ -148,7 +143,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 	width = max(width, max_content_width + 2 * real_margin_x);
 
 	/* Align comments */
-	for (size_t i = 0; i < candidates_count && i < MAX_CANDIDATES_COUNT; ++i)
+	for (auto i = 0; i < candidates_count && i < MAX_CANDIDATES_COUNT; ++i)
 	{
 		int hlTop = _candidateTextRects[i].top;
 		int hlBot = _candidateTextRects[i].bottom;
@@ -179,7 +174,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR)
 		height = max(height, _style.min_height);
 	}
 	UpdateStatusIconLayout(&width, &height);
-	for (size_t i = 0; i < candidates_count && i < MAX_CANDIDATES_COUNT; ++i)
+	for (auto i = 0; i < candidates_count && i < MAX_CANDIDATES_COUNT; ++i)
 		_candidateRects[i].right = max(_candidateRects[i].right, _candidateRects[i].left - real_margin_x + width - real_margin_x);
 
 	_contentSize.SetSize(width + offsetX * 2, height + offsetY * 2);
