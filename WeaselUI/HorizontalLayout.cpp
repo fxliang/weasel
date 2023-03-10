@@ -69,6 +69,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 		for (auto i = 0; i < candidates_count && i < MAX_CANDIDATES_COUNT; ++i)
 		{
 			int current_cand_width = 0;
+			if (i > 0) w += _style.candidate_spacing;
 			if( id == i ) w += base_offset;
 			/* Label */
 			std::wstring label = GetLabelText(labels, i, _style.label_text_format.c_str());
@@ -109,21 +110,21 @@ void HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 				w = offsetX + real_margin_x + (i==id ? base_offset : 0);
 				int ofx = w - _candidateLabelRects[i].left;
 				int ofy = height_of_rows[row_cnt] + _style.candidate_spacing;
-				mintop_of_rows[row_cnt] = height;
-				height += ofy;
-				w += current_cand_width;
-				if (i < candidates_count - 1)	w += _style.candidate_spacing;
-				
 				_candidateLabelRects[i].OffsetRect(ofx, ofy);
 				_candidateTextRects[i].OffsetRect(ofx, ofy);
 				_candidateCommentRects[i].OffsetRect(ofx, ofy);
+				mintop_of_rows[row_cnt] = height + offsetY;
+				height += ofy;
+				// re calc rect position, decrease offsetX for origin 
+				w += current_cand_width - offsetX;
 				row_cnt ++;
+				// mintop_of_rows position must be value after offset
+				mintop_of_rows[row_cnt] = height + offsetY;
 			}
 			else
 			{
 				max_width_of_rows = max(max_width_of_rows, w);
-				if (i < candidates_count - 1)	w += _style.candidate_spacing;
-				else	mintop_of_rows[row_cnt] = height;
+				mintop_of_rows[row_cnt] = height + offsetY;
 			}
 			height_of_rows[row_cnt] = max(height_of_rows[row_cnt], _candidateLabelRects[i].Height());
 			height_of_rows[row_cnt] = max(height_of_rows[row_cnt], _candidateTextRects[i].Height());
