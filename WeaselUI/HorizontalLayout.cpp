@@ -24,6 +24,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 	if (!IsInlinePreedit() && !_context.preedit.str.empty())
 	{
 		size = GetPreeditSize(dc, _context.preedit, pDWR->pTextFormat, pDWR);
+		// icon size higher then preedit text
 		if(STATUS_ICON_SIZE/ 2 >= (height + size.cy / 2) && ShouldDisplayStatusIcon())
 		{
 			height += (STATUS_ICON_SIZE - size.cy) / 2;
@@ -43,6 +44,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 	{
 		w = offsetX + real_margin_x;
 		size = GetPreeditSize(dc, _context.aux, pDWR->pTextFormat, pDWR);
+		// icon size higher then auxiliary text
 		if(STATUS_ICON_SIZE/ 2 >= (height + size.cy / 2) && ShouldDisplayStatusIcon())
 		{
 			height += (STATUS_ICON_SIZE - size.cy) / 2 ;
@@ -100,7 +102,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 
 			int base_left = (i==id) ? _candidateLabelRects[i].left - base_offset : _candidateLabelRects[i].left;
 			// if not the first candidate of current row, and current_cand_width > _style.max_width
-			if((base_left > real_margin_x + offsetX) && (_candidateCommentRects[i].right - offsetX + real_margin_x > _style.max_width))
+			if(_style.max_width > 0 && (base_left > real_margin_x + offsetX) && (_candidateCommentRects[i].right - offsetX + real_margin_x > _style.max_width))
 			{
 				max_width_of_rows = max(max_width_of_rows, _candidateCommentRects[i-1].right);
 				w = offsetX + real_margin_x + (i==id ? base_offset : 0);
@@ -168,8 +170,51 @@ void HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 	_contentSize.SetSize(width + 2 * offsetX, height + 2 * offsetY);
 
 	_contentRect.SetRect(0, 0, _contentSize.cx, _contentSize.cy);
+	// prepare temp rect _bgRect for roundinfo calculation
 	CopyRect(_bgRect, _contentRect);
 	_bgRect.DeflateRect(offsetX + 1, offsetY + 1);
+	// prepare round info for single row status
+	_PrepareRoundInfo(dc);
+	// fix round for multilines rows
+	if(row_cnt)
+	{
+		for (auto i = 0; i < candidates_count && i < MAX_CANDIDATES_COUNT; ++i)
+		{
+			if (_style.inline_preedit)
+			{
+				_roundInfo[0].IsBottomLeftNeedToRound = false;
+				if(row_of_candidate[i] > 0 && row_of_candidate[i] < row_cnt)	// middle rows, no need to round
+				{
+					_roundInfo[i].IsTopLeftNeedToRound = false;
+					_roundInfo[i].IsTopRightNeedToRound = false;
+					_roundInfo[i].IsBottomLeftNeedToRound = false;
+					_roundInfo[i].IsBottomRightNeedToRound = false;
+				}
+				if( row_of_candidate[i] > row_of_candidate[i-1] && row_of_candidate[i] == row_cnt)	// bottom left candidate
+					_roundInfo[i].IsBottomLeftNeedToRound = true;
+				else if( i > 0 && i< (candidates_count - 1) )	// mid candidate not the bottom left, Hemispherical in _PrepareRoundInfo is false, make true to use round info
+					_roundInfo[i].Hemispherical = true;
+				if( row_of_candidate[i] == 0 && row_of_candidate[i+1] > row_of_candidate[i])	// first row right candidate
+					_roundInfo[i].IsTopRightNeedToRound = true;
+				if(i == candidates_count - 1)	// in _PrepareRoundInfo for one row, true, fixed it for multilines
+					_roundInfo[i].IsTopRightNeedToRound = false;
+			}
+			else
+			{
+				if(row_of_candidate[i] < row_cnt)	// not last rows not to round
+				{
+					_roundInfo[i].IsTopLeftNeedToRound = false;
+					_roundInfo[i].IsTopRightNeedToRound = false;
+					_roundInfo[i].IsBottomLeftNeedToRound = false;
+					_roundInfo[i].IsBottomRightNeedToRound = false;
+				}
+				if( row_of_candidate[i] > row_of_candidate[i-1] && row_of_candidate[i] == row_cnt)	// bottom left candidate
+					_roundInfo[i].IsBottomLeftNeedToRound = true;
+				else if( i > 0 && i< (candidates_count - 1) )	// mid candidate not the bottom left
+					_roundInfo[i].Hemispherical = true;
+			}
+		}
+	}
 
 	int deflatex = offsetX - _style.border / 2;
 	int deflatey = offsetY - _style.border / 2;

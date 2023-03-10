@@ -3,10 +3,6 @@
 
 using namespace weasel;
 
-StandardLayout::StandardLayout(const UIStyle &style, const Context &context, const Status &status)
-	: Layout(style, context, status)
-{
-}
 std::wstring StandardLayout::GetLabelText(const std::vector<Text> &labels, int id, const wchar_t *format) const
 {
 	wchar_t buffer[128];
@@ -215,9 +211,9 @@ void weasel::StandardLayout::_PrepareRoundInfo(CDCHandle& dc)
 					// not inline_preedit
 					{
 						{false, true, false, false},		// FIRST_CAND
-						{false, false, false, false},	// MID_CAND
+						{false, false, false, false},		// MID_CAND
 						{false, false, false, true},		// LAST_CAND
-						{false, true, false, true},		// ONLY_CAND
+						{false, true, false, true},			// ONLY_CAND
 					} ,
 					// inline_preedit
 					{
@@ -250,20 +246,20 @@ void weasel::StandardLayout::_PrepareRoundInfo(CDCHandle& dc)
 				CRect hilite_rect(_candidateRects[i]);
 				hilite_rect.InflateRect(_style.hilite_padding, _style.hilite_padding);
 				bool current_hemispherical_dome_status = _IsHighlightOverCandidateWindow(hilite_rect, dc);
-				int type = 1;
-				if (candidates_count == 1)
-					type = 4;
-				else if (i != 0 && i != candidates_count - 1)
+				int type = 0;	// default FIRST_CAND
+				if (candidates_count == 1)	// ONLY_CAND
+					type =3;
+				else if (i != 0 && i != candidates_count - 1) // MID_CAND
+					type = 1;
+				else if (i == candidates_count - 1)	// LAST_CAND
 					type = 2;
-				else if (i == candidates_count - 1)
-					type = 3;
-				if( i <= 0 )	i = 1;
-				_roundInfo[i].IsTopLeftNeedToRound = is_to_round_corner[layout_type][_style.inline_preedit][type - 1][0];
-				_roundInfo[i].IsBottomLeftNeedToRound = is_to_round_corner[layout_type][_style.inline_preedit][type - 1][1];
-				_roundInfo[i].IsTopRightNeedToRound = is_to_round_corner[layout_type][_style.inline_preedit][type - 1][2];
-				_roundInfo[i].IsBottomRightNeedToRound = is_to_round_corner[layout_type][_style.inline_preedit][type - 1][3];
+				_roundInfo[i].IsTopLeftNeedToRound = is_to_round_corner[layout_type][_style.inline_preedit][type][0];
+				_roundInfo[i].IsBottomLeftNeedToRound = is_to_round_corner[layout_type][_style.inline_preedit][type][1];
+				_roundInfo[i].IsTopRightNeedToRound = is_to_round_corner[layout_type][_style.inline_preedit][type][2];
+				_roundInfo[i].IsBottomRightNeedToRound = is_to_round_corner[layout_type][_style.inline_preedit][type][3];
 				_roundInfo[i].Hemispherical = current_hemispherical_dome_status;
 			}
+			// fix round info for vetical text layout when vertical_text_left_to_right is set
 			if ( _style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT && _style.vertical_text_left_to_right )
 			{
 				if ( _style.inline_preedit )
