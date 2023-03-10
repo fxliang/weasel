@@ -173,49 +173,9 @@ void HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 	// prepare temp rect _bgRect for roundinfo calculation
 	CopyRect(_bgRect, _contentRect);
 	_bgRect.DeflateRect(offsetX + 1, offsetY + 1);
-	// prepare round info for single row status
-	_PrepareRoundInfo(dc);
-	// fix round for multilines rows
-	if(row_cnt)
-	{
-		for (auto i = 0; i < candidates_count && i < MAX_CANDIDATES_COUNT; ++i)
-		{
-			if (_style.inline_preedit)
-			{
-				_roundInfo[0].IsBottomLeftNeedToRound = false;
-				if(row_of_candidate[i] > 0 && row_of_candidate[i] < row_cnt)	// middle rows, no need to round
-				{
-					_roundInfo[i].IsTopLeftNeedToRound = false;
-					_roundInfo[i].IsTopRightNeedToRound = false;
-					_roundInfo[i].IsBottomLeftNeedToRound = false;
-					_roundInfo[i].IsBottomRightNeedToRound = false;
-				}
-				if( row_of_candidate[i] > row_of_candidate[i-1] && row_of_candidate[i] == row_cnt)	// bottom left candidate
-					_roundInfo[i].IsBottomLeftNeedToRound = true;
-				else if( i > 0 && i< (candidates_count - 1) )	// mid candidate not the bottom left, Hemispherical in _PrepareRoundInfo is false, make true to use round info
-					_roundInfo[i].Hemispherical = true;
-				if( row_of_candidate[i] == 0 && row_of_candidate[i+1] > row_of_candidate[i])	// first row right candidate
-					_roundInfo[i].IsTopRightNeedToRound = true;
-				if(i == candidates_count - 1)	// in _PrepareRoundInfo for one row, true, fixed it for multilines
-					_roundInfo[i].IsTopRightNeedToRound = false;
-			}
-			else
-			{
-				if(row_of_candidate[i] < row_cnt)	// not last rows not to round
-				{
-					_roundInfo[i].IsTopLeftNeedToRound = false;
-					_roundInfo[i].IsTopRightNeedToRound = false;
-					_roundInfo[i].IsBottomLeftNeedToRound = false;
-					_roundInfo[i].IsBottomRightNeedToRound = false;
-				}
-				if( row_of_candidate[i] > row_of_candidate[i-1] && row_of_candidate[i] == row_cnt)	// bottom left candidate
-					_roundInfo[i].IsBottomLeftNeedToRound = true;
-				else if( i > 0 && i< (candidates_count - 1) )	// mid candidate not the bottom left
-					_roundInfo[i].Hemispherical = true;
-			}
-		}
-	}
-
+	// prepare round info for single row status, only for single row situation
+	if(!row_cnt)
+		_PrepareRoundInfo(dc);
 	int deflatex = offsetX - _style.border / 2;
 	int deflatey = offsetY - _style.border / 2;
 	_contentRect.DeflateRect(deflatex, deflatey);

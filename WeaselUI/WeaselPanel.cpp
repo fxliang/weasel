@@ -478,7 +478,7 @@ void WeaselPanel::_BlurBacktround(CRect& rc)
 
 	if (setWindowCompositionAttribute != NULL 
 		&& (((m_style.shadow_color & 0xff000000) == 0) || m_style.shadow_radius == 0) 
-		&& (m_style.back_color >> 24) < 0xff
+		&& (m_style.back_color >> 24) < 0x80
 		&& (m_style.back_color >> 24) > 0
 		&& _isWindows10OrGreater)
 	{

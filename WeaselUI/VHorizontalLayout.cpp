@@ -401,24 +401,6 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, DirectWriteResources* pDW
 	CopyRect(_bgRect, _contentRect);
 	_bgRect.DeflateRect(offsetX + 1, offsetY + 1);
 	// prepare round info for single row status
-#if 0
-	_PrepareRoundInfo(dc);
-	// candidates end
-	// fixe round for multicolumns todo
-	if(candidates_count)	
-	{
-		for (auto i = 0; i < candidates_count && i < MAX_CANDIDATES_COUNT; ++i)
-		{
-			if(_style.inline_preedit)
-			{
-			}
-			else
-			{
-			}
-		}
-	}
-	//
-#endif
 	int deflatex = offsetX - _style.border / 2;
 	int deflatey = offsetY - _style.border / 2;
 	_contentRect.DeflateRect(deflatex, deflatey);

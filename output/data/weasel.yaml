@@ -31,10 +31,10 @@ style:
   vertical_text_with_wrap: false
   layout:
     align_type: bottom
-    max_width: 1080
+    max_width: 0	#set 0 to disable max width
     min_width: 160
     min_height: 0
-    max_height: 600
+    max_height: 0	#set 0 to disable max height
     border_width: 3
     margin_x: 12
     margin_y: 12
