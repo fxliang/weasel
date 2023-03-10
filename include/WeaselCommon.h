@@ -263,6 +263,7 @@ namespace weasel
 		PreeditType preedit_type;
 		LayoutType layout_type;
 		bool vertical_text_left_to_right;
+		bool vertical_text_with_wrap;
 		std::wstring font_face;
 		std::wstring label_font_face;
 		std::wstring comment_font_face;
@@ -270,7 +271,6 @@ namespace weasel
 		int label_font_point;
 		int comment_font_point;
 		bool inline_preedit;
-		bool color_font;
 		bool blur_window;
 		bool display_tray_icon;
 		std::wstring current_icon;
@@ -327,7 +327,6 @@ namespace weasel
 			inline_preedit(false),
 			align_type(ALIGN_BOTTOM),
 			preedit_type(COMPOSITION),
-			color_font(0),
 			blur_window(false),
 			display_tray_icon(false),
 			current_icon(),
@@ -335,7 +334,8 @@ namespace weasel
 			label_text_format(L"%s."),
 			mark_text(),
 			layout_type(LAYOUT_VERTICAL),
-			vertical_text_left_to_right(true),
+			vertical_text_left_to_right(false),
+			vertical_text_with_wrap(false),
 			min_width(0),
 			max_width(0),
 			min_height(0),
@@ -381,6 +381,7 @@ namespace weasel
 					|| preedit_type != st.preedit_type
 					|| layout_type != st.layout_type
 					|| vertical_text_left_to_right != st.vertical_text_left_to_right
+					|| vertical_text_with_wrap != st.vertical_text_with_wrap
 					|| font_face != st.font_face
 					|| label_font_face != st.label_font_face
 					|| comment_font_face != st.comment_font_face
@@ -388,7 +389,6 @@ namespace weasel
 					|| label_font_point != st.label_font_point
 					|| comment_font_point != st.comment_font_point
 					|| inline_preedit != st.inline_preedit
-					|| color_font != st.color_font
 					|| blur_window != st.blur_window
 					|| display_tray_icon != st.display_tray_icon
 					|| current_icon != st.current_icon
@@ -448,7 +448,6 @@ namespace boost {
 			ar & s.comment_font_point;
 			ar & s.inline_preedit;
 			ar & s.align_type;
-			ar & s.color_font;
 			ar & s.blur_window;
 			ar & s.preedit_type;
 			ar & s.display_tray_icon;
@@ -459,6 +458,7 @@ namespace boost {
 			// layout
 			ar & s.layout_type;
 			ar & s.vertical_text_left_to_right;
+			ar & s.vertical_text_with_wrap;
 			ar & s.min_width;
 			ar & s.max_width;
 			ar & s.min_height;

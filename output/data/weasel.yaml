@@ -10,7 +10,6 @@ app_options:
     ascii_mode: true
 
 style:
-  color_font: false
   color_scheme: aqua
   color_scheme_dark: lost_temple
   font_face: Microsoft YaHei
@@ -29,6 +28,7 @@ style:
   mark_text: ""
   vertical_text: false
   vertical_text_left_to_right: false
+  vertical_text_with_wrap: false
   layout:
     align_type: bottom
     max_width: 1080
