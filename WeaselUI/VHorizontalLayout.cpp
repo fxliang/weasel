@@ -404,5 +404,6 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, DirectWriteResources* pDW
 	int deflatex = offsetX - _style.border / 2;
 	int deflatey = offsetY - _style.border / 2;
 	_contentRect.DeflateRect(deflatex, deflatey);
+	if (_style.border % 2 == 0)	_contentRect.DeflateRect(1, 1);
 }
 

@@ -482,7 +482,7 @@ void WeaselPanel::_BlurBacktround(CRect& rc)
 		&& _isWindows10OrGreater)
 	{
 		rc.DeflateRect(m_layout->offsetX, m_layout->offsetY);
-		SetWindowRgn(CreateRoundRectRgn(rc.left, rc.top, rc.right + 1 + m_style.border, rc.bottom + 1 + m_style.border,
+		SetWindowRgn(CreateRoundRectRgn(rc.left - m_style.border, rc.top - m_style.border, rc.right + 1 + m_style.border, rc.bottom + 1 + m_style.border,
 			m_style.round_corner_ex, m_style.round_corner_ex), true);
 		setWindowCompositionAttribute(m_hWnd, &data);
 	}
