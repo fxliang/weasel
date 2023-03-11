@@ -12,6 +12,8 @@
 #define PREPAREBITMAPINFOHEADER(width, height)	{40, width, height, 1, 32, BI_RGB, 0, 0, 0, 0, 0}
 #define COLORTRANSPARENT(color)		((color & 0xff000000) == 0)
 #define COLORNOTTRANSPARENT(color)	((color & 0xff000000) != 0)
+#define TRANS_COLOR		0x00000000
+#define GDPCOLOR_FROM_COLORREF(color)	Gdiplus::Color::MakeARGB(((color >> 24) & 0xff), GetRValue(color), GetGValue(color), GetBValue(color))
 
 WeaselPanel::WeaselPanel(weasel::UI& ui)
 	: m_layout(NULL),
@@ -152,8 +154,7 @@ void WeaselPanel::CleanUp()
 	pBrush = NULL;
 }
 
-void WeaselPanel::_HighlightText(CDCHandle &dc, CRect rc, COLORREF color, COLORREF shadowColor, int radius, BackType type = BackType::TEXT, bool highlighted = false, 
-	IsToRoundStruct rd = IsToRoundStruct(), COLORREF bordercolor=0)
+void WeaselPanel::_HighlightText(CDCHandle &dc, CRect rc, COLORREF color, COLORREF shadowColor, int radius, BackType type = BackType::TEXT, IsToRoundStruct rd = IsToRoundStruct(), COLORREF bordercolor=TRANS_COLOR)
 {
 	Gdiplus::Graphics g_back(dc);
 	g_back.SetSmoothingMode(Gdiplus::SmoothingMode::SmoothingModeHighQuality);
@@ -202,7 +203,8 @@ void WeaselPanel::_HighlightText(CDCHandle &dc, CRect rc, COLORREF color, COLORR
 	}
 	GraphicsRoundRectPath* hiliteBackPath;
 	if (rd.Hemispherical && type!= BackType::BACKGROUND && m_style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN && m_style.layout_type != UIStyle::LAYOUT_VERTICAL_FULLSCREEN) {
-		int rr = m_style.round_corner_ex - m_style.border / 2 + (m_style.border % 2 == 0);
+		//int rr = m_style.round_corner_ex - m_style.border / 2 + (m_style.border % 2 == 0);
+		int rr = m_style.round_corner_ex;
 		hiliteBackPath = new GraphicsRoundRectPath(rc, rr, rd.IsTopLeftNeedToRound, rd.IsTopRightNeedToRound, rd.IsBottomRightNeedToRound, rd.IsBottomLeftNeedToRound);
 	}
 	else // background or current candidate background not out of window background
@@ -210,7 +212,7 @@ void WeaselPanel::_HighlightText(CDCHandle &dc, CRect rc, COLORREF color, COLORR
 
 	// 必须back_color非完全透明才绘制
 	if COLORNOTTRANSPARENT(color)	{
-		Gdiplus::Color back_color = Gdiplus::Color::MakeARGB((color >> 24), GetRValue(color), GetGValue(color), GetBValue(color));
+		Gdiplus::Color back_color = GDPCOLOR_FROM_COLORREF(color);
 		Gdiplus::SolidBrush back_brush(back_color);
 		// candidates only, and current candidate background out of window background
 		g_back.FillPath(&back_brush, hiliteBackPath);
@@ -218,14 +220,12 @@ void WeaselPanel::_HighlightText(CDCHandle &dc, CRect rc, COLORREF color, COLORR
 	// draw border
 	if (type == BackType::BACKGROUND && m_style.border != 0 && COLORNOTTRANSPARENT(bordercolor)) {
 		GraphicsRoundRectPath bgPath(rc, m_style.round_corner_ex);
-		int alpha = ((bordercolor >> 24) & 0xff);
-		Gdiplus::Color border_color = Gdiplus::Color::MakeARGB(alpha, GetRValue(bordercolor), GetGValue(bordercolor), GetBValue(bordercolor));
+		Gdiplus::Color border_color = GDPCOLOR_FROM_COLORREF(bordercolor);
 		Gdiplus::Pen gPenBorder(border_color, (Gdiplus::REAL)m_style.border);
 		g_back.DrawPath(&gPenBorder, &bgPath);
 	}
 	else if (type != BackType::BACKGROUND && type != BackType::TEXT && m_style.border != 0 && COLORNOTTRANSPARENT(bordercolor)) {
-		int alpha = ((bordercolor >> 24) & 0xff);
-		Gdiplus::Color border_color = Gdiplus::Color::MakeARGB(alpha, GetRValue(bordercolor), GetGValue(bordercolor), GetBValue(bordercolor));
+		Gdiplus::Color border_color = GDPCOLOR_FROM_COLORREF(bordercolor);
 		Gdiplus::Pen gPenBorder(border_color, (Gdiplus::REAL)m_style.border);
 		g_back.DrawPath(&gPenBorder, hiliteBackPath);
 	}
@@ -328,7 +328,7 @@ bool WeaselPanel::_DrawPreeditBack(Text const& text, CDCHandle dc, CRect const& 
 				rc_hi = CRect(x, rc.top, x + (selEnd.cx - selStart.cx), rc.bottom);
 			rc_hi.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
 			IsToRoundStruct rd = m_layout->GetTextRoundInfo();
-			_HighlightText(dc, rc_hi, m_style.hilited_back_color, m_style.hilited_shadow_color, m_style.round_corner, BackType::TEXT, false, rd, 0x00000000);
+			_HighlightText(dc, rc_hi, m_style.hilited_back_color, m_style.hilited_shadow_color, m_style.round_corner, BackType::TEXT, rd);
 			drawn = true;
 		}
 	}
@@ -365,7 +365,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 				rect = m_layout->GetCandidateRect((int)i);
 				rect.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
 				IsToRoundStruct rd = m_layout->GetRoundInfo(i);
-				_HighlightText(dc, rect, 0x00000000, m_style.candidate_shadow_color, m_style.round_corner, bkType, false, rd);
+				_HighlightText(dc, rect, 0x00000000, m_style.candidate_shadow_color, m_style.round_corner, bkType, rd);
 				drawn = true;
 			}
 		// draw non highlighted candidates, without shadow
@@ -377,7 +377,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 				rect = m_layout->GetCandidateRect((int)i);
 				rect.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
 				IsToRoundStruct rd = m_layout->GetRoundInfo(i);
-				_HighlightText(dc, rect, m_style.candidate_back_color, 0x00000000, m_style.round_corner, bkType, false, rd, m_style.candidate_border_color);
+				_HighlightText(dc, rect, m_style.candidate_back_color, 0x00000000, m_style.round_corner, bkType, rd, m_style.candidate_border_color);
 			}
 			drawn = true;
 		}
@@ -387,7 +387,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 			rect = m_layout->GetHighlightRect();
 			rect.InflateRect(m_style.hilite_padding, m_style.hilite_padding);
 			IsToRoundStruct rd = m_layout->GetRoundInfo(m_ctx.cinfo.highlighted);
-			_HighlightText(dc, rect, m_style.hilited_candidate_back_color, m_style.hilited_candidate_shadow_color, m_style.round_corner, bkType, true, rd, m_style.hilited_candidate_border_color);
+			_HighlightText(dc, rect, m_style.hilited_candidate_back_color, m_style.hilited_candidate_shadow_color, m_style.round_corner, bkType, rd, m_style.hilited_candidate_border_color);
 			drawn = true;
 		}
 	}
@@ -503,7 +503,7 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 		// background start
 		if (!m_ctx.empty()) {
 			CRect backrc = m_layout->GetContentRect();
-			_HighlightText(memDC, backrc, m_style.back_color, m_style.shadow_color, m_style.round_corner_ex, BackType::BACKGROUND, m_style.border_color);
+			_HighlightText(memDC, backrc, m_style.back_color, m_style.shadow_color, m_style.round_corner_ex, BackType::BACKGROUND, IsToRoundStruct(),  m_style.border_color);
 		}
 		if(!m_ctx.aux.str.empty())
 			drawn |= _DrawPreeditBack(m_ctx.aux, memDC, m_layout->GetAuxiliaryRect());
