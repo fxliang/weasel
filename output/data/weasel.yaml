@@ -30,7 +30,7 @@ style:
   vertical_text_left_to_right: false
   vertical_text_with_wrap: false
   layout:
-    align_type: bottom
+    align_type: center
     max_width: 0	#set 0 to disable max width
     min_width: 160
     min_height: 0

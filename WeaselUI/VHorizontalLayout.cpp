@@ -120,9 +120,24 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 		for (auto i = 0; i < candidates_count && i < MAX_CANDIDATES_COUNT; ++i)
 		{
 			int ol = 0, ot = 0, oc = 0;
-			ol = (wids[i] - _candidateLabelRects[i].Width()) / 2;
-			ot = (wids[i] - _candidateTextRects[i].Width()) / 2;
-			oc = (wids[i] - _candidateCommentRects[i].Width()) / 2;
+			if(_style.align_type == UIStyle::ALIGN_CENTER)
+			{
+				ol = (wids[i] - _candidateLabelRects[i].Width()) / 2;
+				ot = (wids[i] - _candidateTextRects[i].Width()) / 2;
+				oc = (wids[i] - _candidateCommentRects[i].Width()) / 2;
+			}
+			else if((_style.align_type == UIStyle::ALIGN_BOTTOM) && _style.vertical_text_left_to_right)
+			{
+				ol = (wids[i] - _candidateLabelRects[i].Width());
+				ot = (wids[i] - _candidateTextRects[i].Width());
+				oc = (wids[i] - _candidateCommentRects[i].Width());
+			}
+			else if((_style.align_type == UIStyle::ALIGN_TOP) && (!_style.vertical_text_left_to_right))
+			{
+				ol = (wids[i] - _candidateLabelRects[i].Width());
+				ot = (wids[i] - _candidateTextRects[i].Width());
+				oc = (wids[i] - _candidateCommentRects[i].Width());
+			}
 			// offset rects
 			_candidateLabelRects[i].OffsetRect(ol + offsetX, offsetY);
 			_candidateTextRects[i].OffsetRect(ot + offsetX, offsetY);
@@ -315,7 +330,13 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, DirectWriteResources* pDW
 				ot = (width_of_cols[col_of_candidate[i]] - _candidateTextRects[i].Width()) / 2;
 				oc = (width_of_cols[col_of_candidate[i]] - _candidateCommentRects[i].Width()) / 2;
 			}
-			else if (_style.align_type == UIStyle::ALIGN_BOTTOM)
+			else if((_style.align_type == UIStyle::ALIGN_BOTTOM) && _style.vertical_text_left_to_right)
+			{
+				ol = (width_of_cols[col_of_candidate[i]] - _candidateLabelRects[i].Width());
+				ot = (width_of_cols[col_of_candidate[i]] - _candidateTextRects[i].Width());
+				oc = (width_of_cols[col_of_candidate[i]] - _candidateCommentRects[i].Width());
+			}
+			else if((_style.align_type == UIStyle::ALIGN_TOP) && (!_style.vertical_text_left_to_right))
 			{
 				ol = (width_of_cols[col_of_candidate[i]] - _candidateLabelRects[i].Width());
 				ot = (width_of_cols[col_of_candidate[i]] - _candidateTextRects[i].Width());
