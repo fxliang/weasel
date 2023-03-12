@@ -149,7 +149,7 @@ void HorizontalLayout::DoLayout(CDCHandle dc, DirectWriteResources* pDWR )
 			_candidateTextRects[i].OffsetRect(0, ot);
 			_candidateCommentRects[i].OffsetRect(0, oc);
 			if(( i < candidates_count - 1 && row_of_candidate[i] < row_of_candidate[i+1] ) || (i == candidates_count - 1))
-				_candidateRects[i].right = offsetX + max_width_of_rows;
+				_candidateRects[i].right = offsetX + max(width, max_width_of_rows);
 		}
 		height = mintop_of_rows[row_cnt] + height_of_rows[row_cnt] - offsetY;
 		width = max(width, max_width_of_rows);
