@@ -478,18 +478,18 @@ void RimeWithWeaselHandler::_LoadSchemaSpecificSettings(const std::string& schem
 	{
 		std::wstring tmp = utf8towcs(buffer);
 		std::wstring user_dir = utf8towcs(weasel_user_data_dir());
-		DWORD dwAttrib = GetFileAttributes((user_dir + L"\/" + tmp).c_str());
+		DWORD dwAttrib = GetFileAttributes((user_dir + L"\\" + tmp).c_str());
 		if (!(INVALID_FILE_ATTRIBUTES != dwAttrib && 0 == (dwAttrib & FILE_ATTRIBUTE_DIRECTORY)))
 		{
 			std::wstring share_dir = utf8towcs(weasel_shared_data_dir());
-			dwAttrib = GetFileAttributes((share_dir + L"\/" + tmp).c_str());
+			dwAttrib = GetFileAttributes((share_dir + L"\\" + tmp).c_str());
 			if (!(INVALID_FILE_ATTRIBUTES != dwAttrib && 0 == (dwAttrib & FILE_ATTRIBUTE_DIRECTORY)))
 				m_ui->style().current_icon = L"";
 			else
-				m_ui->style().current_icon = (share_dir + L"\/" + tmp);
+				m_ui->style().current_icon = (share_dir + L"\\" + tmp);
 		}
 		else
-			m_ui->style().current_icon = user_dir + L"\/" + tmp;
+			m_ui->style().current_icon = user_dir + L"\\" + tmp;
 	}
 	else
 		m_ui->style().current_icon = L"";
@@ -770,14 +770,7 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 	{
 		style.inline_preedit = !!inline_preedit;
 	}
-	Bool color_font = True;
-	if (RimeConfigGetBool(config, "style/color_font", &color_font) || initialize)
-	{
-		style.color_font = !!color_font;
-	}
 
-	// if system version lower than 8.1, disable color_font
-	style.color_font = style.color_font && IsWindows8Point10OrGreaterEx();
 	Bool blur_window = false;
 	if (RimeConfigGetBool(config, "style/blur_window", &blur_window) || initialize)
 	{
@@ -833,6 +826,24 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 		style.layout_type = (style.layout_type == weasel::UIStyle::LAYOUT_HORIZONTAL)
 			 ? weasel::UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN : weasel::UIStyle::LAYOUT_VERTICAL_FULLSCREEN;
 	}
+
+	Bool vertical_text = False;
+	if ( RimeConfigGetBool(config, "style/vertical_text", &vertical_text))
+	{
+		if(vertical_text)
+			style.layout_type = weasel::UIStyle::LAYOUT_VERTICAL_TEXT;
+	}
+	Bool vertical_text_left_to_right = False;
+	if ( RimeConfigGetBool(config, "style/vertical_text_left_to_right", &vertical_text_left_to_right))
+	{
+		style.vertical_text_left_to_right = !!vertical_text_left_to_right;
+	}
+	Bool vertical_text_with_wrap = false;
+	if ( RimeConfigGetBool(config, "style/vertical_text_with_wrap", &vertical_text_with_wrap) )
+	{
+		style.vertical_text_with_wrap = !!vertical_text_with_wrap;
+	}
+
 	char label_text_format[128] = { 0 };
 	if (RimeConfigGetString(config, "style/label_format", label_text_format, sizeof(label_text_format) - 1))
 	{
@@ -851,6 +862,9 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 			style.layout_type = weasel::UIStyle::LAYOUT_VERTICAL;
 		else if (!std::strcmp(layout_type, "horizontal"))
 			style.layout_type = weasel::UIStyle::LAYOUT_HORIZONTAL;
+		else if (!std::strcmp(layout_type, "vertical_text"))
+			style.layout_type = weasel::UIStyle::LAYOUT_VERTICAL_TEXT;
+
 		if (!std::strcmp(layout_type, "vertical+fullscreen"))
 			style.layout_type = weasel::UIStyle::LAYOUT_VERTICAL_FULLSCREEN;
 		else if (!std::strcmp(layout_type, "horizontal+fullscreen"))
@@ -861,6 +875,7 @@ static void _UpdateUIStyle(RimeConfig* config, weasel::UI* ui, bool initialize)
 	RimeConfigGetInt(config, "style/layout/min_width", &style.min_width);
 	RimeConfigGetInt(config, "style/layout/max_width", &style.max_width);
 	RimeConfigGetInt(config, "style/layout/min_height", &style.min_height);
+	RimeConfigGetInt(config, "style/layout/max_height", &style.max_height);
 	if (!RimeConfigGetInt(config, "style/layout/border", &style.border)) {
 		RimeConfigGetInt(config, "style/layout/border_width", &style.border);
 	}

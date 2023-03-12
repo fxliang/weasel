@@ -53,14 +53,15 @@ DirectWriteResources::~DirectWriteResources()
 
 HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int label_font_point,
 	std::wstring font_face, int font_point,
-	std::wstring comment_font_face, int comment_font_point) 
+	std::wstring comment_font_face, int comment_font_point, bool vertical_text) 
 {
 	// prepare d2d1 resources
 	SafeRelease(&pPreeditTextFormat);
 	SafeRelease(&pTextFormat);
 	SafeRelease(&pLabelTextFormat);
 	SafeRelease(&pCommentTextFormat);
-	DWRITE_WORD_WRAPPING wrapping = _style.max_width == 0 ? DWRITE_WORD_WRAPPING_NO_WRAP : DWRITE_WORD_WRAPPING_WHOLE_WORD;
+	DWRITE_WORD_WRAPPING wrapping = (_style.max_width == 0 || _style.max_height == 0) ? DWRITE_WORD_WRAPPING_NO_WRAP : DWRITE_WORD_WRAPPING_WHOLE_WORD;
+	DWRITE_FLOW_DIRECTION flow = _style.vertical_text_left_to_right ? DWRITE_FLOW_DIRECTION_LEFT_TO_RIGHT : DWRITE_FLOW_DIRECTION_RIGHT_TO_LEFT;
 	HRESULT hResult = S_OK;
 	std::vector<std::wstring> fontFaceStrVector;
 	// text font text format set up
@@ -74,7 +75,15 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 			font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(&pTextFormat));
 	if( pTextFormat != NULL)
 	{
-		pTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
+		if (vertical_text)
+		{
+			pTextFormat->SetFlowDirection(flow);
+			pTextFormat->SetReadingDirection(DWRITE_READING_DIRECTION_TOP_TO_BOTTOM);
+			pTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
+		}
+		else
+			pTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
+
 		pTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
 		pTextFormat->SetWordWrapping(wrapping);
 		if (fontFaceStrVector.size() > 1)
@@ -86,9 +95,16 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 			font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(&pPreeditTextFormat));
 	if( pPreeditTextFormat != NULL)
 	{
-		pPreeditTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
+		if (vertical_text)
+		{
+			pPreeditTextFormat->SetFlowDirection(flow);
+			pPreeditTextFormat->SetReadingDirection(DWRITE_READING_DIRECTION_TOP_TO_BOTTOM);
+			pPreeditTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
+		}
+		else
+			pPreeditTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
 		pPreeditTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
-		pPreeditTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP);
+		pPreeditTextFormat->SetWordWrapping(wrapping);
 		if (fontFaceStrVector.size() > 1)
 			_SetFontFallback(pPreeditTextFormat, fontFaceStrVector);
 	}
@@ -104,7 +120,14 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 			label_font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(&pLabelTextFormat));
 	if( pLabelTextFormat != NULL)
 	{
-		pLabelTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
+		if (vertical_text)
+		{
+			pLabelTextFormat->SetFlowDirection(flow);
+			pLabelTextFormat->SetReadingDirection(DWRITE_READING_DIRECTION_TOP_TO_BOTTOM);
+			pLabelTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
+		}
+		else
+			pLabelTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
 		pLabelTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
 		pLabelTextFormat->SetWordWrapping(wrapping);
 		if (fontFaceStrVector.size() > 1)
@@ -122,7 +145,14 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 			comment_font_point * dpiScaleX_, L"", reinterpret_cast<IDWriteTextFormat**>(&pCommentTextFormat));
 	if( pCommentTextFormat != NULL)
 	{
-		pCommentTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
+		if (vertical_text)
+		{
+			pCommentTextFormat->SetFlowDirection(flow);
+			pCommentTextFormat->SetReadingDirection(DWRITE_READING_DIRECTION_TOP_TO_BOTTOM);
+			pCommentTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
+		}
+		else
+			pCommentTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_LEADING);
 		pCommentTextFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER);
 		pCommentTextFormat->SetWordWrapping(wrapping);
 		if (fontFaceStrVector.size() > 1)
@@ -135,7 +165,8 @@ HRESULT DirectWriteResources::InitResources(std::wstring label_font_face, int la
 HRESULT DirectWriteResources::InitResources(UIStyle& style)
 {
 	_style = style;
-	return InitResources(style.label_font_face, style.label_font_point, style.font_face, style.font_point, style.comment_font_face, style.comment_font_point);
+	return InitResources(style.label_font_face, style.label_font_point, style.font_face, _style.font_point, 
+		style.comment_font_face, style.comment_font_point, style.layout_type==UIStyle::LAYOUT_VERTICAL_TEXT);
 }
 
 void DirectWriteResources::_ParseFontFace(const std::wstring fontFaceStr,
@@ -249,67 +280,3 @@ void DirectWriteResources::_SetFontFallback(IDWriteTextFormat1* textFormat, std:
 	SafeRelease(&pFontFallbackBuilder);
 }
 
-GDIFonts::GDIFonts(const UIStyle& style) 
-{
-	std::vector<std::wstring> fontFaceStrVector;
-	boost::algorithm::split(fontFaceStrVector, style.label_font_face, boost::algorithm::is_any_of(L","));
-	_ParseFontFace(fontFaceStrVector[0], m_LabelFont.m_FontFace, m_LabelFont.m_FontWeight);
-	m_LabelFont.m_FontPoint = style.label_font_point;
-	fontFaceStrVector.swap(std::vector<std::wstring>());
-
-	boost::algorithm::split(fontFaceStrVector, style.font_face, boost::algorithm::is_any_of(L","));
-	_ParseFontFace(fontFaceStrVector[0], m_TextFont.m_FontFace, m_TextFont.m_FontWeight);
-	m_TextFont.m_FontPoint = style.font_point;
-	fontFaceStrVector.swap(std::vector<std::wstring>());
-
-	boost::algorithm::split(fontFaceStrVector, style.comment_font_face, boost::algorithm::is_any_of(L","));
-	_ParseFontFace(fontFaceStrVector[0], m_CommentFont.m_FontFace, m_CommentFont.m_FontWeight);
-	m_CommentFont.m_FontPoint = style.comment_font_point;
-	fontFaceStrVector.swap(std::vector<std::wstring>());
-}
-
-void GDIFonts::InitResources(const UIStyle& style) 
-{
-	std::vector<std::wstring> fontFaceStrVector;
-	boost::algorithm::split(fontFaceStrVector, style.label_font_face, boost::algorithm::is_any_of(L","));
-	_ParseFontFace(fontFaceStrVector[0], m_LabelFont.m_FontFace, m_LabelFont.m_FontWeight);
-	m_LabelFont.m_FontPoint = style.label_font_point;
-	fontFaceStrVector.swap(std::vector<std::wstring>());
-
-	boost::algorithm::split(fontFaceStrVector, style.font_face, boost::algorithm::is_any_of(L","));
-	_ParseFontFace(fontFaceStrVector[0], m_TextFont.m_FontFace, m_TextFont.m_FontWeight);
-	m_TextFont.m_FontPoint = style.font_point;
-	fontFaceStrVector.swap(std::vector<std::wstring>());
-
-	boost::algorithm::split(fontFaceStrVector, style.comment_font_face, boost::algorithm::is_any_of(L","));
-	_ParseFontFace(fontFaceStrVector[0], m_CommentFont.m_FontFace, m_CommentFont.m_FontWeight);
-	m_CommentFont.m_FontPoint = style.comment_font_point;
-	fontFaceStrVector.swap(std::vector<std::wstring>());
-}
-
-void GDIFonts::_ParseFontFace(const std::wstring fontFaceStr, std::wstring& fontFace, int& fontWeight)
-{
-	std::vector<std::wstring> parsedStrV; 
-	boost::algorithm::split(parsedStrV, fontFaceStr, boost::algorithm::is_any_of(L":"));
-	fontFace = parsedStrV[0];
-	if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":thin", boost::wregex::icase)))
-		fontWeight = FW_THIN;
-	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":(extra_light|ultra_light)", boost::wregex::icase)))
-		fontWeight = FW_EXTRALIGHT;
-	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":(light|semi_light|demi_light)", boost::wregex::icase)))
-		fontWeight = FW_LIGHT;
-	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":medium", boost::wregex::icase)))
-		fontWeight = FW_MEDIUM;
-	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":bold", boost::wregex::icase)))
-		fontWeight = FW_BOLD;
-	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":(semi_bold|demi_bold)", boost::wregex::icase)))
-		fontWeight = FW_SEMIBOLD;
-	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":(extra_bold|ultra_bold)", boost::wregex::icase)))
-		fontWeight = FW_EXTRABOLD;
-	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":(extra_black|ultra_black|heavy|black)", boost::wregex::icase)))
-		fontWeight = FW_BLACK;
-	else if (boost::regex_search(fontFaceStr, boost::wsmatch(), boost::wregex(L":normal", boost::wregex::icase)))
-		fontWeight = FW_NORMAL;
-	else
-		fontWeight = FW_DONTCARE;
-}

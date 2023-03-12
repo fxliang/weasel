@@ -7,8 +7,9 @@ namespace weasel
 	class FullScreenLayout: public StandardLayout
 	{
 	public:
-		FullScreenLayout(const UIStyle &style, const Context &context, const Status &status, const CRect& inputPos, Layout* layout);
-		virtual ~FullScreenLayout();
+		FullScreenLayout(const UIStyle &style, const Context &context, const Status &status, const CRect& inputPos, Layout* layout)
+			: StandardLayout(style, context, status), mr_inputPos(inputPos), m_layout(layout) { }
+		virtual ~FullScreenLayout(){ delete m_layout; }
 
 		virtual void DoLayout(CDCHandle dc, DirectWriteResources* pDWR = NULL);
 

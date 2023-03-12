@@ -246,6 +246,7 @@ namespace weasel
 		{
 			LAYOUT_VERTICAL = 0,
 			LAYOUT_HORIZONTAL,
+			LAYOUT_VERTICAL_TEXT,
 			LAYOUT_VERTICAL_FULLSCREEN,
 			LAYOUT_HORIZONTAL_FULLSCREEN,
 			LAYOUT_TYPE_LAST
@@ -261,6 +262,8 @@ namespace weasel
 		LayoutAlignType align_type;
 		PreeditType preedit_type;
 		LayoutType layout_type;
+		bool vertical_text_left_to_right;
+		bool vertical_text_with_wrap;
 		std::wstring font_face;
 		std::wstring label_font_face;
 		std::wstring comment_font_face;
@@ -268,7 +271,6 @@ namespace weasel
 		int label_font_point;
 		int comment_font_point;
 		bool inline_preedit;
-		bool color_font;
 		bool blur_window;
 		bool display_tray_icon;
 		std::wstring current_icon;
@@ -279,6 +281,7 @@ namespace weasel
 		int min_width;
 		int max_width;
 		int min_height;
+		int max_height;
 		int border;
 		int margin_x;
 		int margin_y;
@@ -324,7 +327,6 @@ namespace weasel
 			inline_preedit(false),
 			align_type(ALIGN_BOTTOM),
 			preedit_type(COMPOSITION),
-			color_font(0),
 			blur_window(false),
 			display_tray_icon(false),
 			current_icon(),
@@ -332,9 +334,12 @@ namespace weasel
 			label_text_format(L"%s."),
 			mark_text(),
 			layout_type(LAYOUT_VERTICAL),
+			vertical_text_left_to_right(false),
+			vertical_text_with_wrap(false),
 			min_width(0),
 			max_width(0),
 			min_height(0),
+			max_height(0),
 			border(0),
 			margin_x(0),
 			margin_y(0),
@@ -375,6 +380,8 @@ namespace weasel
 					align_type != st.align_type
 					|| preedit_type != st.preedit_type
 					|| layout_type != st.layout_type
+					|| vertical_text_left_to_right != st.vertical_text_left_to_right
+					|| vertical_text_with_wrap != st.vertical_text_with_wrap
 					|| font_face != st.font_face
 					|| label_font_face != st.label_font_face
 					|| comment_font_face != st.comment_font_face
@@ -382,7 +389,6 @@ namespace weasel
 					|| label_font_point != st.label_font_point
 					|| comment_font_point != st.comment_font_point
 					|| inline_preedit != st.inline_preedit
-					|| color_font != st.color_font
 					|| blur_window != st.blur_window
 					|| display_tray_icon != st.display_tray_icon
 					|| current_icon != st.current_icon
@@ -392,6 +398,7 @@ namespace weasel
 					|| min_width != st.min_width
 					|| max_width != st.max_width
 					|| min_height != st.min_height
+					|| max_height != st.max_height
 					|| border != st.border
 					|| margin_x != st.margin_x
 					|| margin_y != st.margin_y
@@ -441,7 +448,6 @@ namespace boost {
 			ar & s.comment_font_point;
 			ar & s.inline_preedit;
 			ar & s.align_type;
-			ar & s.color_font;
 			ar & s.blur_window;
 			ar & s.preedit_type;
 			ar & s.display_tray_icon;
@@ -451,9 +457,12 @@ namespace boost {
 			ar & s.mark_text;
 			// layout
 			ar & s.layout_type;
+			ar & s.vertical_text_left_to_right;
+			ar & s.vertical_text_with_wrap;
 			ar & s.min_width;
 			ar & s.max_width;
 			ar & s.min_height;
+			ar & s.max_height;
 			ar & s.border;
 			ar & s.margin_x;
 			ar & s.margin_y;
