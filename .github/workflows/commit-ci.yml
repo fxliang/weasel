@@ -19,6 +19,7 @@ jobs:
     env:
       boost_version: 1.82.0
       BOOST_ROOT: ${{ github.workspace }}\deps\boost_1_82_0
+      ARCH: x64
     steps:
       - name: Checkout last commit
         uses: actions/checkout@v3
