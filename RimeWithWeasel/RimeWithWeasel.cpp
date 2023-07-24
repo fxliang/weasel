@@ -662,13 +662,10 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
 		if (ctx.menu.num_candidates)
 		{
 			CandidateInfo cinfo;
-			std::wstringstream ss;
-			boost::archive::text_woarchive oa(ss);
 			_GetCandidateInfo(cinfo, ctx);
 
-			oa << cinfo;
-
-			messages.push_back(std::string("ctx.cand=") + wstring_to_string(ss.str().c_str(), CP_UTF8) + '\n');
+			json j = cinfo;
+			messages.push_back(std::string("ctx.cand=") + j.dump() + '\n');
 		}
 		RimeFreeContext(&ctx);
 	}

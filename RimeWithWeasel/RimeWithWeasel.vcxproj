@@ -205,6 +205,9 @@
     <None Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\WeaselIPC\WeaselIPC.vcxproj">
+      <Project>{ce11a2df-8d20-4b07-a935-4b0d03f0303d}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\WeaselUI\WeaselUI.vcxproj">
       <Project>{10b3b8bf-7294-4661-9a8a-2ffc920fa2f4}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>

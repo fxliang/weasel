@@ -4,6 +4,8 @@
 //#include <vector>
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/string.hpp>
+#include <json.hpp>
+using json = nlohmann::json;
 
 #define WEASEL_IME_NAME L"小狼毫"
 #define WEASEL_REG_KEY L"Software\\Rime\\Weasel"
@@ -481,6 +483,21 @@ namespace weasel
 					);
 		}
 	};
+
+	extern void to_json(json& j, const std::wstring& w);
+	extern void from_json(const json& j, std::wstring& w);
+	extern void to_json(json& j, const TextAttributeType& tat);
+	extern void from_json(const json& j, TextAttributeType& tat);
+	extern void to_json(json& j, const TextAttribute& ta);
+	extern void from_json(const json& j, TextAttribute& ta);
+	extern void to_json(json& j, const TextRange& tr);
+	extern void from_json(const json& j, TextRange& tr);
+	extern void to_json(json& j, const Text& t);
+	extern void from_json(const json& j, Text& t);
+	extern void to_json(json& j, const CandidateInfo& ci);
+	extern void from_json(const json& j, CandidateInfo& ci);
+	extern void to_json(json& j, const Context& ctx);
+	extern void from_json(const json& j, Context& ctx);
 }
 namespace boost {
 	namespace serialization {
