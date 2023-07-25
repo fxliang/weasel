@@ -587,7 +587,8 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
 	if (RimeGetCommit(session_id, &commit))
 	{
 		actions.insert("commit");
-		messages.push_back(std::string("commit=") + commit.text + '\n');
+		json j = string_to_wstring(commit.text, CP_UTF8);
+		messages.push_back(std::string("commit=") + j.dump() + '\n');
 		RimeFreeCommit(&commit);
 	}
 	
