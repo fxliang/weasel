@@ -1,7 +1,5 @@
 ﻿#pragma once
 
-//#include <string>
-//#include <vector>
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/string.hpp>
 #include <json.hpp>
@@ -241,6 +239,82 @@ namespace weasel
 		bool inline_preedit;
 	};
 
+	struct ColorScheme
+	{
+		// color scheme
+		int text_color;
+		int candidate_text_color;
+		int candidate_back_color;
+		int candidate_shadow_color;
+		int candidate_border_color;
+		int label_text_color;
+		int comment_text_color;
+		int back_color;
+		int shadow_color;
+		int border_color;
+		int hilited_text_color;
+		int hilited_back_color;
+		int hilited_shadow_color;
+		int hilited_candidate_text_color;
+		int hilited_candidate_back_color;
+		int hilited_candidate_shadow_color;
+		int hilited_candidate_border_color;
+		int hilited_label_text_color;
+		int hilited_comment_text_color;
+		int hilited_mark_color;
+		int prevpage_color;
+		int nextpage_color;
+
+		ColorScheme() : text_color(0),
+		candidate_text_color(0),
+		candidate_back_color(0),
+		candidate_shadow_color(0),
+		candidate_border_color(0),
+		label_text_color(0),
+		comment_text_color(0),
+		back_color(0),
+		shadow_color(0),
+		border_color(0),
+		hilited_text_color(0),
+		hilited_back_color(0),
+		hilited_shadow_color(0),
+		hilited_candidate_text_color(0),
+		hilited_candidate_back_color(0),
+		hilited_candidate_shadow_color(0),
+		hilited_candidate_border_color(0),
+		hilited_label_text_color(0),
+		hilited_comment_text_color(0),
+		hilited_mark_color(0),
+		prevpage_color(0),
+		nextpage_color(0) {}
+		bool operator!=(const ColorScheme& color){
+			return (
+					text_color != color.text_color
+					||candidate_text_color != color.candidate_text_color
+					||candidate_back_color != color.candidate_back_color
+					||candidate_shadow_color != color.candidate_shadow_color
+					||candidate_border_color != color.candidate_border_color
+					||label_text_color != color.label_text_color
+					||comment_text_color != color.comment_text_color
+					||back_color != color.back_color
+					||shadow_color != color.shadow_color
+					||border_color != color.border_color
+					||hilited_text_color != color.hilited_text_color
+					||hilited_back_color != color.hilited_back_color
+					||hilited_shadow_color != color.hilited_shadow_color
+					||hilited_candidate_text_color != color.hilited_candidate_text_color
+					||hilited_candidate_back_color != color.hilited_candidate_back_color
+					||hilited_candidate_shadow_color != color.hilited_candidate_shadow_color
+					||hilited_candidate_border_color != color.hilited_candidate_border_color
+					||hilited_label_text_color != color.hilited_label_text_color
+					||hilited_comment_text_color != color.hilited_comment_text_color
+					||hilited_mark_color != color.hilited_mark_color
+					||prevpage_color != color.prevpage_color
+					||nextpage_color != color.nextpage_color
+					);
+		}
+	};
+
 	struct UIStyle
 	{
 		enum AntiAliasMode
@@ -276,32 +350,36 @@ namespace weasel
 			ALIGN_TOP
 		};
 
-		AntiAliasMode antialias_mode;
-		LayoutAlignType align_type;
-		PreeditType preedit_type;
-		LayoutType layout_type;
-		bool vertical_text_left_to_right;
-		bool vertical_text_with_wrap;
-		bool paging_on_scroll;
+		// font face and font point settings
 		std::wstring font_face;
 		std::wstring label_font_face;
 		std::wstring comment_font_face;
-		int mouse_hover_ms;
 		int font_point;
 		int label_font_point;
 		int comment_font_point;
+
 		bool inline_preedit;
 		bool display_tray_icon;
 		bool ascii_tip_follow_cursor;
+		bool paging_on_scroll;
+		bool enhanced_position;
+		int mouse_hover_ms;
+		AntiAliasMode antialias_mode;
+		PreeditType preedit_type;
+		// custom icon settings
 		std::wstring current_zhung_icon;
 		std::wstring current_ascii_icon;
 		std::wstring current_half_icon;
 		std::wstring current_full_icon;
-		bool enhanced_position;
-
+		// label format and mark_text
 		std::wstring label_text_format;
 		std::wstring mark_text;
-		// layout
+		// layout relative parameters
+		LayoutType layout_type;
+		LayoutAlignType align_type;
+		bool vertical_text_left_to_right;
+		bool vertical_text_with_wrap;
+		// layout, with key name like style/layout/...
 		int min_width;
 		int max_width;
 		int min_height;
@@ -321,56 +399,35 @@ namespace weasel
 		int shadow_offset_y;
 		bool vertical_auto_reverse;
 		// color scheme
-		int text_color;
-		int candidate_text_color;
-		int candidate_back_color;
-		int candidate_shadow_color;
-		int candidate_border_color;
-		int label_text_color;
-		int comment_text_color;
-		int back_color;
-		int shadow_color;
-		int border_color;
-		int hilited_text_color;
-		int hilited_back_color;
-		int hilited_shadow_color;
-		int hilited_candidate_text_color;
-		int hilited_candidate_back_color;
-		int hilited_candidate_shadow_color;
-		int hilited_candidate_border_color;
-		int hilited_label_text_color;
-		int hilited_comment_text_color;
-		int hilited_mark_color;
-		int prevpage_color;
-		int nextpage_color;
+		ColorScheme color_scheme;
 		// per client
 		int client_caps;
 
-		UIStyle() : font_face(),
+		UIStyle() : 
+			font_face(),
 			label_font_face(),
 			comment_font_face(),
-			mouse_hover_ms(0),
 			font_point(0),
 			label_font_point(0),
 			comment_font_point(0),
 			inline_preedit(false),
-			antialias_mode(DEFAULT),
-			align_type(ALIGN_BOTTOM),
-			preedit_type(COMPOSITION),
 			display_tray_icon(false),
 			ascii_tip_follow_cursor(false),
+			paging_on_scroll(false),
+			enhanced_position(false),
+			mouse_hover_ms(0),
+			antialias_mode(DEFAULT),
+			preedit_type(COMPOSITION),
 			current_zhung_icon(),
 			current_ascii_icon(),
 			current_half_icon(),
 			current_full_icon(),
-			enhanced_position(false),
-
 			label_text_format(L"%s."),
 			mark_text(),
 			layout_type(LAYOUT_VERTICAL),
+			align_type(ALIGN_BOTTOM),
 			vertical_text_left_to_right(false),
 			vertical_text_with_wrap(false),
-			paging_on_scroll(false),
 			min_width(0),
 			max_width(0),
 			min_height(0),
@@ -389,28 +446,7 @@ namespace weasel
 			shadow_offset_x(0),
 			shadow_offset_y(0),
 			vertical_auto_reverse(false),
-			text_color(0),
-			candidate_text_color(0),
-			candidate_back_color(0),
-			candidate_shadow_color(0),
-			candidate_border_color(0),
-			label_text_color(0),
-			comment_text_color(0),
-			back_color(0),
-			shadow_color(0),
-			border_color(0),
-			hilited_text_color(0),
-			hilited_back_color(0),
-			hilited_shadow_color(0),
-			hilited_candidate_text_color(0),
-			hilited_candidate_back_color(0),
-			hilited_candidate_shadow_color(0),
-			hilited_candidate_border_color(0),
-			hilited_label_text_color(0),
-			hilited_comment_text_color(0),
-			hilited_mark_color(0),
-			prevpage_color(0),
-			nextpage_color(0),
+			color_scheme(),
 			client_caps(0) {}
 		bool operator!=(const UIStyle& st)
 		{
@@ -458,32 +494,25 @@ namespace weasel
 					|| shadow_offset_x != st.shadow_offset_x
 					|| shadow_offset_y != st.shadow_offset_y
 					|| vertical_auto_reverse != st.vertical_auto_reverse
-					|| text_color != st.text_color
-					|| candidate_text_color != st.candidate_text_color
-					|| candidate_back_color != st.candidate_back_color
-					|| candidate_shadow_color != st.candidate_shadow_color
-					|| candidate_border_color != st.candidate_border_color
-					|| hilited_candidate_border_color != st.hilited_candidate_border_color
-					|| label_text_color != st.label_text_color
-					|| comment_text_color != st.comment_text_color
-					|| back_color != st.back_color
-					|| shadow_color != st.shadow_color
-					|| border_color != st.border_color
-					|| hilited_text_color != st.hilited_text_color
-					|| hilited_back_color != st.hilited_back_color
-					|| hilited_shadow_color != st.hilited_shadow_color
-					|| hilited_candidate_text_color != st.hilited_candidate_text_color
-					|| hilited_candidate_back_color != st.hilited_candidate_back_color
-					|| hilited_candidate_shadow_color != st.hilited_candidate_shadow_color
-					|| hilited_label_text_color != st.hilited_label_text_color
-					|| hilited_comment_text_color != st.hilited_comment_text_color
-					|| hilited_mark_color != st.hilited_mark_color
-					|| prevpage_color != st.prevpage_color
-					|| nextpage_color != st.nextpage_color
+					|| color_scheme != st.color_scheme
 					);
 		}
 	};
 
+	// UIStyle vs json
+	extern void to_json(json& j, const UIStyle::AntiAliasMode& aam);
+	extern void from_json(const json& j, UIStyle::AntiAliasMode& aam);
+	extern void to_json(json& j, const UIStyle::LayoutAlignType& lat);
+	extern void from_json(const json& j, UIStyle::LayoutAlignType& lat);
+	extern void to_json(json& j, const UIStyle::LayoutType& lt);
+	extern void from_json(const json& j, UIStyle::LayoutType& lt);
+	extern void to_json(json& j, const UIStyle::PreeditType& pt);
+	extern void from_json(const json& j, UIStyle::PreeditType& pt);
+	extern void to_json(json& j, const ColorScheme& color);
+	extern void from_json(const json& j, ColorScheme& color);
+	extern void to_json(json& j, const UIStyle& style);
+	extern void from_json(const json& j, UIStyle& style);
+	// Context vs json
 	extern void to_json(json& j, const std::wstring& w);
 	extern void from_json(const json& j, std::wstring& w);
 	extern void to_json(json& j, const TextAttributeType& tat);
@@ -499,110 +528,3 @@ namespace weasel
 	extern void to_json(json& j, const Context& ctx);
 	extern void from_json(const json& j, Context& ctx);
 }
-namespace boost {
-	namespace serialization {
-		template <typename Archive>
-		void serialize(Archive &ar, weasel::UIStyle &s, const unsigned int version)
-		{
-			ar & s.font_face;
-			ar & s.label_font_face;
-			ar & s.comment_font_face;
-			ar & s.mouse_hover_ms;
-			ar & s.font_point;
-			ar & s.label_font_point;
-			ar & s.comment_font_point;
-			ar & s.inline_preedit;
-			ar & s.align_type;
-			ar & s.antialias_mode;
-			ar & s.mark_text;
-			ar & s.preedit_type;
-			ar & s.display_tray_icon;
-			ar & s.ascii_tip_follow_cursor;
-			ar & s.current_zhung_icon;
-			ar & s.current_ascii_icon;
-			ar & s.current_half_icon;
-			ar & s.current_full_icon;
-			ar& s.enhanced_position;
-			ar & s.label_text_format;
-			// layout
-			ar & s.layout_type;
-			ar & s.vertical_text_left_to_right;
-			ar & s.vertical_text_with_wrap;
-			ar & s.paging_on_scroll;
-			ar & s.min_width;
-			ar & s.max_width;
-			ar & s.min_height;
-			ar & s.max_height;
-			ar & s.border;
-			ar & s.margin_x;
-			ar & s.margin_y;
-			ar & s.spacing;
-			ar & s.candidate_spacing;
-			ar & s.hilite_spacing;
-			ar & s.hilite_padding_x;
-			ar & s.hilite_padding_y;
-			ar & s.round_corner;
-			ar & s.round_corner_ex;
-			ar & s.shadow_radius;
-			ar & s.shadow_offset_x;
-			ar & s.shadow_offset_y;
-			ar & s.vertical_auto_reverse;
-			// color scheme
-			ar & s.text_color;
-			ar & s.candidate_text_color;
-			ar & s.candidate_back_color;
-			ar & s.candidate_shadow_color;
-			ar & s.candidate_border_color;
-			ar & s.label_text_color;
-			ar & s.comment_text_color;
-			ar & s.back_color;
-			ar & s.shadow_color;
-			ar & s.border_color;
-			ar & s.hilited_text_color;
-			ar & s.hilited_back_color;
-			ar & s.hilited_shadow_color;
-			ar & s.hilited_candidate_text_color;
-			ar & s.hilited_candidate_back_color;
-			ar & s.hilited_candidate_shadow_color;
-			ar & s.hilited_candidate_border_color;
-			ar & s.hilited_label_text_color;
-			ar & s.hilited_comment_text_color;
-			ar & s.hilited_mark_color;
-			ar & s.prevpage_color;
-			ar & s.nextpage_color;
-			// per client
-			ar & s.client_caps;
-		}
-
-		template <typename Archive>
-		void serialize(Archive &ar, weasel::CandidateInfo &s, const unsigned int version)
-		{
-			ar & s.currentPage;
-			ar & s.totalPages;
-			ar & s.highlighted;
-			ar & s.is_last_page;
-			ar & s.candies;
-			ar & s.comments;
-			ar & s.labels;
-		}
-		template <typename Archive>
-		void serialize(Archive &ar, weasel::Text &s, const unsigned int version)
-		{
-			ar & s.str;
-			ar & s.attributes;
-		}
-		template <typename Archive>
-		void serialize(Archive &ar, weasel::TextAttribute &s, const unsigned int version)
-		{
-			ar & s.range;
-			ar & s.type;
-		}
-		template <typename Archive>
-		void serialize(Archive &ar, weasel::TextRange &s, const unsigned int version)
-		{
-			ar & s.start;
-			ar & s.end;
-			ar & s.cursor;
-		}
-	} // namespace serialization
-} // namespace boost

@@ -76,6 +76,7 @@ private:
 	weasel::Status &m_status;
 	weasel::UIStyle &m_style;
 	weasel::UIStyle &m_ostyle;
+	weasel::ColorScheme &m_color_scheme;
 
 	CRect m_inputPos;
 	CRect m_oinputPos;

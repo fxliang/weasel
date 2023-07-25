@@ -44,6 +44,7 @@ WeaselPanel::WeaselPanel(weasel::UI& ui)
 	m_octx(ui.octx()),
 	m_status(ui.status()),
 	m_style(ui.style()),
+	m_color_scheme(m_style.color_scheme),
 	m_ostyle(ui.ostyle()),
 	m_candidateCount(0),
 	m_current_zhung_icon(),
@@ -245,7 +246,7 @@ LRESULT WeaselPanel::OnLeftClicked(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 	}
 	// button response
 	{
-		if(!m_style.inline_preedit && m_candidateCount != 0 && COLORNOTTRANSPARENT(m_style.prevpage_color) && COLORNOTTRANSPARENT(m_style.nextpage_color)) {
+		if(!m_style.inline_preedit && m_candidateCount != 0 && COLORNOTTRANSPARENT(m_color_scheme.prevpage_color) && COLORNOTTRANSPARENT(m_color_scheme.nextpage_color)) {
 			// click prepage
 			if(m_ctx.cinfo.currentPage != 0 ) {
 				CRect prc = m_layout->GetPrepageRect();
@@ -447,7 +448,7 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 					rc_before = CRect(rc.left, y, rc.right, y + beforeSz.cy);
 				else
 					rc_before = CRect(x, rc.top, rc.left + beforeSz.cx, rc.bottom);
-				_TextOut(rc_before, str_before.c_str(), str_before.length(), m_style.text_color, txtFormat);
+				_TextOut(rc_before, str_before.c_str(), str_before.length(), m_color_scheme.text_color, txtFormat);
 				if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
 					y += beforeSz.cy + m_style.hilite_spacing;
 				else
@@ -462,7 +463,7 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 					rc_hi = CRect(rc.left, y, rc.right, y + hilitedSz.cy);
 				else
 					rc_hi = CRect(x, rc.top, x + hilitedSz.cx, rc.bottom);
-				_TextOut(rc_hi, str_highlight.c_str(), str_highlight.length(), m_style.hilited_text_color, txtFormat);
+				_TextOut(rc_hi, str_highlight.c_str(), str_highlight.length(), m_color_scheme.hilited_text_color, txtFormat);
 				if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
 					y += rc_hi.Height()+m_style.hilite_spacing;
 				else
@@ -476,27 +477,27 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 					rc_after = CRect(rc.left, y, rc.right, y + afterSz.cy);
 				else
 					rc_after = CRect(x, rc.top, x + afterSz.cx, rc.bottom);
-				_TextOut(rc_after, str_after.c_str(), str_after.length(), m_style.text_color, txtFormat);
+				_TextOut(rc_after, str_after.c_str(), str_after.length(), m_color_scheme.text_color, txtFormat);
 			}
 		}
 		else {
 			CRect rcText(rc.left, rc.top, rc.right, rc.bottom);
-			_TextOut(rcText, t.c_str(), t.length(), m_style.text_color, txtFormat);
+			_TextOut(rcText, t.c_str(), t.length(), m_color_scheme.text_color, txtFormat);
 		}
 		// draw pager mark if not inline_preedit if necessary
-		if(m_candidateCount && !m_style.inline_preedit && COLORNOTTRANSPARENT(m_style.prevpage_color) && COLORNOTTRANSPARENT(m_style.nextpage_color))
+		if(m_candidateCount && !m_style.inline_preedit && COLORNOTTRANSPARENT(m_color_scheme.prevpage_color) && COLORNOTTRANSPARENT(m_color_scheme.nextpage_color))
 		{
 			const std::wstring pre = L"<";
 			const std::wstring next = L">";
 			CRect prc = m_layout->GetPrepageRect();
 			// clickable color / disabled color
-			int color = m_ctx.cinfo.currentPage ? m_style.prevpage_color : m_style.text_color;
+			int color = m_ctx.cinfo.currentPage ? m_color_scheme.prevpage_color : m_color_scheme.text_color;
 			if(m_istorepos)	prc.OffsetRect(0, m_offsety_preedit);
 			_TextOut(prc, pre.c_str(), pre.length(), color, txtFormat);
 
 			CRect nrc = m_layout->GetNextpageRect();
 			// clickable color / disabled color
-			color = m_ctx.cinfo.is_last_page ? m_style.text_color : m_style.nextpage_color;
+			color = m_ctx.cinfo.is_last_page ? m_color_scheme.text_color : m_color_scheme.nextpage_color;
 			if(m_istorepos)	nrc.OffsetRect(0, m_offsety_preedit);
 			_TextOut(nrc, next.c_str(), next.length(), color, txtFormat);
 		}
@@ -556,7 +557,7 @@ bool WeaselPanel::_DrawPreeditBack(Text const& text, CDCHandle dc, CRect const& 
 					std::swap(rd.IsTopLeftNeedToRound, rd.IsBottomLeftNeedToRound);
 					std::swap(rd.IsTopRightNeedToRound, rd.IsBottomRightNeedToRound);
 				}
-				_HighlightText(dc, rc_hi, m_style.hilited_back_color, m_style.hilited_shadow_color, m_style.round_corner, BackType::TEXT, rd);
+				_HighlightText(dc, rc_hi, m_color_scheme.hilited_back_color, m_color_scheme.hilited_shadow_color, m_style.round_corner, BackType::TEXT, rd);
 			}
 		}
 		drawn = true;
@@ -581,7 +582,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 	// draw back color and shadow color, with gdi+
 	if (back) {
 		// if candidate_shadow_color not transparent, draw candidate shadow first
-		if (COLORNOTTRANSPARENT(m_style.candidate_shadow_color)) {
+		if (COLORNOTTRANSPARENT(m_color_scheme.candidate_shadow_color)) {
 			for (auto i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
 				if (i == m_ctx.cinfo.highlighted) continue;	// draw non hilited candidates only 
 				rect = m_layout->GetCandidateRect((int)i);
@@ -591,12 +592,12 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 					ReconfigRoundInfo(rd, i, m_candidateCount);
 				}
 				rect.InflateRect(m_style.hilite_padding_x, m_style.hilite_padding_y);
-				_HighlightText(dc, rect, 0x00000000, m_style.candidate_shadow_color, m_style.round_corner, bkType, rd);
+				_HighlightText(dc, rect, 0x00000000, m_color_scheme.candidate_shadow_color, m_style.round_corner, bkType, rd);
 				drawn = true;
 			}
 		}
 		// draw non highlighted candidates, without shadow
-		if (COLORNOTTRANSPARENT(m_style.candidate_back_color) || COLORNOTTRANSPARENT(m_style.candidate_border_color)
+		if (COLORNOTTRANSPARENT(m_color_scheme.candidate_back_color) || COLORNOTTRANSPARENT(m_color_scheme.candidate_border_color)
 				)	// if transparent not to draw
 		{
 			for (auto i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
@@ -608,7 +609,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 					ReconfigRoundInfo(rd, i, m_candidateCount);
 				}
 				rect.InflateRect(m_style.hilite_padding_x, m_style.hilite_padding_y);
-				_HighlightText(dc, rect, m_style.candidate_back_color, 0x00000000, m_style.round_corner, bkType, rd, m_style.candidate_border_color);
+				_HighlightText(dc, rect, m_color_scheme.candidate_back_color, 0x00000000, m_style.round_corner, bkType, rd, m_color_scheme.candidate_border_color);
 				drawn = true;
 			}
 		}
@@ -621,12 +622,12 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 				ReconfigRoundInfo(rd, m_ctx.cinfo.highlighted, m_candidateCount);
 			}
 			rect.InflateRect(m_style.hilite_padding_x, m_style.hilite_padding_y);
-			if (m_style.mark_text.empty() && COLORNOTTRANSPARENT(m_style.hilited_mark_color))
+			if (m_style.mark_text.empty() && COLORNOTTRANSPARENT(m_color_scheme.hilited_mark_color))
 			{
-				BYTE r = GetRValue(m_style.hilited_mark_color);
-				BYTE g = GetGValue(m_style.hilited_mark_color);
-				BYTE b = GetBValue(m_style.hilited_mark_color);
-				BYTE alpha = (BYTE)((m_style.hilited_mark_color >> 24) & 255);
+				BYTE r = GetRValue(m_color_scheme.hilited_mark_color);
+				BYTE g = GetGValue(m_color_scheme.hilited_mark_color);
+				BYTE b = GetBValue(m_color_scheme.hilited_mark_color);
+				BYTE alpha = (BYTE)((m_color_scheme.hilited_mark_color >> 24) & 255);
 				Gdiplus::Graphics g_back(dc);
 				g_back.SetSmoothingMode(Gdiplus::SmoothingMode::SmoothingModeHighQuality);
 				Gdiplus::Color mark_color = Gdiplus::Color::MakeARGB(alpha, r, g, b);
@@ -644,7 +645,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 					g_back.FillPath(&mk_brush, &mk_path);
 				}
 			}
-			_HighlightText(dc, rect, m_style.hilited_candidate_back_color, m_style.hilited_candidate_shadow_color, m_style.round_corner, bkType, rd, m_style.hilited_candidate_border_color);
+			_HighlightText(dc, rect, m_color_scheme.hilited_candidate_back_color, m_color_scheme.hilited_candidate_shadow_color, m_style.round_corner, bkType, rd, m_color_scheme.hilited_candidate_border_color);
 			drawn = true;
 		}
 	}
@@ -656,18 +657,18 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 		for (auto i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
 			if (i == m_ctx.cinfo.highlighted)
 			{
-				label_text_color = m_style.hilited_label_text_color;
-				candidate_text_color = m_style.hilited_candidate_text_color;
-				comment_text_color = m_style.hilited_comment_text_color;
+				label_text_color = m_color_scheme.hilited_label_text_color;
+				candidate_text_color = m_color_scheme.hilited_candidate_text_color;
+				comment_text_color = m_color_scheme.hilited_comment_text_color;
 			}
 			else
 			{
-				label_text_color = m_style.label_text_color;
-				candidate_text_color = m_style.candidate_text_color;
-				comment_text_color = m_style.comment_text_color;
+				label_text_color = m_color_scheme.label_text_color;
+				candidate_text_color = m_color_scheme.candidate_text_color;
+				comment_text_color = m_color_scheme.comment_text_color;
 			}
 			// draw highlight mark
-			if (!m_style.mark_text.empty() && COLORNOTTRANSPARENT(m_style.hilited_mark_color))
+			if (!m_style.mark_text.empty() && COLORNOTTRANSPARENT(m_color_scheme.hilited_mark_color))
 			{
 				CRect rc = m_layout->GetHighlightRect();
 				if(m_istorepos) rc.OffsetRect(0, m_offsetys[m_ctx.cinfo.highlighted]);
@@ -681,7 +682,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 				else
 					hlRc = CRect(rc.left + m_style.hilite_padding_x + (m_layout->MARK_GAP - m_layout->MARK_WIDTH) / 2 + 1, rc.top + vgap,
 					rc.left + m_style.hilite_padding_x + (m_layout->MARK_GAP - m_layout->MARK_WIDTH) / 2 + 1 + m_layout->MARK_WIDTH, rc.bottom - vgap);
-				_TextOut(hlRc, m_style.mark_text.c_str(), m_style.mark_text.length(), m_style.hilited_mark_color, pDWR->pTextFormat.Get());
+				_TextOut(hlRc, m_style.mark_text.c_str(), m_style.mark_text.length(), m_color_scheme.hilited_mark_color, pDWR->pTextFormat.Get());
 			}
 			// Draw label
 			std::wstring label = m_layout->GetLabelText(labels, (int)i, m_style.label_text_format.c_str());
@@ -760,7 +761,7 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 		// background and candidates back, hilite back drawing start
 		if (!m_ctx.empty()) {
 			CRect backrc = m_layout->GetContentRect();
-			_HighlightText(memDC, backrc, m_style.back_color, m_style.shadow_color, m_style.round_corner_ex, BackType::BACKGROUND, IsToRoundStruct(),  m_style.border_color);
+			_HighlightText(memDC, backrc, m_color_scheme.back_color, m_color_scheme.shadow_color, m_style.round_corner_ex, BackType::BACKGROUND, IsToRoundStruct(),  m_color_scheme.border_color);
 		}
 		if (!m_ctx.aux.str.empty())
 		{
@@ -913,8 +914,8 @@ void WeaselPanel::_RepositionWindow(bool adj)
 	rcWorkArea.bottom -= height;
 	int x = m_inputPos.left;
 	int y = m_inputPos.bottom;
-	x -= (m_style.shadow_offset_x >= 0 || COLORTRANSPARENT(m_style.shadow_color)) ? m_layout->offsetX : (m_layout->offsetX / 2);
-	if(adj) y -= (m_style.shadow_offset_y > 0 || COLORTRANSPARENT(m_style.shadow_color)) ? m_layout->offsetY : (m_layout->offsetY / 2);
+	x -= (m_style.shadow_offset_x >= 0 || COLORTRANSPARENT(m_color_scheme.shadow_color)) ? m_layout->offsetX : (m_layout->offsetX / 2);
+	if(adj) y -= (m_style.shadow_offset_y > 0 || COLORTRANSPARENT(m_color_scheme.shadow_color)) ? m_layout->offsetY : (m_layout->offsetY / 2);
 	// for vertical text layout, flow right to left, make window left side
 	if(m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT && !m_style.vertical_text_left_to_right)
 	{
@@ -930,7 +931,7 @@ void WeaselPanel::_RepositionWindow(bool adj)
 		if( !adj && (y + height < m_oinputPos.top) )
 			y = m_oinputPos.top - height;
 		m_istorepos = (m_style.vertical_auto_reverse && m_style.layout_type == UIStyle::LAYOUT_VERTICAL);
-		y += (m_style.shadow_offset_y < 0 || COLORTRANSPARENT(m_style.shadow_color)) ? m_layout->offsetY : (m_layout->offsetY / 2);
+		y += (m_style.shadow_offset_y < 0 || COLORTRANSPARENT(m_color_scheme.shadow_color)) ? m_layout->offsetY : (m_layout->offsetY / 2);
 	}
 	if (y < rcWorkArea.top) y = rcWorkArea.top;		// over workarea top
 	// memorize adjusted position (to avoid window bouncing on height change)

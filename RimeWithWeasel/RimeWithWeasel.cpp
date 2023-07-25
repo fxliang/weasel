@@ -46,7 +46,7 @@ RimeWithWeaselHandler::~RimeWithWeaselHandler()
 }
 
 void _UpdateUIStyle(RimeConfig* config, UI* ui, bool initialize);
-bool _UpdateUIStyleColor(RimeConfig* config, UIStyle& style, std::string color = "");
+bool _UpdateUIStyleColor(RimeConfig* config, ColorScheme& color_scheme, std::string color = "");
 void _LoadAppOptions(RimeConfig* config, AppOptionsByAppName& app_options);
 
 void _RefreshTrayIcon(const UINT session_id, const std::function<void()> _UpdateUICallback)
@@ -447,14 +447,14 @@ void RimeWithWeaselHandler::_LoadSchemaSpecificSettings(const std::string& schem
 		RimeConfigIterator preset = {0};
 		if(RimeConfigBeginMap(&preset, &config, ("preset_color_schemes/" + color_name).c_str()))
 		{
-			_UpdateUIStyleColor(&config, m_ui->style(), color_name);
+			_UpdateUIStyleColor(&config, m_ui->style().color_scheme, color_name);
 		}
 		else
 		{
 			RimeConfig weaselconfig;
 			if (RimeConfigOpen("weasel", &weaselconfig))
 			{
-				_UpdateUIStyleColor(&weaselconfig, m_ui->style(), std::string(buffer));
+				_UpdateUIStyleColor(&weaselconfig, m_ui->style().color_scheme, std::string(buffer));
 				RimeConfigClose(&weaselconfig);
 			}
 		}
@@ -678,12 +678,9 @@ bool RimeWithWeaselHandler::_Respond(UINT session_id, EatLine eat)
 	// style
 	bool has_synced = RimeGetOption(session_id, "__synced");
 	if (!has_synced) {
-		std::wstringstream ss;
-		boost::archive::text_woarchive oa(ss);
-		oa << m_ui->style();
-
+		json j = m_ui->style();
 		actions.insert("style");
-		messages.push_back(std::string("style=") + wstring_to_string(ss.str().c_str(), CP_UTF8) + '\n');
+		messages.push_back(std::string("style=") + j.dump() + '\n');
 		RimeSetOption(session_id, "__synced", true);
 	}
 
@@ -973,10 +970,10 @@ static void _UpdateUIStyle(RimeConfig* config, UI* ui, bool initialize)
 	_RimeGetBool(config, "style/enhanced_position", initialize, style.enhanced_position, true, false);
 	// get color scheme
 	if (initialize && RimeConfigGetString(config, "style/color_scheme", buffer, BUF_SIZE))
-		_UpdateUIStyleColor(config, style);
+		_UpdateUIStyleColor(config, style.color_scheme);
 }
 // load color configs to style, by "style/color_scheme" or specific scheme name "color" which is default empty
-static bool _UpdateUIStyleColor(RimeConfig* config, UIStyle& style, std::string color)
+static bool _UpdateUIStyleColor(RimeConfig* config, ColorScheme& color_scheme, std::string color)
 {
 	const int BUF_SIZE = 255;
 	char buffer[BUF_SIZE + 1];
@@ -995,28 +992,28 @@ static bool _UpdateUIStyleColor(RimeConfig* config, UIStyle& style, std::string 
 			{std::string("abgr"), COLOR_ABGR}
 		};
 		_RimeParseStringOptWithFallback(config, (prefix+"/color_format"), fmt, _colorFmt, COLOR_ABGR);
-		_RimeConfigGetColor32bWithFallback(config, (prefix + "/back_color"), style.back_color, fmt, 0xffffffff);
-		_RimeConfigGetColor32bWithFallback(config, (prefix + "/shadow_color"), style.shadow_color, fmt, TRANSPARENT_COLOR);
-		_RimeConfigGetColor32bWithFallback(config, (prefix + "/prevpage_color"), style.prevpage_color, fmt, TRANSPARENT_COLOR);
-		_RimeConfigGetColor32bWithFallback(config, (prefix + "/nextpage_color"), style.nextpage_color, fmt, TRANSPARENT_COLOR);
-		_RimeConfigGetColor32bWithFallback(config, (prefix + "/text_color"), style.text_color, fmt, 0xff000000);
-		_RimeConfigGetColor32bWithFallback(config, (prefix + "/candidate_text_color"), style.candidate_text_color, fmt, style.text_color);
-		_RimeConfigGetColor32bWithFallback(config, (prefix + "/candidate_back_color"), style.candidate_back_color, fmt, TRANSPARENT_COLOR);
-		_RimeConfigGetColor32bWithFallback(config, (prefix + "/border_color"), style.border_color, fmt, style.text_color);
-		_RimeConfigGetColor32bWithFallback(config, (prefix + "/hilited_text_color"), style.hilited_text_color, fmt, style.text_color);
-		_RimeConfigGetColor32bWithFallback(config, (prefix + "/hilited_back_color"), style.hilited_back_color, fmt, style.back_color);
-		_RimeConfigGetColor32bWithFallback(config, (prefix + "/hilited_candidate_text_color"), style.hilited_candidate_text_color, fmt, style.hilited_text_color);
-		_RimeConfigGetColor32bWithFallback(config, (prefix + "/hilited_candidate_back_color"), style.hilited_candidate_back_color, fmt, style.hilited_back_color);
-		_RimeConfigGetColor32bWithFallback(config, (prefix + "/hilited_candidate_shadow_color"), style.hilited_candidate_shadow_color, fmt, TRANSPARENT_COLOR);
-		_RimeConfigGetColor32bWithFallback(config, (prefix + "/hilited_shadow_color"), style.hilited_shadow_color, fmt, TRANSPARENT_COLOR);
-		_RimeConfigGetColor32bWithFallback(config, (prefix + "/candidate_shadow_color"), style.candidate_shadow_color, fmt, TRANSPARENT_COLOR);
-		_RimeConfigGetColor32bWithFallback(config, (prefix + "/candidate_border_color"), style.candidate_border_color, fmt, TRANSPARENT_COLOR);
-		_RimeConfigGetColor32bWithFallback(config, (prefix + "/hilited_candidate_border_color"), style.hilited_candidate_border_color, fmt, TRANSPARENT_COLOR);
-		_RimeConfigGetColor32bWithFallback(config, (prefix + "/label_color"), style.label_text_color, fmt, blend_colors(style.candidate_text_color, style.candidate_back_color));
-		_RimeConfigGetColor32bWithFallback(config, (prefix + "/hilited_label_color"), style.hilited_label_text_color, fmt, blend_colors(style.hilited_candidate_text_color, style.hilited_candidate_back_color));
-		_RimeConfigGetColor32bWithFallback(config, (prefix + "/comment_text_color"), style.comment_text_color, fmt, style.label_text_color);
-		_RimeConfigGetColor32bWithFallback(config, (prefix + "/hilited_comment_text_color"), style.hilited_comment_text_color, fmt, style.hilited_label_text_color);
-		_RimeConfigGetColor32bWithFallback(config, (prefix + "/hilited_mark_color"), style.hilited_mark_color, fmt, TRANSPARENT_COLOR);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/back_color"), color_scheme.back_color, fmt, 0xffffffff);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/shadow_color"), color_scheme.shadow_color, fmt, TRANSPARENT_COLOR);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/prevpage_color"), color_scheme.prevpage_color, fmt, TRANSPARENT_COLOR);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/nextpage_color"), color_scheme.nextpage_color, fmt, TRANSPARENT_COLOR);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/text_color"), color_scheme.text_color, fmt, 0xff000000);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/candidate_text_color"), color_scheme.candidate_text_color, fmt, color_scheme.text_color);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/candidate_back_color"), color_scheme.candidate_back_color, fmt, TRANSPARENT_COLOR);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/border_color"), color_scheme.border_color, fmt, color_scheme.text_color);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/hilited_text_color"), color_scheme.hilited_text_color, fmt, color_scheme.text_color);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/hilited_back_color"), color_scheme.hilited_back_color, fmt, color_scheme.back_color);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/hilited_candidate_text_color"), color_scheme.hilited_candidate_text_color, fmt, color_scheme.hilited_text_color);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/hilited_candidate_back_color"), color_scheme.hilited_candidate_back_color, fmt, color_scheme.hilited_back_color);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/hilited_candidate_shadow_color"), color_scheme.hilited_candidate_shadow_color, fmt, TRANSPARENT_COLOR);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/hilited_shadow_color"), color_scheme.hilited_shadow_color, fmt, TRANSPARENT_COLOR);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/candidate_shadow_color"), color_scheme.candidate_shadow_color, fmt, TRANSPARENT_COLOR);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/candidate_border_color"), color_scheme.candidate_border_color, fmt, TRANSPARENT_COLOR);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/hilited_candidate_border_color"), color_scheme.hilited_candidate_border_color, fmt, TRANSPARENT_COLOR);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/label_color"), color_scheme.label_text_color, fmt, blend_colors(color_scheme.candidate_text_color, color_scheme.candidate_back_color));
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/hilited_label_color"), color_scheme.hilited_label_text_color, fmt, blend_colors(color_scheme.hilited_candidate_text_color, color_scheme.hilited_candidate_back_color));
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/comment_text_color"), color_scheme.comment_text_color, fmt, color_scheme.label_text_color);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/hilited_comment_text_color"), color_scheme.hilited_comment_text_color, fmt, color_scheme.hilited_label_text_color);
+		_RimeConfigGetColor32bWithFallback(config, (prefix + "/hilited_mark_color"), color_scheme.hilited_mark_color, fmt, TRANSPARENT_COLOR);
 		return true;
 	}
 	return false;

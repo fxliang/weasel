@@ -8,7 +8,7 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, PDWR pDWR)
 	const int space = _style.hilite_spacing;
 	int width = 0, height = real_margin_y;
 
-	if ((_style.hilited_mark_color & 0xff000000))
+	if ((_style.color_scheme.hilited_mark_color & 0xff000000))
 	{
 		CSize sg;
 		if(_style.mark_text.empty())
@@ -20,13 +20,13 @@ void weasel::VerticalLayout::DoLayout(CDCHandle dc, PDWR pDWR)
 		MARK_HEIGHT = sg.cy;
 		MARK_GAP = MARK_WIDTH + 4;
 	}
-	int base_offset =  ((_style.hilited_mark_color & 0xff000000) && !_style.mark_text.empty()) ? MARK_GAP : 0;
+	int base_offset =  ((_style.color_scheme.hilited_mark_color & 0xff000000) && !_style.mark_text.empty()) ? MARK_GAP : 0;
 
 	// calc page indicator 
 	CSize pgszl, pgszr;
 	GetTextSizeDW(pre, pre.length(), pDWR->pPreeditTextFormat, pDWR, &pgszl);
 	GetTextSizeDW(next, next.length(), pDWR->pPreeditTextFormat, pDWR, &pgszr);
-	bool page_en = (_style.prevpage_color & 0xff000000) && (_style.nextpage_color & 0xff000000);
+	bool page_en = (_style.color_scheme.prevpage_color & 0xff000000) && (_style.color_scheme.nextpage_color & 0xff000000);
 	int pgw = page_en ? pgszl.cx + pgszr.cx + _style.hilite_spacing + _style.hilite_padding_x * 2 : 0;
 	int pgh = page_en ? max(pgszl.cy, pgszr.cy) : 0;
 

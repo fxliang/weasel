@@ -28,7 +28,7 @@ void weasel::FullScreenLayout::DoLayout(CDCHandle dc, PDWR pDWR)
 	int step = 32;
 	do {
 		m_layout->DoLayout(dc, pDWR);
-		if (!_style.mark_text.empty() && (_style.hilited_mark_color & 0xff000000))
+		if (!_style.mark_text.empty() && (_style.color_scheme.hilited_mark_color & 0xff000000))
 		{
 			CSize sg;
 			GetTextSizeDW(_style.mark_text, _style.mark_text.length(), pDWR->pTextFormat, pDWR, &sg);

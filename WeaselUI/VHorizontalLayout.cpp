@@ -16,7 +16,7 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, PDWR pDWR )
 	int height = offsetY, width = offsetX + real_margin_x;
 	int h = offsetY + real_margin_y;
 
-	if ((_style.hilited_mark_color & 0xff000000))
+	if ((_style.color_scheme.hilited_mark_color & 0xff000000))
 	{
 		CSize sg;
 		if(_style.mark_text.empty())
@@ -28,13 +28,13 @@ void VHorizontalLayout::DoLayout(CDCHandle dc, PDWR pDWR )
 		MARK_HEIGHT = sg.cy;
 		MARK_GAP = MARK_HEIGHT + 4;
 	}
-	int base_offset =  ((_style.hilited_mark_color & 0xff000000) && !_style.mark_text.empty()) ? MARK_GAP : 0;
+	int base_offset =  ((_style.color_scheme.hilited_mark_color & 0xff000000) && !_style.mark_text.empty()) ? MARK_GAP : 0;
 
 	// calc page indicator 
 	CSize pgszl, pgszr;
 	GetTextSizeDW(pre, pre.length(), pDWR->pPreeditTextFormat, pDWR, &pgszl);
 	GetTextSizeDW(next, next.length(), pDWR->pPreeditTextFormat, pDWR, &pgszr);
-	bool page_en = (_style.prevpage_color & 0xff000000) && (_style.nextpage_color & 0xff000000);
+	bool page_en = (_style.color_scheme.prevpage_color & 0xff000000) && (_style.color_scheme.nextpage_color & 0xff000000);
 	int pgh = page_en ? pgszl.cy + pgszr.cy + _style.hilite_spacing + _style.hilite_padding_y * 2 : 0;
 	int pgw = page_en ? max(pgszl.cx, pgszr.cx) : 0;
 
@@ -225,7 +225,7 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, PDWR pDWR)
 	int height = offsetY, width = offsetX + real_margin_x;
 	int h = offsetY + real_margin_y;
 
-	if ((_style.hilited_mark_color & 0xff000000))
+	if ((_style.color_scheme.hilited_mark_color & 0xff000000))
 	{
 		CSize sg;
 		if(_style.mark_text.empty())
@@ -237,13 +237,13 @@ void VHorizontalLayout::DoLayoutWithWrap(CDCHandle dc, PDWR pDWR)
 		MARK_HEIGHT = sg.cy;
 		MARK_GAP = MARK_HEIGHT + 4;
 	}
-	int base_offset =  ((_style.hilited_mark_color & 0xff000000) && !_style.mark_text.empty()) ? MARK_GAP : 0;
+	int base_offset =  ((_style.color_scheme.hilited_mark_color & 0xff000000) && !_style.mark_text.empty()) ? MARK_GAP : 0;
 
 	// calc page indicator 
 	CSize pgszl, pgszr;
 	GetTextSizeDW(pre, pre.length(), pDWR->pPreeditTextFormat, pDWR, &pgszl);
 	GetTextSizeDW(next, next.length(), pDWR->pPreeditTextFormat, pDWR, &pgszr);
-	bool page_en = (_style.prevpage_color & 0xff000000) && (_style.nextpage_color & 0xff000000);
+	bool page_en = (_style.color_scheme.prevpage_color & 0xff000000) && (_style.color_scheme.nextpage_color & 0xff000000);
 	int pgh = page_en ? pgszl.cy + pgszr.cy + _style.hilite_spacing + _style.hilite_padding_y * 2 : 0;
 	int pgw = page_en ? max(pgszl.cx, pgszr.cx) : 0;
 
