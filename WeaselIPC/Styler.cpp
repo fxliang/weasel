@@ -6,98 +6,11 @@ using namespace weasel;
 
 namespace weasel {
 
-	void to_json(json& j, const UIStyle::AntiAliasMode& aam) {
-		switch(aam) {
-			case UIStyle::DEFAULT:
-				j = "default";
-				break;
-			case UIStyle::CLEARTYPE:
-				j = "cleartype";
-				break;
-			case UIStyle::GRAYSCALE:
-				j = "grayscale";
-				break;
-			case UIStyle::ALIASED:
-				j = "aliased";
-				break;
-			case UIStyle::FORCE_DWORD:
-				j = "force_dword";
-				break;
-		}
-	}
-	void from_json(const json& j, UIStyle::AntiAliasMode& aam) {
-		if(j == "default") aam = UIStyle::DEFAULT;
-		else if(j == "cleartype") aam = UIStyle::CLEARTYPE;
-		else if(j == "grayscale") aam = UIStyle::GRAYSCALE;
-		else if(j == "aliased") aam = UIStyle::ALIASED;
-		else if(j == "force_dword") aam = UIStyle::FORCE_DWORD;
-	}
-	void to_json(json& j, const UIStyle::LayoutAlignType& lat) {
-		switch(lat){
-			case UIStyle::ALIGN_TOP:
-				j = "top";
-				break;
-			case UIStyle::ALIGN_CENTER:
-				j = "center";
-				break;
-			case UIStyle::ALIGN_BOTTOM:
-				j = "bottom";
-				break;
-		}
-	}
-	void from_json(const json& j, UIStyle::LayoutAlignType& lat) {
-		if(j == "top") lat = UIStyle::ALIGN_TOP;
-		else if(j == "center") lat = UIStyle::ALIGN_CENTER;
-		else if(j == "bottom") lat = UIStyle::ALIGN_BOTTOM;
-	}
-	void to_json(json& j, const UIStyle::LayoutType& lt) {
-		switch(lt){
-			case UIStyle::LAYOUT_VERTICAL:
-				j = "vertical";
-				break;
-			case UIStyle::LAYOUT_HORIZONTAL:
-				j = "horizontal";
-				break;
-			case UIStyle::LAYOUT_VERTICAL_TEXT:
-				j = "vertical_text";
-				break;
-			case UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN:
-				j = "horizontal+fullscreen";
-				break;
-			case UIStyle::LAYOUT_VERTICAL_FULLSCREEN:
-				j = "vertical+fullscreen";
-				break;
-			case UIStyle::LAYOUT_TYPE_LAST:
-				j = "last_type";
-				break;
-		}
-	}
-	void from_json(const json& j, UIStyle::LayoutType& lt) {
-		if(j == "vertical")		lt = UIStyle::LAYOUT_VERTICAL;
-		else if(j == "horizontal")	lt = UIStyle::LAYOUT_HORIZONTAL;
-		else if(j == "vertical_text")	lt = UIStyle::LAYOUT_VERTICAL_TEXT;
-		else if(j == "horizontal+fullscreen")	lt = UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN;
-		else if(j == "vertical+fullscreen")		lt = UIStyle::LAYOUT_VERTICAL_FULLSCREEN;
-		else if(j == "last_type")	lt = UIStyle::LAYOUT_TYPE_LAST;
-	}
-	void to_json(json& j, const UIStyle::PreeditType& pt) {
-		switch(pt){
-			case UIStyle::COMPOSITION:
-				j = "composition";
-				break;
-			case UIStyle::PREVIEW:
-				j = "preview";
-				break;
-			case UIStyle::PREVIEW_ALL:
-				j = "preview_all";
-				break;
-		}
-	}
-	void from_json(const json& j, UIStyle::PreeditType& pt) {
-		if(j == "composition")	pt = UIStyle::COMPOSITION;
-		else if(j == "preview") pt = UIStyle::PREVIEW;
-		else if(j == "preview_all") pt = UIStyle::PREVIEW_ALL;
-	}
+	DEFINE_ENUM_JSON_SERIALIZATION(UIStyle::AntiAliasMode)
+	DEFINE_ENUM_JSON_SERIALIZATION(UIStyle::PreeditType)
+	DEFINE_ENUM_JSON_SERIALIZATION(UIStyle::LayoutType)
+	DEFINE_ENUM_JSON_SERIALIZATION(UIStyle::LayoutAlignType)
+
 	// auto serialize and deserialize ColorScheme
 	NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(ColorScheme, \
 		text_color, candidate_text_color, candidate_back_color,\

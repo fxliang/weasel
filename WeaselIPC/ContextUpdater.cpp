@@ -13,27 +13,8 @@ namespace weasel {
 	void from_json(const json& j, std::wstring& w) {
 		w = string_to_wstring(j.get<std::string>(), CP_UTF8);
 	}
-	void to_json(json& j, const TextAttributeType& tat) {
-		switch (tat) {
-		case TextAttributeType::NONE:
-			j = "none";
-			break;
-		case TextAttributeType::HIGHLIGHTED:
-			j = "highlighted";
-			break;
-		case TextAttributeType::LAST_TYPE:
-			j = "last_type";
-			break;
-		}
-	}
-	void from_json(const json& j, TextAttributeType& tat) {
-		if (j == "none")
-			tat = TextAttributeType::NONE;
-		else if (j == "highlighted")
-			tat = TextAttributeType::HIGHLIGHTED;
-		else if(j == "last_type")
-			tat = TextAttributeType::LAST_TYPE;
-	}
+
+	DEFINE_ENUM_JSON_SERIALIZATION(TextAttributeType)
 	// auto serialize and deserialize TextRange
 	NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(TextRange, start, end, cursor)
 	// auto serialize and deserialize TextAttribute

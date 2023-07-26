@@ -13,6 +13,20 @@ using json = nlohmann::json;
 namespace weasel
 {
 
+#define DEFINE_ENUM_JSON_SERIALIZATION(EnumType) \
+    void to_json(json& j, const EnumType& value) \
+    { \
+        j = static_cast<int>(value); \
+    } \
+    void from_json(const json& j, EnumType& value) \
+    { \
+        value = static_cast<EnumType>(j.get<int>()); \
+    }
+// macro for easily define extern prototype 
+#define EXTERN_PROTOTYPE_SERIALIZE_DESERIALIZE(TypeName) \
+	extern void to_json(json& j, const TypeName& var);\
+	extern void from_json(const json& j, TypeName& var);
+
 	enum TextAttributeType
 	{
 		NONE = 0,
@@ -498,31 +512,18 @@ namespace weasel
 	};
 
 	// UIStyle vs json
-	extern void to_json(json& j, const UIStyle::AntiAliasMode& aam);
-	extern void from_json(const json& j, UIStyle::AntiAliasMode& aam);
-	extern void to_json(json& j, const UIStyle::LayoutAlignType& lat);
-	extern void from_json(const json& j, UIStyle::LayoutAlignType& lat);
-	extern void to_json(json& j, const UIStyle::LayoutType& lt);
-	extern void from_json(const json& j, UIStyle::LayoutType& lt);
-	extern void to_json(json& j, const UIStyle::PreeditType& pt);
-	extern void from_json(const json& j, UIStyle::PreeditType& pt);
-	extern void to_json(json& j, const ColorScheme& color);
-	extern void from_json(const json& j, ColorScheme& color);
-	extern void to_json(json& j, const UIStyle& style);
-	extern void from_json(const json& j, UIStyle& style);
+	EXTERN_PROTOTYPE_SERIALIZE_DESERIALIZE(UIStyle::AntiAliasMode)
+	EXTERN_PROTOTYPE_SERIALIZE_DESERIALIZE(UIStyle::LayoutAlignType)
+	EXTERN_PROTOTYPE_SERIALIZE_DESERIALIZE(UIStyle::LayoutType)
+	EXTERN_PROTOTYPE_SERIALIZE_DESERIALIZE(UIStyle::PreeditType)
+	EXTERN_PROTOTYPE_SERIALIZE_DESERIALIZE(ColorScheme)
+	EXTERN_PROTOTYPE_SERIALIZE_DESERIALIZE(UIStyle)
 	// Context vs json
-	extern void to_json(json& j, const std::wstring& w);
-	extern void from_json(const json& j, std::wstring& w);
-	extern void to_json(json& j, const TextAttributeType& tat);
-	extern void from_json(const json& j, TextAttributeType& tat);
-	extern void to_json(json& j, const TextAttribute& ta);
-	extern void from_json(const json& j, TextAttribute& ta);
-	extern void to_json(json& j, const TextRange& tr);
-	extern void from_json(const json& j, TextRange& tr);
-	extern void to_json(json& j, const Text& t);
-	extern void from_json(const json& j, Text& t);
-	extern void to_json(json& j, const CandidateInfo& ci);
-	extern void from_json(const json& j, CandidateInfo& ci);
-	extern void to_json(json& j, const Context& ctx);
-	extern void from_json(const json& j, Context& ctx);
+	EXTERN_PROTOTYPE_SERIALIZE_DESERIALIZE(std::wstring)
+	EXTERN_PROTOTYPE_SERIALIZE_DESERIALIZE(TextAttributeType)
+	EXTERN_PROTOTYPE_SERIALIZE_DESERIALIZE(TextAttribute)
+	EXTERN_PROTOTYPE_SERIALIZE_DESERIALIZE(TextRange)
+	EXTERN_PROTOTYPE_SERIALIZE_DESERIALIZE(Text)
+	EXTERN_PROTOTYPE_SERIALIZE_DESERIALIZE(CandidateInfo)
+	EXTERN_PROTOTYPE_SERIALIZE_DESERIALIZE(Context)
 }
