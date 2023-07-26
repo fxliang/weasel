@@ -311,18 +311,18 @@ void RimeWithWeaselHandler::_GetCandidateInfo(CandidateInfo & cinfo, RimeContext
 	cinfo.labels.resize(ctx.menu.num_candidates);
 	for (int i = 0; i < ctx.menu.num_candidates; ++i)
 	{
-		cinfo.candies[i].str = std::regex_replace(string_to_wstring(ctx.menu.candidates[i].text, CP_UTF8),  std::wregex(L"\\r\\n|\\n|\\r"), L"\r");
+		cinfo.candies[i].str = string_to_wstring(ctx.menu.candidates[i].text, CP_UTF8);
 		if (ctx.menu.candidates[i].comment)
 		{
-			cinfo.comments[i].str = std::regex_replace(string_to_wstring(ctx.menu.candidates[i].comment, CP_UTF8),  std::wregex(L"\\r\\n|\\n|\\r"), L"\r");
+			cinfo.comments[i].str = string_to_wstring(ctx.menu.candidates[i].comment, CP_UTF8);
 		}
 		if (RIME_STRUCT_HAS_MEMBER(ctx, ctx.select_labels) && ctx.select_labels)
 		{
-			cinfo.labels[i].str = std::regex_replace(string_to_wstring(ctx.select_labels[i], CP_UTF8),  std::wregex(L"\\r\\n|\\n|\\r"), L"\r");
+			cinfo.labels[i].str = string_to_wstring(ctx.select_labels[i], CP_UTF8);
 		}
 		else if (ctx.menu.select_keys)
 		{
-			cinfo.labels[i].str = std::regex_replace(std::wstring(1, ctx.menu.select_keys[i]), std::wregex(L"\\r\\n|\\n|\\r"), L"\r");
+			cinfo.labels[i].str = std::wstring(1, ctx.menu.select_keys[i]);
 		}
 		else
 		{
