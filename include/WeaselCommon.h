@@ -1,7 +1,5 @@
 ﻿#pragma once
 
-#include <boost/serialization/vector.hpp>
-#include <boost/serialization/string.hpp>
 #include <json.hpp>
 using json = nlohmann::json;
 

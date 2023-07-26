@@ -3,6 +3,8 @@
 
 #include "stdafx.h"
 #include <boost/detail/lightweight_test.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/string.hpp>
 #include <ResponseParser.h>
 #include <string>
 
