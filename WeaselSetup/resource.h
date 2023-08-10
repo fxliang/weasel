@@ -1,10 +1,12 @@
 //{{NO_DEPENDENCIES}}
-// Microsoft Visual C++ generated include file.
-// Used by WeaselSetup.rc
+// Microsoft Visual C++ 生成的包含文件。
+// 供 WeaselSetup.rc 使用
 //
 #define IDI_WEASELSETUP                 107
 #define IDR_WEASELSETUP                 107
 #define IDR_MAINFRAME                   128
+#define IDS_STRING_INSTALL              129
+#define IDS_STRING_MODIFY               130
 #define IDD_INSTALL_OPTIONS             201
 #define IDD_DIALOG1                     203
 #define IDC_RADIO_CN                    1000
