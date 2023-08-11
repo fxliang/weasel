@@ -84,6 +84,19 @@ BEGIN
     IDR_MAINFRAME           "WeaselSetup"
     IDS_STRING_INSTALL      "安装"
     IDS_STRING_MODIFY       "修改文件夹"
+	IDS_STR_INSTALL_FAILED	"安装失败"
+	IDS_STR_INSTALL_SUCCESS_CAP	"安装完成"
+	IDS_STR_UNINSTALL_SUCCESS_CAP	"卸载完成"
+	IDS_STR_UNINSTALL_FAILED "卸载失败"
+	IDS_STR_ERRCANCELFSREDIRECT  "无法取消文件系统重定向"
+	IDS_STR_ERRRECOVERFSREDIRECT "无法恢复文件系统重定向"
+	IDS_STR_ERRREGIME            "注册输入法错误 ImmInstallIME: HKL=%x Err=%x"
+	IDS_STR_ERRREGTSF           "注册输入法错误 regsvr32.exe %s"
+	IDS_STR_ERRREGIMEWRITESVREXE "无法写入注册表键值 ServerExecutable"
+	IDS_STR_INORUN_FAILED        "安装/卸载失败"
+	IDS_STR_ERRWRITEWEASELROOT   "无法写入 WeaselRoot"
+	IDS_STR_INSTALL_SUCCESS_INFO      "可以使【小狼毫】写字了 :)"
+	IDS_STR_UNINSTALL_SUCCESS_INFO      "小狼毫 :)"
 END
 
 #endif    // 中文(简体，中国) resources
@@ -157,6 +170,19 @@ BEGIN
     IDR_MAINFRAME           "WeaselSetup"
     IDS_STRING_INSTALL      "安裝"
     IDS_STRING_MODIFY       "修改資料夾"
+	IDS_STR_INSTALL_FAILED	"安裝失敗"
+	IDS_STR_INSTALL_SUCCESS_CAP	"安裝完成"
+	IDS_STR_UNINSTALL_SUCCESS_CAP	"卸載完成"
+	IDS_STR_UNINSTALL_FAILED "卸載失敗"
+	IDS_STR_ERRCANCELFSREDIRECT  "無法取消文件系統重定向"
+	IDS_STR_ERRRECOVERFSREDIRECT "無法恢復文件系統重定向"
+	IDS_STR_ERRREGIME            "註冊輸入法錯誤 ImmInstallIME: HKL=%x Err=%x"
+	IDS_STR_ERRREGTSF           "註冊輸入法錯誤 regsvr32.exe %s"
+	IDS_STR_ERRREGIMEWRITESVREXE "無法寫入註冊表鍵值 ServerExecutable"
+	IDS_STR_INORUN_FAILED        "安装/卸載失败"
+	IDS_STR_ERRWRITEWEASELROOT   "無法寫入 WeaselRoot"
+	IDS_STR_INSTALL_SUCCESS_INFO      "可以使【小狼毫】寫字了 :)"
+	IDS_STR_UNINSTALL_SUCCESS_INFO      "小狼毫 :)"
 END
 
 #endif    // 中文(繁体，中国台湾) resources
