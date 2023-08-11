@@ -120,7 +120,7 @@ int Configurator::UpdateWorkspace(bool report_errors) {
 		if (report_errors)
 		{
 			//MessageBox(NULL, L"正在執行另一項部署任務，方纔所做的修改將在輸入法再次啓動後生效。", L"【小狼毫】", MB_OK | MB_ICONINFORMATION);
-			MSG_BY_IDS(IDS_STR_DEPLOYING_RESTARTREQ, IDS_STR_WEASEL, MB_OK);
+			MSG_BY_IDS(IDS_STR_DEPLOYING_RESTARTREQ, IDS_STR_WEASEL, MB_OK | MB_ICONINFORMATION);
 		}
 		return 1;
 	}

@@ -166,7 +166,7 @@ LRESULT DictManagementDialog::OnImport(WORD, WORD code, HWND, BOOL&) {
 		else {
 			std::wstring report(L"導入了 " + std::to_wstring(result) + L" 條記錄。");
 			//MessageBox(report.c_str(), L":-)", MB_OK | MB_ICONINFORMATION);
-			MSG_ID_CAP(report.c_str(), IDS_STR_SAD, MB_OK | MB_ICONHAND);
+			MSG_ID_CAP(report.c_str(), IDS_STR_SAD, MB_OK | MB_ICONINFORMATION);
 		}
 	}
 	return 0;
