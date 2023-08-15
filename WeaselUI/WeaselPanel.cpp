@@ -872,7 +872,7 @@ void WeaselPanel::MoveTo(RECT const& rc)
 		_RepositionWindow(true);
 		RedrawWindow();
 	} else 
-	if((rc.left != m_oinputPos.left && rc.bottom != m_oinputPos.bottom)		// pos changed
+	if((rc.bottom != m_oinputPos.bottom && abs(rc.bottom - m_oinputPos.bottom) > m_oinputPos.Height())		// pos changed
 		|| rc.left != m_oinputPos.left
 		|| m_size != m_osize
 		|| m_octx != m_ctx
