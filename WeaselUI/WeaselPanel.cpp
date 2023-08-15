@@ -712,6 +712,8 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 //draw client area
 void WeaselPanel::DoPaint(CDCHandle dc)
 {
+	// turn off WS_EX_TRANSPARENT, for better resp performance
+	ModifyStyleEx(WS_EX_TRANSPARENT, WS_EX_LAYERED);
 	GetClientRect(&rcw);
 	// prepare memDC
 	CDCHandle hdc = ::GetDC(m_hWnd);
@@ -816,8 +818,6 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 	}
 	_LayerUpdate(rcw, memDC);
 
-	// turn off WS_EX_TRANSPARENT after drawings, for better resp performance
-	::SetWindowLong(m_hWnd, GWL_EXSTYLE, ::GetWindowLong(m_hWnd, GWL_EXSTYLE) & (~WS_EX_TRANSPARENT));
 	// clean objs
 	::DeleteDC(memDC);
 	::DeleteObject(memBitmap);
@@ -887,7 +887,8 @@ void WeaselPanel::MoveTo(RECT const& rc)
 		m_oinputPos = m_inputPos;
 		// with parameter to avoid vertical flicker
 		_RepositionWindow(true);
-		RedrawWindow();
+		if(m_istorepos)
+			RedrawWindow();
 	}
 }
 
