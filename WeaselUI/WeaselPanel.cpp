@@ -436,20 +436,15 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 	IDWriteTextFormat1* txtFormat = pDWR->pPreeditTextFormat.Get();
 
 	if (!t.empty()) {
-		weasel::TextRange range;
-		std::vector<weasel::TextAttribute> const& attrs = text.attributes;
-		for (size_t j = 0; j < attrs.size(); ++j)
-			if (attrs[j].type == weasel::HIGHLIGHTED)
-				range = attrs[j].range;
+		weasel::TextRange range = m_layout->GetPreeditRange();
 
 		if (range.start < range.end) {
-			CSize beforeSz, hilitedSz, afterSz;
 			std::wstring before_str = t.substr(0, range.start);
 			std::wstring hilited_str = t.substr(range.start, range.end);
 			std::wstring after_str = t.substr(range.end);
-			m_layout->GetTextSizeDW(before_str, before_str.length(), txtFormat, pDWR, &beforeSz);
-			m_layout->GetTextSizeDW(hilited_str, hilited_str.length(), txtFormat, pDWR, &hilitedSz);
-			m_layout->GetTextSizeDW(after_str, after_str.length(), txtFormat, pDWR, &afterSz);
+			CSize beforeSz = m_layout->GetBeforeSize();
+			CSize hilitedSz = m_layout->GetHilitedSize();
+			CSize afterSz = m_layout->GetAfterSize();
 
 			int x = rc.left;
 			int y = rc.top;
@@ -528,18 +523,11 @@ bool WeaselPanel::_DrawPreeditBack(Text const& text, CDCHandle dc, CRect const& 
 	IDWriteTextFormat1* txtFormat = pDWR->pPreeditTextFormat.Get();
 
 	if (!t.empty()) {
-		weasel::TextRange range;
-		std::vector<weasel::TextAttribute> const& attrs = text.attributes;
-		for (size_t j = 0; j < attrs.size(); ++j)
-			if (attrs[j].type == weasel::HIGHLIGHTED)
-				range = attrs[j].range;
+		weasel::TextRange range = m_layout->GetPreeditRange();
 
 		if (range.start < range.end) {
-			CSize beforeSz, hilitedSz;
-			std::wstring before_str = t.substr(0, range.start);
-			std::wstring hilited_str = t.substr(range.start, range.end);
-			m_layout->GetTextSizeDW(before_str, before_str.length(), txtFormat, pDWR, &beforeSz);
-			m_layout->GetTextSizeDW(hilited_str, hilited_str.length(), txtFormat, pDWR, &hilitedSz);
+			CSize beforeSz = m_layout->GetBeforeSize();
+			CSize hilitedSz = m_layout->GetHilitedSize();
 
 			int x = rc.left;
 			int y = rc.top;
@@ -638,13 +626,9 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 			rect.InflateRect(m_style.hilite_padding_x, m_style.hilite_padding_y);
 			if (m_style.mark_text.empty() && COLORNOTTRANSPARENT(m_color_scheme.hilited_mark_color))
 			{
-				BYTE r = GetRValue(m_color_scheme.hilited_mark_color);
-				BYTE g = GetGValue(m_color_scheme.hilited_mark_color);
-				BYTE b = GetBValue(m_color_scheme.hilited_mark_color);
-				BYTE alpha = (BYTE)((m_color_scheme.hilited_mark_color >> 24) & 255);
 				Gdiplus::Graphics g_back(dc);
 				g_back.SetSmoothingMode(Gdiplus::SmoothingMode::SmoothingModeHighQuality);
-				Gdiplus::Color mark_color = Gdiplus::Color::MakeARGB(alpha, r, g, b);
+				Gdiplus::Color mark_color = GDPCOLOR_FROM_COLORREF(m_color_scheme.hilited_mark_color);
 				Gdiplus::SolidBrush mk_brush(mark_color);
 				if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
 				{
