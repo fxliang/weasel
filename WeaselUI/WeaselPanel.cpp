@@ -130,7 +130,7 @@ void WeaselPanel::Refresh()
 
 	// only RedrawWindow if no need to hide candidates window
 	if(!hide_candidates)
-	{ 
+	{
 		_InitFontRes();
 		_CreateLayout();
 
@@ -330,7 +330,7 @@ LRESULT WeaselPanel::OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& 
 		TRACKMOUSEEVENT tme;
 		tme.cbSize = sizeof(TRACKMOUSEEVENT);
 		tme.dwFlags = TME_HOVER | TME_LEAVE;
-		tme.dwHoverTime = m_style.mouse_hover_ms; // unit: ms 
+		tme.dwHoverTime = m_style.mouse_hover_ms; // unit: ms
 		tme.hwndTrack = m_hWnd;
 		TrackMouseEvent(&tme);
 	}
@@ -343,7 +343,11 @@ LRESULT WeaselPanel::OnMouseLeave(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 	return 0;
 }
 
-void WeaselPanel::_HighlightText(CDCHandle &dc, CRect rc, COLORREF color, COLORREF shadowColor, int radius, BackType type = BackType::TEXT, IsToRoundStruct rd = IsToRoundStruct(), COLORREF bordercolor=TRANS_COLOR)
+void WeaselPanel::_HighlightText(CDCHandle &dc, const CRect& rc,
+		const COLORREF& color, const COLORREF& shadowColor, const int& radius,
+		const BackType& type = BackType::TEXT,
+		const IsToRoundStruct& rd = IsToRoundStruct(),
+		const COLORREF& bordercolor=TRANS_COLOR)
 {
 	// Graphics obj with SmoothingMode
 	Gdiplus::Graphics g_back(dc);
@@ -354,7 +358,7 @@ void WeaselPanel::_HighlightText(CDCHandle &dc, CRect rc, COLORREF color, COLORR
 	int blurMarginY = m_layout->offsetY;
 
 	GraphicsRoundRectPath* hiliteBackPath;
-	if (rd.Hemispherical && type!= BackType::BACKGROUND && NOT_FULLSCREENLAYOUT(m_style)) 
+	if (rd.Hemispherical && type!= BackType::BACKGROUND && NOT_FULLSCREENLAYOUT(m_style))
 		hiliteBackPath = new GraphicsRoundRectPath(rc, m_style.round_corner_ex - (m_style.border%2 ? m_style.border / 2 : 0) , rd.IsTopLeftNeedToRound, rd.IsTopRightNeedToRound, rd.IsBottomRightNeedToRound, rd.IsBottomLeftNeedToRound);
 	else // background or current candidate background not out of window background
 		hiliteBackPath = new GraphicsRoundRectPath(rc, radius);
@@ -428,7 +432,7 @@ void WeaselPanel::_HighlightText(CDCHandle &dc, CRect rc, COLORREF color, COLORR
 }
 
 // draw preedit text, text only
-bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
+bool WeaselPanel::_DrawPreedit(const Text& text, CDCHandle dc, const CRect& rc)
 {
 	bool drawn = false;
 	std::wstring const& t = text.str;
@@ -466,7 +470,7 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 				// zzz[yyy]
 				std::wstring str_highlight(t.substr(range.start, range.end - range.start));
 				CRect rc_hi;
-				
+
 				if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
 					rc_hi = CRect(rc.left, y, rc.right, y + hilitedSz.cy);
 				else
@@ -515,7 +519,7 @@ bool WeaselPanel::_DrawPreedit(Text const& text, CDCHandle dc, CRect const& rc)
 }
 
 // draw hilited back color, back only
-bool WeaselPanel::_DrawPreeditBack(Text const& text, CDCHandle dc, CRect const& rc)
+bool WeaselPanel::_DrawPreeditBack(const Text& text, CDCHandle dc, const CRect& rc)
 {
 	bool drawn = false;
 	std::wstring const& t = text.str;
@@ -579,13 +583,13 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 	BackType bkType = BackType::CAND;
 
 
-	CRect rect;	
+	CRect rect;
 	// draw back color and shadow color, with gdi+
 	if (back) {
 		// if candidate_shadow_color not transparent, draw candidate shadow first
 		if (COLORNOTTRANSPARENT(m_color_scheme.candidate_shadow_color)) {
 			for (auto i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
-				if (i == m_ctx.cinfo.highlighted) continue;	// draw non hilited candidates only 
+				if (i == m_ctx.cinfo.highlighted) continue;	// draw non hilited candidates only
 				rect = m_layout->GetCandidateRect((int)i);
 				IsToRoundStruct rd = m_layout->GetRoundInfo(i);
 				if(m_istorepos) {
@@ -842,11 +846,11 @@ LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 	return TRUE;
 }
 
-LRESULT WeaselPanel::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) 
-{ 
+LRESULT WeaselPanel::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
 	delete m_layout;
 	m_layout = NULL;
-	return 0; 
+	return 0;
 }
 
 LRESULT WeaselPanel::OnDpiChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -857,7 +861,7 @@ LRESULT WeaselPanel::OnDpiChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 
 void WeaselPanel::MoveTo(RECT const& rc)
 {
-	if(!m_layout)	return;			// avoid handling nullptr in _RepositionWindow 
+	if(!m_layout)	return;			// avoid handling nullptr in _RepositionWindow
 	// if ascii_tip_follow_cursor set, move tip icon to mouse cursor
 	if(m_style.ascii_tip_follow_cursor && m_ctx.aux.empty() && (!m_status.composing) && m_layout->ShouldDisplayStatusIcon()) {	// ascii icon
 		POINT p;
@@ -868,7 +872,7 @@ void WeaselPanel::MoveTo(RECT const& rc)
 		_RepositionWindow(true);
 		RedrawWindow();
 	} else if ((rc.bottom != m_oinputPos.bottom && abs(rc.bottom - m_oinputPos.bottom) > m_oinputPos.Height()) || rc.left != m_oinputPos.left){
-		// in some apps like word 2021, with inline_preedit set, 
+		// in some apps like word 2021, with inline_preedit set,
 		// bottom of rc would flicker 1 px or 2, make the candidate flickering
 		m_inputPos = rc;
 		m_inputPos.OffsetRect(0, 6);
@@ -877,14 +881,14 @@ void WeaselPanel::MoveTo(RECT const& rc)
 		bool m_istorepos_buf = m_istorepos;
 		// with parameter to avoid vertical flicker
 		_RepositionWindow(true);
-		// m_istorepos status changed by _RepositionWindow, or tips to show, 
+		// m_istorepos status changed by _RepositionWindow, or tips to show,
 		// redrawing is required
-		if(m_istorepos != m_istorepos_buf || !m_ctx.aux.empty()) 
+		if(m_istorepos != m_istorepos_buf || !m_ctx.aux.empty())
 			RedrawWindow();
 	}
 }
 
-void WeaselPanel::_RepositionWindow(bool adj)
+void WeaselPanel::_RepositionWindow(const bool& adj)
 {
 	RECT rcWorkArea;
 	memset(&rcWorkArea, 0, sizeof(rcWorkArea));
@@ -930,7 +934,9 @@ void WeaselPanel::_RepositionWindow(bool adj)
 	SetWindowPos(HWND_TOPMOST, x, y, 0, 0, SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOREDRAW);
 }
 
-void WeaselPanel::_TextOut(CRect const& rc, std::wstring psz, size_t cch, int inColor, IDWriteTextFormat1* pTextFormat)
+void WeaselPanel::_TextOut(const CRect& rc, const std::wstring& psz,
+		const size_t& cch, const int& inColor,
+		IDWriteTextFormat1* const pTextFormat)
 {
 	if (pTextFormat == NULL) return;
 	float r = (float)(GetRValue(inColor))/255.0f;
@@ -947,7 +953,7 @@ void WeaselPanel::_TextOut(CRect const& rc, std::wstring psz, size_t cch, int in
 		pDWR->SetBrushColor(D2D1::ColorF(r, g, b, alpha));
 
 	if (NULL != pDWR->pBrush && NULL != pTextFormat) {
-		pDWR->CreateTextLayout( psz.c_str(), (UINT32)psz.size(), pTextFormat, (float)rc.Width(), (float)rc.Height());
+		pDWR->CreateTextLayout( psz.c_str(), (int)cch, pTextFormat, (float)rc.Width(), (float)rc.Height());
 		if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT) {
 			DWRITE_FLOW_DIRECTION flow = m_style.vertical_text_left_to_right ? DWRITE_FLOW_DIRECTION_LEFT_TO_RIGHT : DWRITE_FLOW_DIRECTION_RIGHT_TO_LEFT;
 			pDWR->SetLayoutReadingDirection(DWRITE_READING_DIRECTION_TOP_TO_BOTTOM);
