@@ -72,7 +72,6 @@ private:
 
 	weasel::Layout *m_layout;
 	weasel::Context &m_ctx;
-	weasel::Context &m_octx;
 	weasel::Status &m_status;
 	weasel::UIStyle &m_style;
 	weasel::UIStyle &m_ostyle;
@@ -84,8 +83,6 @@ private:
 	int  m_offsety_preedit;
 	int  m_offsety_aux;
 	bool m_istorepos;
-	CSize m_size;
-	CSize m_osize;
 
 	CIcon m_iconDisabled;
 	CIcon m_iconEnabled;

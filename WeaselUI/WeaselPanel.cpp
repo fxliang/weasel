@@ -41,7 +41,6 @@ static inline void ReconfigRoundInfo(IsToRoundStruct& rd, const int& i, const in
 WeaselPanel::WeaselPanel(weasel::UI& ui)
 	: m_layout(NULL),
 	m_ctx(ui.ctx()),
-	m_octx(ui.octx()),
 	m_status(ui.status()),
 	m_style(ui.style()),
 	m_color_scheme(m_style.color_scheme),
@@ -77,7 +76,7 @@ WeaselPanel::~WeaselPanel()
 void WeaselPanel::_ResizeWindow()
 {
 	CDCHandle dc = GetDC();
-	m_size = m_layout->GetContentSize();
+	CSize m_size = m_layout->GetContentSize();
 	SetWindowPos(NULL, 0, 0, m_size.cx, m_size.cy, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER | SWP_NOREDRAW);
 	ReleaseDC(dc);
 }
@@ -738,8 +737,7 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 					m_offsety_preedit = rects[m_candidateCount - 1].bottom - preeditrc.bottom;
 				if (!m_ctx.aux.str.empty())
 					m_offsety_aux = rects[m_candidateCount - 1].bottom - auxrc.bottom;
-			}
-			else {
+			} else {
 				m_offsety_preedit = 0;
 				m_offsety_aux = 0;
 			}
@@ -846,7 +844,6 @@ LRESULT WeaselPanel::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHa
 
 LRESULT WeaselPanel::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled) 
 { 
-	m_osize = {0,0};
 	delete m_layout;
 	m_layout = NULL;
 	return 0; 
@@ -862,8 +859,7 @@ void WeaselPanel::MoveTo(RECT const& rc)
 {
 	if(!m_layout)	return;			// avoid handling nullptr in _RepositionWindow 
 	// if ascii_tip_follow_cursor set, move tip icon to mouse cursor
-	if(m_style.ascii_tip_follow_cursor && m_ctx.aux.empty() && (!m_status.composing) && m_layout->ShouldDisplayStatusIcon())	// ascii icon
-	{
+	if(m_style.ascii_tip_follow_cursor && m_ctx.aux.empty() && (!m_status.composing) && m_layout->ShouldDisplayStatusIcon()) {	// ascii icon
 		POINT p;
 		::GetCursorPos(&p);
 		RECT irc{p.x-STATUS_ICON_SIZE, p.y-STATUS_ICON_SIZE, p.x, p.y};
@@ -871,23 +867,19 @@ void WeaselPanel::MoveTo(RECT const& rc)
 		m_oinputPos = irc;
 		_RepositionWindow(true);
 		RedrawWindow();
-	} else 
-	if((rc.bottom != m_oinputPos.bottom && abs(rc.bottom - m_oinputPos.bottom) > m_oinputPos.Height())		// pos changed
-		|| rc.left != m_oinputPos.left
-		|| m_size != m_osize
-		|| m_octx != m_ctx
-		|| (m_ctx.preedit.str.empty() && (CRect(rc) == m_oinputPos))		// first click old pos
-		|| !m_ctx.aux.str.empty()	// aux not empty, msg 
-		|| (m_ctx.aux.empty() && (m_layout) && m_layout->ShouldDisplayStatusIcon()))	// ascii icon
-	{
-		m_octx = m_ctx;
-		m_osize = m_size;
+	} else if ((rc.bottom != m_oinputPos.bottom && abs(rc.bottom - m_oinputPos.bottom) > m_oinputPos.Height()) || rc.left != m_oinputPos.left){
+		// in some apps like word 2021, with inline_preedit set, 
+		// bottom of rc would flicker 1 px or 2, make the candidate flickering
 		m_inputPos = rc;
 		m_inputPos.OffsetRect(0, 6);
 		m_oinputPos = m_inputPos;
+		// buffer current m_istorepos status
+		bool m_istorepos_buf = m_istorepos;
 		// with parameter to avoid vertical flicker
 		_RepositionWindow(true);
-		if(m_istorepos)
+		// m_istorepos status changed by _RepositionWindow, or tips to show, 
+		// redrawing is required
+		if(m_istorepos != m_istorepos_buf || !m_ctx.aux.empty()) 
 			RedrawWindow();
 	}
 }
