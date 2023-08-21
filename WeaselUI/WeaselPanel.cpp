@@ -910,6 +910,7 @@ void WeaselPanel::_RepositionWindow(const bool& adj)
 	int x = m_inputPos.left;
 	int y = m_inputPos.bottom;
 	x -= (m_style.shadow_offset_x >= 0 || COLORTRANSPARENT(m_color_scheme.shadow_color)) ? m_layout->offsetX : (m_layout->offsetX / 2);
+reposy:
 	if(adj) y -= (m_style.shadow_offset_y > 0 || COLORTRANSPARENT(m_color_scheme.shadow_color)) ? m_layout->offsetY : (m_layout->offsetY / 2);
 	// for vertical text layout, flow right to left, make window left side
 	if(m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT && !m_style.vertical_text_left_to_right)
@@ -927,6 +928,12 @@ void WeaselPanel::_RepositionWindow(const bool& adj)
 			y = m_oinputPos.top - height;
 		m_istorepos = (m_style.vertical_auto_reverse && m_style.layout_type == UIStyle::LAYOUT_VERTICAL);
 		y += (m_style.shadow_offset_y < 0 || COLORTRANSPARENT(m_color_scheme.shadow_color)) ? m_layout->offsetY : (m_layout->offsetY / 2);
+	} else if(y + height < m_oinputPos.top) { 
+		// candidate window on top of input position, 
+		// and window vertical size getting smaller, rework needed
+		y = m_oinputPos.bottom; 
+		m_istorepos = false;
+		goto reposy;
 	}
 	if (y < rcWorkArea.top) y = rcWorkArea.top;		// over workarea top
 	// memorize adjusted position (to avoid window bouncing on height change)
