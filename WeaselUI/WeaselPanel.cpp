@@ -41,6 +41,7 @@ static inline void ReconfigRoundInfo(IsToRoundStruct& rd, const int& i, const in
 WeaselPanel::WeaselPanel(weasel::UI& ui)
 	: m_layout(NULL),
 	m_ctx(ui.ctx()),
+	m_octx(ui.octx()),
 	m_status(ui.status()),
 	m_style(ui.style()),
 	m_color_scheme(m_style.color_scheme),
@@ -139,7 +140,10 @@ void WeaselPanel::Refresh()
 		ReleaseDC(dc);
 		_ResizeWindow();
 		_RepositionWindow();
-		RedrawWindow();
+		if(m_ctx != m_octx) {
+			m_octx = m_ctx;
+			RedrawWindow();
+		}
 	}
 }
 
