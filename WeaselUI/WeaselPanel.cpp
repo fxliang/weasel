@@ -875,7 +875,7 @@ void WeaselPanel::MoveTo(RECT const& rc)
 		m_oinputPos = irc;
 		_RepositionWindow(true);
 		RedrawWindow();
-	} else if ((rc.bottom != m_oinputPos.bottom && abs(rc.bottom - m_oinputPos.bottom) > m_oinputPos.Height()) || rc.left != m_oinputPos.left){
+	} else if (!(rc.left == m_oinputPos.left && rc.bottom != m_oinputPos.bottom && abs(rc.bottom - m_oinputPos.bottom) < 6)) {
 		// in some apps like word 2021, with inline_preedit set,
 		// bottom of rc would flicker 1 px or 2, make the candidate flickering
 		m_inputPos = rc;
