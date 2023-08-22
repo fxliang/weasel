@@ -867,7 +867,7 @@ void WeaselPanel::MoveTo(RECT const& rc)
 {
 	if(!m_layout)	return;			// avoid handling nullptr in _RepositionWindow
 	// if ascii_tip_follow_cursor set, move tip icon to mouse cursor
-	if(m_style.ascii_tip_follow_cursor && m_ctx.aux.empty() && (!m_status.composing) && m_layout->ShouldDisplayStatusIcon()) {	// ascii icon
+	if(m_style.ascii_tip_follow_cursor && m_ctx.empty() && (!m_status.composing) && m_layout->ShouldDisplayStatusIcon()) {	// ascii icon
 		POINT p;
 		::GetCursorPos(&p);
 		RECT irc{p.x-STATUS_ICON_SIZE, p.y-STATUS_ICON_SIZE, p.x, p.y};
