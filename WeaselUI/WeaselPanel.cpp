@@ -631,6 +631,7 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 				ReconfigRoundInfo(rd, m_ctx.cinfo.highlighted, m_candidateCount);
 			}
 			rect.InflateRect(m_style.hilite_padding_x, m_style.hilite_padding_y);
+			_HighlightText(dc, rect, m_color_scheme.hilited_candidate_back_color, m_color_scheme.hilited_candidate_shadow_color, m_style.round_corner, bkType, rd, m_color_scheme.hilited_candidate_border_color);
 			if (m_style.mark_text.empty() && COLORNOTTRANSPARENT(m_color_scheme.hilited_mark_color))
 			{
 				Gdiplus::Graphics g_back(dc);
@@ -650,7 +651,6 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 					g_back.FillPath(&mk_brush, &mk_path);
 				}
 			}
-			_HighlightText(dc, rect, m_color_scheme.hilited_candidate_back_color, m_color_scheme.hilited_candidate_shadow_color, m_style.round_corner, bkType, rd, m_color_scheme.hilited_candidate_border_color);
 			drawn = true;
 		}
 	}
