@@ -375,6 +375,7 @@ namespace weasel
 		bool ascii_tip_follow_cursor;
 		bool paging_on_scroll;
 		bool enhanced_position;
+		bool click_to_capture;
 		int mouse_hover_ms;
 		AntiAliasMode antialias_mode;
 		PreeditType preedit_type;
@@ -427,6 +428,7 @@ namespace weasel
 			ascii_tip_follow_cursor(false),
 			paging_on_scroll(false),
 			enhanced_position(false),
+			click_to_capture(false),
 			mouse_hover_ms(0),
 			antialias_mode(DEFAULT),
 			preedit_type(COMPOSITION),
@@ -487,6 +489,7 @@ namespace weasel
 					|| current_half_icon != st.current_half_icon
 					|| current_full_icon != st.current_full_icon
 					|| enhanced_position != st.enhanced_position
+					|| click_to_capture != st.click_to_capture
 					|| label_text_format != st.label_text_format
 					|| min_width != st.min_width
 					|| max_width != st.max_width
