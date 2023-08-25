@@ -634,19 +634,23 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 			_HighlightText(dc, rect, m_color_scheme.hilited_candidate_back_color, m_color_scheme.hilited_candidate_shadow_color, m_style.round_corner, bkType, rd, m_color_scheme.hilited_candidate_border_color);
 			if (m_style.mark_text.empty() && COLORNOTTRANSPARENT(m_color_scheme.hilited_mark_color))
 			{
+				int height = min(rect.Height() - m_style.hilite_padding_y * 2, rect.Height() - m_style.round_corner * 2);
+				int width = min(rect.Width() - m_style.hilite_padding_x * 2, rect.Width() - m_style.round_corner * 2);
 				Gdiplus::Graphics g_back(dc);
 				g_back.SetSmoothingMode(Gdiplus::SmoothingMode::SmoothingModeHighQuality);
 				Gdiplus::Color mark_color = GDPCOLOR_FROM_COLORREF(m_color_scheme.hilited_mark_color);
 				Gdiplus::SolidBrush mk_brush(mark_color);
 				if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
 				{
-					CRect mkrc{ rect.left + m_style.round_corner, rect.top, rect.right - m_style.round_corner, rect.top + m_layout->MARK_HEIGHT / 2 };
+					int x = (rect.left + rect.Width() - width)/2;
+					CRect mkrc{ x, rect.top, x + width, rect.top + m_layout->MARK_HEIGHT / 2 };
 					GraphicsRoundRectPath mk_path(mkrc, 2);
 					g_back.FillPath(&mk_brush, &mk_path);
 				}
 				else
 				{
-					CRect mkrc{ rect.left, rect.top + m_style.round_corner, rect.left + m_layout->MARK_WIDTH / 2, rect.bottom - m_style.round_corner };
+					int y = rect.top + (rect.Height() - height)/2;
+					CRect mkrc{ rect.left, y, rect.left + m_layout->MARK_WIDTH / 2, y + height };
 					GraphicsRoundRectPath mk_path(mkrc, 2);
 					g_back.FillPath(&mk_brush, &mk_path);
 				}
