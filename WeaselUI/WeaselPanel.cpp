@@ -870,29 +870,31 @@ LRESULT WeaselPanel::OnDpiChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 
 void WeaselPanel::MoveTo(RECT const& rc)
 {
-	if(!m_layout)	return;			// avoid handling nullptr in _RepositionWindow
+	if(!m_layout)	return;		// avoid handling nullptr in _RepositionWindow
 	// if ascii_tip_follow_cursor set, move tip icon to mouse cursor
-	if(m_style.ascii_tip_follow_cursor && m_ctx.empty() && (!m_status.composing) && m_layout->ShouldDisplayStatusIcon()) {	// ascii icon
+	if(m_style.ascii_tip_follow_cursor && m_ctx.empty() 
+			&& (!m_status.composing) && m_layout->ShouldDisplayStatusIcon()) {	
+		// ascii icon follow cursor
 		POINT p;
 		::GetCursorPos(&p);
 		RECT irc{p.x-STATUS_ICON_SIZE, p.y-STATUS_ICON_SIZE, p.x, p.y};
 		m_inputPos = irc;
-		m_oinputPos = irc;
 		_RepositionWindow(true);
 		RedrawWindow();
-	} else if (!(rc.left == m_oinputPos.left && rc.bottom != m_oinputPos.bottom && abs(rc.bottom - m_oinputPos.bottom) < 6)) {
+	} else if (!(rc.left == m_inputPos.left && rc.bottom != m_inputPos.bottom 
+				&& abs(rc.bottom - m_inputPos.bottom) < 6)) {
 		// in some apps like word 2021, with inline_preedit set,
 		// bottom of rc would flicker 1 px or 2, make the candidate flickering
 		m_inputPos = rc;
 		m_inputPos.OffsetRect(0, 6);
-		m_oinputPos = m_inputPos;
 		// buffer current m_istorepos status
 		bool m_istorepos_buf = m_istorepos;
 		// with parameter to avoid vertical flicker
 		_RepositionWindow(true);
 		// m_istorepos status changed by _RepositionWindow, or tips to show,
 		// redrawing is required
-		if(m_istorepos != m_istorepos_buf || !m_ctx.aux.empty())
+		if(m_istorepos != m_istorepos_buf || !m_ctx.aux.empty() 
+				|| (m_ctx.empty() && m_layout->ShouldDisplayStatusIcon()))
 			RedrawWindow();
 	}
 }
@@ -918,32 +920,28 @@ void WeaselPanel::_RepositionWindow(const bool& adj)
 	rcWorkArea.bottom -= height;
 	int x = m_inputPos.left;
 	int y = m_inputPos.bottom;
-	x -= (m_style.shadow_offset_x >= 0 || COLORTRANSPARENT(m_color_scheme.shadow_color)) ? m_layout->offsetX : (m_layout->offsetX / 2);
-reposy:
-	if(adj) y -= (m_style.shadow_offset_y > 0 || COLORTRANSPARENT(m_color_scheme.shadow_color)) ? m_layout->offsetY : (m_layout->offsetY / 2);
-	// for vertical text layout, flow right to left, make window left side
-	if(m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT && !m_style.vertical_text_left_to_right)
-	{
-		x += m_layout->offsetX - width;
-		if ( m_style.shadow_offset_x < 0 ) x += m_layout->offsetX;
+	if(m_style.shadow_radius > 0) {
+		x -= (m_style.shadow_offset_x >= 0 || COLORTRANSPARENT(m_color_scheme.shadow_color)) ? m_layout->offsetX : (m_layout->offsetX / 2);
+		if (adj)
+			y -= (m_style.shadow_offset_y > 0 || COLORTRANSPARENT(m_color_scheme.shadow_color)) ? m_layout->offsetY : (m_layout->offsetY / 2);
+		// for vertical text layout, flow right to left, make window left side
+		if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT && !m_style.vertical_text_left_to_right)
+		{
+			x += m_layout->offsetX - width;
+			if (m_style.shadow_offset_x < 0)
+				x += m_layout->offsetX;
+		}
 	}
 	if(adj) m_istorepos = false;
 	if (x > rcWorkArea.right) x = rcWorkArea.right;		// over workarea right
 	if (x < rcWorkArea.left) x = rcWorkArea.left;		// over workarea left
 	// show panel above the input focus if we're around the bottom
 	if (y > rcWorkArea.bottom) {
-		y = m_inputPos.top - height - 6; // over workarea bottom
-		if( !adj && (y + height < m_oinputPos.top) )
-			y = m_oinputPos.top - height;
+		y = m_inputPos.top - height - (adj ? 0 : 6); // over workarea bottom
 		m_istorepos = (m_style.vertical_auto_reverse && m_style.layout_type == UIStyle::LAYOUT_VERTICAL);
-		y += (m_style.shadow_offset_y < 0 || COLORTRANSPARENT(m_color_scheme.shadow_color)) ? m_layout->offsetY : (m_layout->offsetY / 2);
-	} else if(y + height < m_oinputPos.top) { 
-		// candidate window on top of input position, 
-		// and window vertical size getting smaller, rework needed
-		y = m_oinputPos.bottom; 
-		m_istorepos = false;
-		goto reposy;
-	}
+		if(m_style.shadow_radius > 0)
+			y += (m_style.shadow_offset_y < 0 || COLORTRANSPARENT(m_color_scheme.shadow_color)) ? m_layout->offsetY : (m_layout->offsetY / 2);
+	} 
 	if (y < rcWorkArea.top) y = rcWorkArea.top;		// over workarea top
 	// memorize adjusted position (to avoid window bouncing on height change)
 	m_inputPos.bottom = y;
