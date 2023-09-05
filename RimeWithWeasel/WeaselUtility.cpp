@@ -31,6 +31,14 @@ const char* weasel_shared_data_dir() {
 	strcpy_s(path + k + 1, _countof(path) - (k + 1), "data");
 	return path;
 }
+const char* weasel_shared_data_dir_x64() {
+	static char path[MAX_PATH] = {0};
+	GetModuleFileNameA(NULL, path, _countof(path));
+	std::string str_path(path);
+	size_t k = str_path.find_last_of("/\\");
+	strcpy_s(path + k + 1, _countof(path) - (k + 1), "..\\data");
+	return path;
+}
 
 const char* weasel_user_data_dir() {
 	static char path[MAX_PATH] = {0};

@@ -20,8 +20,7 @@ static void CreateFileIfNotExist(std::string filename)
 {
 	std::string user_data_dir = weasel_user_data_dir();
 	std::wstring filepathw = string_to_wstring(user_data_dir) + L"\\" + string_to_wstring(filename);
-	DWORD dwAttrib = GetFileAttributes(filepathw.c_str());
-	if (!(INVALID_FILE_ATTRIBUTES != dwAttrib && 0 == (dwAttrib & FILE_ATTRIBUTE_DIRECTORY)))
+	if (!IfFileExistW(filepathw))
 	{
 		std::wofstream o(filepathw, std::ios::app);
 		o.close();
@@ -36,7 +35,11 @@ Configurator::Configurator()
 void Configurator::Initialize()
 {
 	RIME_STRUCT(RimeTraits, weasel_traits);
+#ifdef _WIN64
+	weasel_traits.shared_data_dir = weasel_shared_data_dir_x64();
+#else
 	weasel_traits.shared_data_dir = weasel_shared_data_dir();
+#endif
 	weasel_traits.user_data_dir = weasel_user_data_dir();
 	weasel_traits.prebuilt_data_dir = weasel_traits.shared_data_dir;
 	const int len = 20;

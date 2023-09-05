@@ -30,6 +30,7 @@ inline std::wstring getUsername() {
 std::wstring WeaselUserDataPath();
 
 const char* weasel_shared_data_dir();
+const char* weasel_shared_data_dir_x64();
 const char* weasel_user_data_dir();
 
 inline std::wstring string_to_wstring(const std::string& str, int code_page = CP_ACP)
@@ -61,6 +62,30 @@ inline std::string wstring_to_string(const std::wstring& wstr, int code_page = C
 	res.append(buffer);
 	delete[] buffer;
 	return res;
+}
+
+inline bool IfFileExistW(std::wstring filepathw)
+{
+	DWORD dwAttrib = GetFileAttributes(filepathw.c_str());
+	return (INVALID_FILE_ATTRIBUTES != dwAttrib && 0 == (dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
+}
+
+inline bool IfFileExist(std::string filepath, int code_page = CP_ACP)
+{
+	std::wstring filepathw{string_to_wstring(filepath, code_page)};
+	DWORD dwAttrib = GetFileAttributes(filepathw.c_str());
+	return (INVALID_FILE_ATTRIBUTES != dwAttrib && 0 == (dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
+}
+
+inline bool is_wow64() {
+	DWORD errorCode;
+	if (GetSystemWow64DirectoryW(NULL, 0) == 0)
+		if ((errorCode = GetLastError()) == ERROR_CALL_NOT_IMPLEMENTED)
+			return false;
+		else
+			ExitProcess((UINT)errorCode);
+	else
+		return true;
 }
 
 // resource
