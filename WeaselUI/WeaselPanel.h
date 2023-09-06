@@ -56,7 +56,7 @@ public:
 	bool GetIsReposition(){ return m_istorepos; }
 
 private:
-	void _InitFontRes(void);
+	void _InitFontRes(bool forced = false);
 	void _CaptureRect(CRect& rect);
 	bool m_mouse_entry = false;
 	void _CreateLayout();

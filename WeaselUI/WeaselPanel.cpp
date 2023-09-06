@@ -147,7 +147,7 @@ void WeaselPanel::Refresh()
 	}
 }
 
-void WeaselPanel::_InitFontRes(void)
+void WeaselPanel::_InitFontRes(bool forced)
 {
 	HMONITOR hMonitor = MonitorFromRect(m_inputPos, MONITOR_DEFAULTTONEAREST);
 	UINT dpiX = 96, dpiY = 96;
@@ -155,7 +155,7 @@ void WeaselPanel::_InitFontRes(void)
 		GetDpiForMonitor(hMonitor, MDT_EFFECTIVE_DPI, &dpiX, &dpiY);
 	// prepare d2d1 resources
 	// if style changed, or dpi changed, or pDWR NULL, re-initialize directwrite resources
-	if ((pDWR == NULL) || (m_ostyle != m_style) || (dpiX != dpi))
+	if (forced || (pDWR == NULL) || (m_ostyle != m_style) || (dpiX != dpi))
 	{
 		pDWR.reset();
 		pDWR = std::make_shared< DirectWriteResources>(m_style, dpiX);
@@ -581,7 +581,12 @@ bool WeaselPanel::_DrawCandidates(CDCHandle &dc, bool back)
 	const std::vector<Text> &candidates(m_ctx.cinfo.candies);
 	const std::vector<Text> &comments(m_ctx.cinfo.comments);
 	const std::vector<Text> &labels(m_ctx.cinfo.labels);
-
+	// prevent all text format nullptr
+	if(pDWR->pTextFormat.Get() == nullptr 
+			&& pDWR->pLabelTextFormat.Get() == nullptr
+			&& pDWR->pCommentTextFormat.Get() == nullptr) {
+		_InitFontRes(true);
+	}
 	ComPtr<IDWriteTextFormat1> txtFormat = pDWR->pTextFormat;
 	ComPtr<IDWriteTextFormat1> labeltxtFormat = pDWR->pLabelTextFormat;
 	ComPtr<IDWriteTextFormat1> commenttxtFormat = pDWR->pCommentTextFormat;
@@ -790,8 +795,11 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 			drawn |= _DrawCandidates(memDC, true);
 		// background and candidates back, hilite back drawing end
 
-		// begin  texts drawing
-		pDWR->pRenderTarget->BindDC(memDC, &rcw);
+		// begin  texts drawing, if pRenderTarget failed, force to reinit directwrite resources
+		if (FAILED(pDWR->pRenderTarget->BindDC(memDC, &rcw))) {
+			_InitFontRes(true);
+			pDWR->pRenderTarget->BindDC(memDC, &rcw);
+		}
 		pDWR->pRenderTarget->BeginDraw();
 		// draw auxiliary string
 		if (!m_ctx.aux.str.empty())
