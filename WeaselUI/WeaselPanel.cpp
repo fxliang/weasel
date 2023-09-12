@@ -122,15 +122,14 @@ void WeaselPanel::Refresh()
 	// show schema menu status: schema_id == L".default"
 	bool show_schema_menu = m_status.schema_id == L".default";
 	bool margin_negative = (m_style.margin_x < 0 || m_style.margin_y < 0);
-	bool inline_no_candidates = m_style.inline_preedit && (m_ctx.cinfo.candies.size() == 0) && (!show_tips);
 	// when to hide_cadidates?
-	// 1. inline_no_candidates
-	// or
-	// 2. margin_negative, and not in show tips mode( ascii switching / half-full switching / simp-trad switching / error tips), and not in schema menu
+	// 1. margin_negative, and not in show tips mode( ascii switching / half-full switching / simp-trad switching / error tips), and not in schema menu
+	// 2. inline preedit without candidates
+	bool inline_no_candidates = (m_style.inline_preedit && m_candidateCount == 0) && !show_tips;
 	hide_candidates = inline_no_candidates || (margin_negative && !show_tips && !show_schema_menu);
 
-	// only RedrawWindow if no need to hide candidates window
-	if(!hide_candidates)
+	// only RedrawWindow if no need to hide candidates window, or inline_no_candidates
+	if(!hide_candidates || inline_no_candidates)
 	{
 		_InitFontRes();
 		_CreateLayout();
@@ -775,7 +774,7 @@ void WeaselPanel::DoPaint(CDCHandle dc)
 			delete[] btmys;
 		}
 		// background and candidates back, hilite back drawing start
-		if (!m_ctx.empty()) {
+		if ((!m_ctx.empty() && !m_style.inline_preedit) || (m_style.inline_preedit && (m_candidateCount || !m_ctx.aux.empty() ))) {
 			CRect backrc = m_layout->GetContentRect();
 			_HighlightText(memDC, backrc, m_color_scheme.back_color, m_color_scheme.shadow_color, m_style.round_corner_ex, BackType::BACKGROUND, IsToRoundStruct(),  m_color_scheme.border_color);
 		}
