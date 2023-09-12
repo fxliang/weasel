@@ -565,7 +565,8 @@ bool RimeWithWeaselHandler::_ShowMessage(Context& ctx, Status& status) {
 	}
 	if (tips.empty() && !show_icon)
 		return m_ui->IsCountingDown();
-
+	if (!m_ui->style().show_ascii_tip && m_message_type == "option" && (m_message_value == "ascii_mode" || m_message_value == "!ascii_mode"))
+		return false;
 	m_ui->Update(ctx, status);
 	m_ui->ShowWithTimeout(1200 + 200 * tips.length());
 	return true;
@@ -893,6 +894,7 @@ static void _UpdateUIStyle(RimeConfig* config, UI* ui, bool initialize)
 	_RimeParseStringOptWithFallback(config, "style/layout/align_type", style.align_type, _alignType, style.align_type);
 	_RimeGetBool(config, "style/display_tray_icon", initialize, style.display_tray_icon, true, false);
 	_RimeGetBool(config, "style/ascii_tip_follow_cursor", initialize, style.ascii_tip_follow_cursor, true, false);
+	_RimeGetBool(config, "style/show_ascii_tip", initialize, style.show_ascii_tip, true, false);
 	_RimeGetBool(config, "style/horizontal", initialize, style.layout_type, UIStyle::LAYOUT_HORIZONTAL, UIStyle::LAYOUT_VERTICAL);
 	_RimeGetBool(config, "style/paging_on_scroll", initialize, style.paging_on_scroll, true, false);
 	_RimeGetBool(config, "style/click_to_capture", initialize, style.click_to_capture, true, false);

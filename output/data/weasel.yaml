@@ -12,6 +12,7 @@ app_options:
 style:
   antialias_mode: default
   ascii_tip_follow_cursor: false
+  show_ascii_tip: true
   color_scheme: aqua
   font_face: Microsoft YaHei
   label_font_face: Microsoft YaHei

@@ -373,6 +373,7 @@ namespace weasel
 		bool inline_preedit;
 		bool display_tray_icon;
 		bool ascii_tip_follow_cursor;
+		bool show_ascii_tip;
 		bool paging_on_scroll;
 		bool enhanced_position;
 		bool click_to_capture;
@@ -426,6 +427,7 @@ namespace weasel
 			inline_preedit(false),
 			display_tray_icon(false),
 			ascii_tip_follow_cursor(false),
+			show_ascii_tip(true),
 			paging_on_scroll(false),
 			enhanced_position(false),
 			click_to_capture(false),
@@ -484,6 +486,7 @@ namespace weasel
 					|| mark_text != st.mark_text
 					|| display_tray_icon != st.display_tray_icon
 					|| ascii_tip_follow_cursor != st.ascii_tip_follow_cursor
+					|| show_ascii_tip != st.show_ascii_tip
 					|| current_zhung_icon != st.current_zhung_icon
 					|| current_ascii_icon != st.current_ascii_icon
 					|| current_half_icon != st.current_half_icon

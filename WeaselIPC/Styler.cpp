@@ -25,7 +25,7 @@ namespace weasel {
 	NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(UIStyle, antialias_mode, preedit_type, paging_on_scroll, mouse_hover_ms,\
 		font_face, label_font_face, comment_font_face, font_point,\
 		label_font_point, comment_font_point, inline_preedit, display_tray_icon,\
-		ascii_tip_follow_cursor, current_zhung_icon, current_ascii_icon, current_half_icon,\
+		ascii_tip_follow_cursor, show_ascii_tip, current_zhung_icon, current_ascii_icon, current_half_icon,\
 		current_full_icon, enhanced_position, click_to_capture, label_text_format, mark_text,\
 		layout_type, align_type, vertical_text_left_to_right, vertical_text_with_wrap,\
 		min_width, max_width, min_height, max_height,\
