@@ -5,6 +5,7 @@
 
 #include "resource.h"
 #include <thread>
+#include <WeaselUtility.h>
 
 #include "InstallOptionsDlg.h"
 
@@ -136,11 +137,19 @@ static int CustomInstall(bool installing)
 	{
 		std::wstring dir(install_dir());
 		std::thread th([dir]() {
+			if (is_wow64() && IfFileExistW(dir + L"\\x64\\WeaselDeployer.exe") && IfFileExistW(dir + L"\\x64\\rime.dll")) {
+			ShellExecuteW(NULL, NULL, (dir + L"\\WeaselServer.exe").c_str(), L"/q", NULL, SW_SHOWNORMAL);
+			Sleep(500);
+			ShellExecuteW(NULL, NULL, (dir + L"\\WeaselServer.exe").c_str(), L"", NULL, SW_SHOWNORMAL);
+			Sleep(500);
+			ShellExecuteW(NULL, NULL, (dir + L"\\x64\\WeaselDeployer.exe").c_str(), L"/deploy", NULL, SW_SHOWNORMAL);
+			} else {
 			ShellExecuteW(NULL, NULL, (dir + L"\\WeaselServer.exe").c_str(), L"/q", NULL, SW_SHOWNORMAL);
 			Sleep(500);
 			ShellExecuteW(NULL, NULL, (dir + L"\\WeaselServer.exe").c_str(), L"", NULL, SW_SHOWNORMAL);
 			Sleep(500);
 			ShellExecuteW(NULL, NULL, (dir + L"\\WeaselDeployer.exe").c_str(), L"/deploy", NULL, SW_SHOWNORMAL);
+			}
 			});
 		th.detach();
 		MSG_BY_IDS(IDS_STR_MODIFY_SUCCESS_INFO, IDS_STR_MODIFY_SUCCESS_CAP, MB_ICONINFORMATION | MB_OK);
