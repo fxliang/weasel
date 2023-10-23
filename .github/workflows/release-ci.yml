@@ -1,24 +1,19 @@
-name: Commit CI
+name: Release CI
 
 on:
-  workflow_dispatch:
   push:
-    branches:
-      - '*'
     tags:
-      - '![0-9]+.*'
-    paths:
-      - '**/**'
-      - '!*.md'
-      - '!.gitignore'
-  pull_request:
+      - '[0-9]+.*'
 
 jobs:
-  build:
+  build-and-release:
+    permissions:
+      contents: write
     runs-on: windows-2022
     env:
       boost_version: 1.83.0
       BOOST_ROOT: ${{ github.workspace }}\deps\boost_1_83_0
+      RIME_PLUGINS: rime/librime-charcode hchunhui/librime-lua lotem/librime-octagram
     steps:
       - name: Checkout last commit
         uses: actions/checkout@v3
@@ -60,11 +55,16 @@ jobs:
         shell: pwsh
         run: |
           Compress-Archive -Path output\*.pdb -CompressionLevel Optimal -DestinationPath .\output\archives\symbols.zip
+      
+      - name: Extract changelog
+        shell: pwsh
+        run: |
+          .\extract_changelog.ps1
 
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+      - name: Release
+        uses: softprops/action-gh-release@v1
         with:
-          if-no-files-found: error
-          path: |
-            .\output\archives\weasel*.exe
-            .\output\archives\symbols.zip
+          files: |
+            ./output/archives/weasel*.exe
+            ./output/archives/symbols.zip
+          body_path: ${{ github.workspace }}/RELEASE_CHANGELOG.md
