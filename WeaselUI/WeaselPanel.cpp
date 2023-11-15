@@ -929,24 +929,27 @@ void WeaselPanel::_RepositionWindow(const bool& adj)
 	rcWorkArea.bottom -= height;
 	int x = m_inputPos.left;
 	int y = m_inputPos.bottom;
-	if(m_style.shadow_radius > 0) {
+	if(m_style.shadow_radius)
+	{
 		x -= (m_style.shadow_offset_x >= 0 || COLORTRANSPARENT(m_color_scheme.shadow_color)) ? m_layout->offsetX : (m_layout->offsetX / 2);
 		if (adj)
 			y -= (m_style.shadow_offset_y > 0 || COLORTRANSPARENT(m_color_scheme.shadow_color)) ? m_layout->offsetY : (m_layout->offsetY / 2);
-		// for vertical text layout, flow right to left, make window left side
-		if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT && !m_style.vertical_text_left_to_right)
-		{
-			x += m_layout->offsetX - width;
-			if (m_style.shadow_offset_x < 0)
-				x += m_layout->offsetX;
-		}
+	}
+	// for vertical text layout, flow right to left, make window left side
+	if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT && !m_style.vertical_text_left_to_right)
+	{
+		x += m_layout->offsetX - width;
+		if (m_style.shadow_offset_x < 0)
+			x += m_layout->offsetX;
 	}
 	if(adj) m_istorepos = false;
 	if (x > rcWorkArea.right) x = rcWorkArea.right;		// over workarea right
 	if (x < rcWorkArea.left) x = rcWorkArea.left;		// over workarea left
 	// show panel above the input focus if we're around the bottom
 	if (y > rcWorkArea.bottom) {
-		y = m_inputPos.top - height - (adj ? 0 : 6); // over workarea bottom
+		y = m_inputPos.top - height - 6; // over workarea bottom
+		if(m_style.shadow_radius && m_style.shadow_offset_y > 0)
+			y -= m_style.shadow_offset_y;
 		m_istorepos = (m_style.vertical_auto_reverse && m_style.layout_type == UIStyle::LAYOUT_VERTICAL);
 		if(m_style.shadow_radius > 0)
 			y += (m_style.shadow_offset_y < 0 || COLORTRANSPARENT(m_color_scheme.shadow_color)) ? m_layout->offsetY : (m_layout->offsetY / 2);
