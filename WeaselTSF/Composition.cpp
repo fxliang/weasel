@@ -370,12 +370,13 @@ BOOL WeaselTSF::_InsertText(ITfContext* pContext, const std::wstring& text)
 void WeaselTSF::_UpdateComposition(ITfContext* pContext)
 {
 	HRESULT hr;
-
 	_pEditSessionContext = pContext;
-	
-	_pEditSessionContext->RequestEditSession(_tfClientId, this, TF_ES_ASYNCDONTCARE | TF_ES_READWRITE, &hr);
-	_UpdateCompositionWindow(pContext);
-
+	ResetBit(WeaselFlag::ASYNC_EDIT);
+	auto ret = _pEditSessionContext->RequestEditSession(_tfClientId, this, TF_ES_ASYNCDONTCARE | TF_ES_READWRITE, &hr);
+	if (hr == TF_S_ASYNC)
+	{
+		SetBit(WeaselFlag::ASYNC_EDIT);
+	}
 }
 
 /* Composition State */

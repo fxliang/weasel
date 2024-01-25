@@ -111,7 +111,8 @@ STDAPI WeaselTSF::OnKeyUp(ITfContext *pContext, WPARAM wParam, LPARAM lParam, BO
 	else
     {
 		_ProcessKeyEvent(wParam, lParam, pfEaten);
-        _UpdateComposition(pContext);
+		if (!GetBit(WeaselFlag::ASYNC_EDIT))
+			_UpdateComposition(pContext);
     }
 	return S_OK;
 }
