@@ -15,6 +15,15 @@ STDAPI WeaselTSF::OnSetFocus(ITfDocumentMgr *pDocMgrFocus, ITfDocumentMgr *pDocM
 {
 	_InitTextEditSink(pDocMgrFocus);
 
+	if (!pDocMgrFocus)
+	{
+		SetBit(WeaselFlag::FOCUS_CHANGED);
+	}
+	else if (GetBit(WeaselFlag::KEYBOARD_DISABLE))
+	{
+		_SetKeyboardOpen(TRUE);
+	}
+
 	com_ptr<ITfDocumentMgr> pCandidateListDocumentMgr;
 	com_ptr<ITfContext> pTfContext = _GetUIContextDocument();
 	if ((nullptr != pTfContext) && SUCCEEDED(pTfContext->GetDocumentMgr(&pCandidateListDocumentMgr)))

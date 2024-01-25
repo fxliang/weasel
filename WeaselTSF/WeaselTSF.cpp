@@ -31,7 +31,8 @@ WeaselTSF::WeaselTSF()
 
 	_fCUASWorkaroundTested = _fCUASWorkaroundEnabled = FALSE;
 
-	_cand = new CCandidateList(this);
+	_cand.Attach(new CCandidateList(this));
+	SetBit(WeaselFlag::SUPPORT_DISPLAY_ATTRIBUTE);
 
 	DllAddRef();
 }
@@ -60,6 +61,8 @@ STDAPI WeaselTSF::QueryInterface(REFIID riid, void **ppvObject)
 		*ppvObject = (ITfTextLayoutSink*)this;
 	else if (IsEqualIID(riid, IID_ITfKeyEventSink))
 		*ppvObject = (ITfKeyEventSink*)this;
+	else if (IsEqualIID(riid, IID_ITfActiveLanguageProfileNotifySink))
+		*ppvObject = (ITfActiveLanguageProfileNotifySink*)this;
 	else if (IsEqualIID(riid, IID_ITfCompositionSink))
 		*ppvObject = (ITfCompositionSink*)this;
 	else if (IsEqualIID(riid, IID_ITfEditSession))
@@ -103,7 +106,9 @@ STDAPI WeaselTSF::Deactivate()
 {
 	m_client.EndSession();
 
-	_InitTextEditSink(com_ptr<ITfDocumentMgr>());
+	_InitTextEditSink();
+
+	_UninitLanguageBar();
 
 	_UninitThreadMgrEventSink();
 
@@ -113,8 +118,6 @@ STDAPI WeaselTSF::Deactivate()
 	_UninitLanguageBar();
 
 	_UninitCompartment();
-
-	_pThreadMgr = NULL;
 
 	_tfClientId = TF_CLIENTID_NULL;
 
@@ -142,10 +145,10 @@ STDAPI WeaselTSF::ActivateEx(ITfThreadMgr *pThreadMgr, TfClientId tfClientId, DW
 	if (!_InitKeyEventSink())
 		goto ExitError;
 
-	//if (!_InitDisplayAttributeGuidAtom())
-	//	goto ExitError;
-	//	some app might init failed because it not provide DisplayAttributeInfo, like some opengl stuff
-	_InitDisplayAttributeGuidAtom();
+	if (!_InitDisplayAttributeGuidAtom())
+	{
+		ResetBit(WeaselFlag::SUPPORT_DISPLAY_ATTRIBUTE);
+	}
 
 	if (!_InitPreservedKey())
 		goto ExitError;

@@ -43,8 +43,13 @@ STDAPI WeaselTSF::OnEndEdit(ITfContext *pContext, TfEditCookie ecReadOnly, ITfEd
 	/* text modification? */
 	if (pEditRecord->GetTextAndPropertyUpdates(TF_GTP_INCL_TEXT, NULL, 0, &pEnumTextChanges) == S_OK)
 	{
-		if (pEnumTextChanges->Next(1, &pRange, NULL) == S_OK)
+		ULONG fetched{};
+		if (pEnumTextChanges->Next(1, &pRange, &fetched) == S_OK)
 		{
+			if (fetched == 0)
+			{
+				_UpdateCompositionWindow(pContext);
+			}
 			pRange->Release();
 		}
 		pEnumTextChanges->Release();
@@ -65,22 +70,22 @@ STDAPI WeaselTSF::OnLayoutChange(ITfContext *pContext, TfLayoutCode lcode, ITfCo
 	return S_OK;
 }
 
-BOOL WeaselTSF::_InitTextEditSink(com_ptr<ITfDocumentMgr> pDocMgr)
+BOOL WeaselTSF::_InitTextEditSink(ITfDocumentMgr* pDocMgr)
 {
 	com_ptr<ITfSource> pSource;
-	BOOL fRet;
+	BOOL fRet{};
 
 	/* clear out any previous sink first */
 	if (_dwTextEditSinkCookie != TF_INVALID_COOKIE)
 	{
-		_pTextEditSinkContext->QueryInterface(&pSource);
-		if (pSource != nullptr)
+		if (SUCCEEDED(_pTextEditSinkContext->QueryInterface(&pSource)) && pSource != nullptr)
 		{
 			pSource->UnadviseSink(_dwTextEditSinkCookie);
 			pSource->UnadviseSink(_dwTextLayoutSinkCookie);
 		}
-		_pTextEditSinkContext = nullptr;
+		_pTextEditSinkContext.Release();
 		_dwTextEditSinkCookie = TF_INVALID_COOKIE;
+		_dwTextLayoutSinkCookie = TF_INVALID_COOKIE;
 	}
 	if (pDocMgr == NULL)
 		return TRUE;
@@ -91,17 +96,13 @@ BOOL WeaselTSF::_InitTextEditSink(com_ptr<ITfDocumentMgr> pDocMgr)
 	if (_pTextEditSinkContext == NULL)
 		return TRUE;
 
-	fRet = FALSE;
-
-	pSource.Release();
-
-	if (_pTextEditSinkContext->QueryInterface(IID_ITfSource, (void **) &pSource) == S_OK)
+	if (SUCCEEDED(_pTextEditSinkContext->QueryInterface(&pSource)))
 	{
-		if (pSource->AdviseSink(IID_ITfTextEditSink, (ITfTextEditSink *) this, &_dwTextEditSinkCookie) == S_OK)
+		if (SUCCEEDED(pSource->AdviseSink(IID_ITfTextEditSink, (ITfTextEditSink*) this, &_dwTextEditSinkCookie)))
 			fRet = TRUE;
 		else
 			_dwTextEditSinkCookie = TF_INVALID_COOKIE;
-		if (pSource->AdviseSink(IID_ITfTextLayoutSink, (ITfTextLayoutSink *) this, &_dwTextLayoutSinkCookie) == S_OK)
+		if (SUBLANGID(pSource->AdviseSink(IID_ITfTextLayoutSink, (ITfTextLayoutSink*) this, &_dwTextLayoutSinkCookie)))
 		{
 			fRet = TRUE;
 		}
@@ -110,7 +111,7 @@ BOOL WeaselTSF::_InitTextEditSink(com_ptr<ITfDocumentMgr> pDocMgr)
 	}
 	if (fRet == FALSE)
 	{
-		_pTextEditSinkContext = nullptr;
+		_pTextEditSinkContext.Release();
 	}
 
 	return fRet;

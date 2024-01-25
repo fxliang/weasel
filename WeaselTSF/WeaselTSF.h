@@ -3,6 +3,7 @@
 #include <WeaselCommon.h>
 #include "Globals.h"
 #include "WeaselIPC.h"
+#include "WeaselFlag.h"
 
 class CCandidateList;
 class CLangBarItemButton;
@@ -85,14 +86,14 @@ public:
 	HRESULT _SetCompartmentDWORD(const DWORD& value, const GUID guid);
 
 	/* Composition */
-	void _StartComposition(com_ptr<ITfContext> pContext, BOOL fCUASWorkaroundEnabled);
-	void _EndComposition(com_ptr<ITfContext> pContext, BOOL clear);
-	BOOL _ShowInlinePreedit(com_ptr<ITfContext> pContext, const std::shared_ptr<weasel::Context> context);
-	void _UpdateComposition(com_ptr<ITfContext> pContext);
+	void _StartComposition(ITfContext* pContext);
+	void _EndComposition(ITfContext* pContext, BOOL clear);
+	BOOL _ShowInlinePreedit(ITfContext* pContext, const std::shared_ptr<weasel::Context> context);
+	void _UpdateComposition(ITfContext* pContext);
 	BOOL _IsComposing();
-	void _SetComposition(com_ptr<ITfComposition> pComposition);
-	void _SetCompositionPosition(const RECT &rc);
-	BOOL _UpdateCompositionWindow(com_ptr<ITfContext> pContext);
+	void _SetComposition(ITfComposition* pComposition);
+	void _SetCompositionPosition(RECT &rc);
+	BOOL _UpdateCompositionWindow(ITfContext* pContext);
 	void _FinalizeComposition();
 	void _AbortComposition(bool clear = true);
 
@@ -120,6 +121,15 @@ public:
 	com_ptr<ITfThreadMgr> _GetThreadMgr() { return _pThreadMgr; }
 	void HandleUICallback(size_t* const sel, size_t* const hov, bool* const next, bool* const scroll_next);
 
+	void SetBit(WeaselFlag flag) { _bitset.set(static_cast<int>(flag)); }
+	void SetBit(WeaselFlag flag, bool value) { _bitset.set(static_cast<int>(flag), value); }
+	void ResetBit(WeaselFlag flag) { _bitset.reset(static_cast<int>(flag)); }
+	bool GetBit(WeaselFlag flag) const { return _bitset[static_cast<int>(flag)]; }
+	void Flip(WeaselFlag flag) { _bitset.flip(static_cast<size_t>(flag)); }
+
+	void SetRect(const RECT& rc) { m_rcFallback = rc; }
+	RECT GetRect() const { return m_rcFallback; }
+
 private:
 	/* ui callback functions private */
 	void _SelectCandidateOnCurrentPage(const size_t index);
@@ -129,7 +139,7 @@ private:
 	BOOL _InitThreadMgrEventSink();
 	void _UninitThreadMgrEventSink();
 
-	BOOL _InitTextEditSink(com_ptr<ITfDocumentMgr> pDocMgr);
+	BOOL _InitTextEditSink(ITfDocumentMgr* pDocMgr = nullptr);
 
 	BOOL _InitKeyEventSink();
 	void _UninitKeyEventSink();
@@ -144,7 +154,7 @@ private:
 	void _ShowLanguageBar(BOOL show);
 	void _EnableLanguageBar(BOOL enable);
 
-	BOOL _InsertText(com_ptr<ITfContext> pContext, const std::wstring& ext);
+	BOOL _InsertText(ITfContext* pContext, const std::wstring& ext);
 
 	void _DeleteCandidateList();
 
@@ -191,4 +201,7 @@ private:
 
 	// guidatom for the display attibute.
 	TfGuidAtom _gaDisplayAttributeInput;
+
+	RECT m_rcFallback{};
+	std::bitset<32> _bitset{};
 };

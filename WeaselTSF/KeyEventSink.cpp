@@ -55,13 +55,13 @@ STDAPI WeaselTSF::OnSetFocus(BOOL fForeground)
 STDAPI WeaselTSF::OnTestKeyDown(ITfContext *pContext, WPARAM wParam, LPARAM lParam, BOOL *pfEaten)
 {
 	_fTestKeyUpPending = FALSE;
+	ResetBit(WeaselFlag::FIRST_KEY_COMPOSITION);
 	if (_fTestKeyDownPending)
 	{
 		*pfEaten = TRUE;
 		return S_OK;
 	}
 	_ProcessKeyEvent(wParam, lParam, pfEaten);
-	_UpdateComposition(pContext);
 	if (*pfEaten)
 		_fTestKeyDownPending = TRUE;
 	return S_OK;
@@ -77,9 +77,11 @@ STDAPI WeaselTSF::OnKeyDown(ITfContext *pContext, WPARAM wParam, LPARAM lParam, 
     }
 	else
     {
+		ResetBit(WeaselFlag::FIRST_KEY_COMPOSITION);
 		_ProcessKeyEvent(wParam, lParam, pfEaten);
-	    _UpdateComposition(pContext);
     }
+	// 暴雪公司的游戏在OnTestKeyDown事件中执行编辑请求时会丢失编码
+	_UpdateComposition(pContext);
 	return S_OK;
 } 
 

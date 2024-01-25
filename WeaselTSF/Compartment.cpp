@@ -282,6 +282,11 @@ HRESULT WeaselTSF::_HandleCompartment(REFGUID guidCompartment)
 		BOOL isOpen = _IsKeyboardOpen();
 		if (isOpen) {
 			m_client.TrayCommand(ID_WEASELTRAY_DISABLE_ASCII);
+			ResetBit(WeaselFlag::KEYBOARD_DISABLE);
+		}
+		else
+		{
+			SetBit(WeaselFlag::KEYBOARD_DISABLE);
 		}
 		_EnableLanguageBar(isOpen);
 	}

@@ -1,0 +1,15 @@
+
+# Rime table
+# coding: utf-8
+# vim: noet:ts=8:sw=4:sts=8:fenc=utf8:ft=text:list
+# @/db_name  stzm_phrase_before.txt
+# @/db_type  tabledb
+# 用于【小泉郑码/小泉简郑/小单单郑/小泉小郑】输入方案，这里的词排在主码表的前面
+# 码表各字段以制表符（Tab）分隔
+# 顺序为：文字、编码、权重（决定重码的次序、可选）
+#
+# 虽然文本码表编辑较为方便，但不适合导入大量条目
+#
+
+Windows	win
+遮挽	wtdr
