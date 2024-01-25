@@ -218,7 +218,7 @@ BOOL WeaselTSF::_UpdateCompositionWindow(ITfContext* pContext)
 	return SUCCEEDED(hr);
 }
 
-void WeaselTSF::_SetCompositionPosition(RECT &rc)
+void WeaselTSF::_SetCompositionPosition(const RECT &rc)
 {
 	/* Test if rect is valid.
 	 * If it is invalid during CUAS test, we need to apply CUAS workaround */
@@ -234,13 +234,15 @@ void WeaselTSF::_SetCompositionPosition(RECT &rc)
 			return;
 		}
 	}
-	if (rc.left == 0 || abs(rc.left - rect.right) < 5)
+
+	RECT rcCopy{ rc };
+	if (rcCopy.left == 0 || abs(rcCopy.right - rect.right) < 5)
 	{
-		rc.left = rc.right = rect.right / 3.0;
-		rc.top = rc.bottom = rect.bottom / 3.0 * 2;
+		rcCopy.left = rcCopy.right = rect.right / 3.0;
+		rcCopy.top = rcCopy.bottom = rect.bottom / 3.0 * 2;
 	}
-	m_client.UpdateInputPosition(rc);
-	_cand->UpdateInputPosition(rc);
+	m_client.UpdateInputPosition(rcCopy);
+	_cand->UpdateInputPosition(rcCopy);
 }
 
 /* Inline Preedit */

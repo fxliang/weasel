@@ -92,7 +92,7 @@ public:
 	void _UpdateComposition(ITfContext* pContext);
 	BOOL _IsComposing();
 	void _SetComposition(ITfComposition* pComposition);
-	void _SetCompositionPosition(RECT &rc);
+	void _SetCompositionPosition(const RECT &rc);
 	BOOL _UpdateCompositionWindow(ITfContext* pContext);
 	void _FinalizeComposition();
 	void _AbortComposition(bool clear = true);
