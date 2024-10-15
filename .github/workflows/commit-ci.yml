@@ -1,5 +1,8 @@
 name: Commit CI
 
+permissions:
+  contents: write
+
 on:
   workflow_dispatch:
   push:
@@ -120,6 +123,18 @@ jobs:
           path: |
             .\output\archives\weasel*.exe
             .\output\archives\debug_symbols.7z
+
+      - name: Create Personal Build
+        if: ${{ github.repository == 'fxliang/weasel' && github.ref == 'refs/heads/pb' }}
+        uses: 'marvinpinto/action-automatic-releases@latest'
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          automatic_release_tag: pblatest
+          prerelease: true
+          title: "Personal Build"
+          files: |
+            ./output/archives/weasel*.exe
+            ./output/archives/debug_symbols.7z
 
   xbuild:
     needs: lint
