@@ -9,14 +9,36 @@
 #include <memory>
 #include <wrl/client.h>
 #include <functional>
+#include <WeaselUtility.h>
+
 using namespace Microsoft::WRL;
 namespace weasel {
 
-template <class T>
-void SafeRelease(T** ppT) {
-  if (*ppT) {
-    (*ppT)->Release();
-    *ppT = NULL;
+using wstring = std::wstring;
+using string = std::string;
+template <typename T>
+using vector = std::vector<T>;
+
+inline string HRESULTToString(HRESULT hr) {
+  if (SUCCEEDED(hr))
+    return "Success";
+  char buffer[512];
+  DWORD dwFlags = FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS;
+  DWORD dwSize =
+      FormatMessageA(dwFlags, nullptr, hr, 0, buffer, sizeof(buffer), nullptr);
+  if (dwSize == 0)
+    return "Unknown HRESULT error";
+  return string(buffer);
+}
+
+struct ComException {
+  HRESULT result;
+  ComException(HRESULT const value) : result(value) {}
+};
+inline void HR(HRESULT const result) {
+  if (S_OK != result) {
+    DEBUG << HRESULTToString(result);
+    throw ComException(result);
   }
 }
 
@@ -120,7 +142,8 @@ class DirectWriteResources {
                            const float& height) {
     return pDWFactory->CreateTextLayout(
         text.c_str(), nCount, txtFormat, width, height,
-        reinterpret_cast<IDWriteTextLayout**>(pTextLayout.GetAddressOf()));
+        reinterpret_cast<IDWriteTextLayout**>(
+            pTextLayout.ReleaseAndGetAddressOf()));
   }
   void DrawRect(D2D1_RECT_F* const rect,
                 const float& strokeWidth = 1.0f,
@@ -167,7 +190,7 @@ class DirectWriteResources {
   void _ParseFontFace(const std::wstring& fontFaceStr,
                       DWRITE_FONT_WEIGHT& fontWeight,
                       DWRITE_FONT_STYLE& fontStyle);
-  void _SetFontFallback(ComPtr<IDWriteTextFormat1> pTextFormat,
+  void _SetFontFallback(ComPtr<IDWriteTextFormat1>& pTextFormat,
                         const std::vector<std::wstring>& fontVector);
 };
 }  // namespace weasel
