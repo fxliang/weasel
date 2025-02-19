@@ -172,23 +172,23 @@ echo "Bumping version to $tag ..."
 currentDateTime=$(date --rfc-2822)
 
 # update appcast xml files
-sed -i "s|${old_version[3]}|$tag|g" ./update/appcast.xml || faild_exit
-sed -i "s|<pubDate>[^<]*</pubDate>|<pubDate>$currentDateTime</pubDate>|g" ./update/appcast.xml || faild_exit
+sed -b -i "s|${old_version[3]}|$tag|g" ./update/appcast.xml || faild_exit
+sed -b -i "s|<pubDate>[^<]*</pubDate>|<pubDate>$currentDateTime</pubDate>|g" ./update/appcast.xml || faild_exit
 echo "update/appcast.xml updated"
 
-sed -i "s|${old_version[3]}|$tag|g" ./update/testing-appcast.xml || faild_exit
-sed -i "s|<pubDate>[^<]*</pubDate>|<pubDate>$currentDateTime</pubDate>|g" ./update/testing-appcast.xml || faild_exit
+sed -b -i "s|${old_version[3]}|$tag|g" ./update/testing-appcast.xml || faild_exit
+sed -b -i "s|<pubDate>[^<]*</pubDate>|<pubDate>$currentDateTime</pubDate>|g" ./update/testing-appcast.xml || faild_exit
 echo "update/testing-appcast.xml updated"
 
 # update bat files
-sed -i "s/VERSION_MAJOR=${old_version[0]}/VERSION_MAJOR=${new_version[0]}/g" ./build.bat || faild_exit
-sed -i "s/VERSION_MINOR=${old_version[1]}/VERSION_MINOR=${new_version[1]}/g" ./build.bat || faild_exit
-sed -i "s/VERSION_PATCH=${old_version[2]}/VERSION_PATCH=${new_version[2]}/g" ./build.bat || faild_exit
+sed -b -i "s/VERSION_MAJOR=${old_version[0]}/VERSION_MAJOR=${new_version[0]}/g" ./build.bat || faild_exit
+sed -b -i "s/VERSION_MINOR=${old_version[1]}/VERSION_MINOR=${new_version[1]}/g" ./build.bat || faild_exit
+sed -b -i "s/VERSION_PATCH=${old_version[2]}/VERSION_PATCH=${new_version[2]}/g" ./build.bat || faild_exit
 echo "build.bat updated"
 
-sed -i "s/VERSION_MAJOR=${old_version[0]}/VERSION_MAJOR=${new_version[0]}/g" ./xbuild.bat || faild_exit
-sed -i "s/VERSION_MINOR=${old_version[1]}/VERSION_MINOR=${new_version[1]}/g" ./xbuild.bat || faild_exit
-sed -i "s/VERSION_PATCH=${old_version[2]}/VERSION_PATCH=${new_version[2]}/g" ./xbuild.bat || faild_exit
+sed -b -i "s/VERSION_MAJOR=${old_version[0]}/VERSION_MAJOR=${new_version[0]}/g" ./xbuild.bat || faild_exit
+sed -b -i "s/VERSION_MINOR=${old_version[1]}/VERSION_MINOR=${new_version[1]}/g" ./xbuild.bat || faild_exit
+sed -b -i "s/VERSION_PATCH=${old_version[2]}/VERSION_PATCH=${new_version[2]}/g" ./xbuild.bat || faild_exit
 echo "xbuild.bat updated"
 
 if [[ $updatelog ]]; then
