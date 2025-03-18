@@ -17,11 +17,11 @@ jobs:
   build:
     runs-on: windows-2022
     env:
-      boost_version: 1.83.0
+      boost_version: 1.84.0
       BOOST_ROOT: ${{ github.workspace }}\deps\boost_1_83_0
     steps:
       - name: Checkout last commit
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: true
 
@@ -33,7 +33,7 @@ jobs:
 
       - name: Cache Boost
         id: cache-boost
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ${{ env.BOOST_ROOT }}
@@ -62,7 +62,7 @@ jobs:
           Compress-Archive -Path output\*.pdb -CompressionLevel Optimal -DestinationPath .\output\archives\symbols.zip
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           if-no-files-found: error
           path: |
