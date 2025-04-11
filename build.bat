@@ -46,8 +46,8 @@ echo WEASEL_BUNDLED_RECIPES=%WEASEL_BUNDLED_RECIPES%
 echo.
 
 if defined GITHUB_ENV (
-	setlocal enabledelayedexpansion
-	echo git_ref_name=%PRODUCT_VERSION%>>!GITHUB_ENV!
+  setlocal enabledelayedexpansion
+  echo git_ref_name=%PRODUCT_VERSION%>>!GITHUB_ENV!
 )
 
 if defined BOOST_ROOT (
@@ -144,28 +144,20 @@ rem build librime x64 and Win32
 if %build_rime% == 1 (
   if not exist librime\build.bat (
     git submodule update --init --recursive
+    if errorlevel 1 goto error
   )
   cd %WEASEL_ROOT%\librime
-  rem clean cache before building
-  for %%a in ( build dist lib ^
-    deps\glog\build ^
-    deps\googletest\build ^
-    deps\leveldb\build ^
-    deps\marisa-trie\build ^
-    deps\opencc\build ^
-    deps\yaml-cpp\build ) do (
-      if exist %%a rd /s /q %%a
+  if defined RIME_PLUGINS (
+    pushd %WEASEL_ROOT%\librime
+    call .\action-install-plugins-windows.bat || echo "action-install-plugins-windows.bat failed, continuing..."
+    popd
   )
-
   rem build x64 librime
-  set ARCH=x64
   call :build_librime_platform x64 %WEASEL_ROOT%\lib64 %WEASEL_ROOT%\output
+  if errorlevel 1 goto error
   rem build Win32 librime
-  set ARCH=Win32
-  call :build_librime_platform Win32 %WEASEL_ROOT%\lib %WEASEL_ROOT%\output\Win32
-  rem clean the modified file
-  rem git checkout .
-  rem git submodule foreach git checkout .
+  call :build_librime_platform x86 %WEASEL_ROOT%\lib %WEASEL_ROOT%\output\Win32
+  if errorlevel 1 goto error
 )
 
 rem -------------------------------------------------------------------------
@@ -297,80 +289,91 @@ rem ---------------------------------------------------------------------------
 
 rem ---------------------------------------------------------------------------
 :build_opencc_data
-  if not exist %WEASEL_ROOT%\librime\share\opencc\TSCharacters.ocd2 (
+  if not exist %WEASEL_ROOT%\librime\deps_x64\share\opencc\TSCharacters.ocd2 (
     cd %WEASEL_ROOT%\librime
-    call build.bat deps %rime_build_variant%
+    call %WEASEL_ROOT%\msvc-latest.bat x64
+    set build_dir=build_x64
+    set deps_install_prefix=%WEASEL_ROOT%\librime\deps_x64
+    set rime_install_prefix=%WEASEL_ROOT%\librime\dist_x64
+    rem try ninja to build librime
+    call :TraySetNinja
+    cd %WEASEL_ROOT%\librime
+    if not exist env.bat copy %WEASEL_ROOT%\env.bat env.bat
+    call build.bat deps %rime_build_variant% 
     if errorlevel 1 goto error
   )
   cd %WEASEL_ROOT%
   if not exist output\data\opencc mkdir output\data\opencc
-  copy %WEASEL_ROOT%\librime\share\opencc\*.* output\data\opencc\
+  copy %WEASEL_ROOT%\librime\deps_x64\share\opencc\*.* output\data\opencc\
   if errorlevel 1 goto error
   exit /b
 
 rem ---------------------------------------------------------------------------
-rem %1 : ARCH
-rem %2 : push | pop , push to backup when pop to restore
-:stash_build
-  pushd %WEASEL_ROOT%\librime
-  for %%a in ( build dist lib ^
-    deps\glog\build ^
-    deps\googletest\build ^
-    deps\leveldb\build ^
-    deps\marisa-trie\build ^
-    deps\opencc\build ^
-    deps\yaml-cpp\build ) do (
-    if "%2"=="push" (
-      if exist %%a  move %%a %%a_%1 
+:TraySetNinja
+    rem try ninja to build librime
+    ninja --version >nul 2>&1
+    rem ninja available
+    if %errorlevel% equ 0 (
+      echo Ninja is available
+      cd %WEASEL_ROOT%
+      xcopy /Y %WEASEL_ROOT%\env.bat %WEASEL_ROOT%\librime\
+      powershell -Command "(Get-Content 'librime\env.bat') | Where-Object {$_ -notmatch '^.*set PLATFORM_TOOLSET=.*$'} | Set-Content 'librime\env.bat'"
+      powershell -Command "(Get-Content 'librime\env.bat') | Where-Object {$_ -notmatch '^.*set CMAKE_GENERATOR=.*$'} | Set-Content 'librime\env.bat'"
+      powershell -Command "(Get-Content 'librime\env.bat') | Where-Object {$_ -notmatch '^.*set ARCH=.*$'} | Set-Content 'librime\env.bat'"
+      set CMAKE_GENERATOR=Ninja
+      set ARCH=
+      set PLATFORM_TOOLSET=
     )
-    if "%2"=="pop" (
-      if exist %%a_%1  move %%a_%1 %%a 
-    )
-  )
-  popd
-  exit /b
+    exit /b
 
 rem ---------------------------------------------------------------------------
-rem %1 : ARCH
+rem %1 : ARCH x86 or x64
 rem %2 : target_path of rime.lib, base %WEASEL_ROOT% or abs path
 rem %3 : target_path of rime.dll, base %WEASEL_ROOT% or abs path
 :build_librime_platform
-  rem restore backuped %1 build
-  call :stash_build %1 pop
+  call %WEASEL_ROOT%\msvc-latest.bat %1
+  set build_dir=build_%1
+  set deps_install_prefix=%WEASEL_ROOT%\librime\deps_%1
+  set rime_install_prefix=%WEASEL_ROOT%\librime\dist_%1
+
+  if "%1"=="x64" (
+    rem try ninja to build librime
+    call :TraySetNinja
+  )
 
   cd %WEASEL_ROOT%\librime
-  if not exist env.bat (
-    copy %WEASEL_ROOT%\env.bat env.bat
-  )
-  if not exist lib\opencc.lib (
+  if not exist env.bat copy %WEASEL_ROOT%\env.bat env.bat
+
+  if not exist %deps_install_prefix%\lib\opencc.lib (
     call build.bat deps %rime_build_variant%
-    if errorlevel 1 (
-      call :stash_build %1 push
-      goto error
-    )
+    if errorlevel 1 goto error
   )
   call build.bat %rime_build_variant%
-  if errorlevel 1 (
-    call :stash_build %1 push
-    goto error
-  )
+  if errorlevel 1 goto error
 
   cd %WEASEL_ROOT%\librime
-  call :stash_build %1 push
-
-  copy /Y %WEASEL_ROOT%\librime\dist_%1\include\rime_*.h %WEASEL_ROOT%\include\
-  if errorlevel 1 goto error
-  copy /Y %WEASEL_ROOT%\librime\dist_%1\lib\rime.lib %2\
-  if errorlevel 1 goto error
-  copy /Y %WEASEL_ROOT%\librime\dist_%1\lib\rime.dll %3\
-  if errorlevel 1 goto error
+  if "%1"=="x86" (
+    call :copye %WEASEL_ROOT%\librime\dist_%1\include\rime_*.h %WEASEL_ROOT%\include\
+  )
+  call :copye %WEASEL_ROOT%\librime\dist_%1\lib\rime.lib %2\
+  call :copye %WEASEL_ROOT%\librime\dist_%1\lib\rime.dll %3\
+  call :copye %WEASEL_ROOT%\librime\dist_%1\lib\rime.pdb %3\
 
   exit /b
+rem ---------------------------------------------------------------------------
+rem %1 src
+rem %2 dest
+:copye
+  xcopy /Y %1 %2
+  if errorlevel 1 goto error
+  exit /b
+
 rem ---------------------------------------------------------------------------
 
 :error
 
 echo error building weasel...
+exit 1
 
 :end
 cd %WEASEL_ROOT%
