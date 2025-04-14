@@ -36,7 +36,6 @@ class CDialogDpiAware : public CDialogImpl<T> {
     UINT newDpi = GetWindowDpi();
     if (newDpi != 96) {
       float scaleFactor = (float)newDpi / (float)96.0f;
-      GetWindowRect(&m_rect);
       int width = (m_rect.right - m_rect.left) * scaleFactor;
       int height = (m_rect.bottom - m_rect.top) * scaleFactor;
       SetWindowPos(nullptr, m_rect.left, m_rect.top, width, height,
@@ -93,11 +92,11 @@ class CDialogDpiAware : public CDialogImpl<T> {
     UINT newDpi = HIWORD(wParam);
     if (newDpi == m_currentDpi)
       return 0;
-    float scaleFactor = (float)newDpi / (float)96.0f;
     const RECT* pNewRect = reinterpret_cast<const RECT*>(lParam);
-    int width = (m_rect.right - m_rect.left) * scaleFactor;
-    int height = (m_rect.bottom - m_rect.top) * scaleFactor;
-    SetWindowPos(nullptr, pNewRect->left, pNewRect->top, width, height,
+    // 直接使用系统建议的矩形
+    SetWindowPos(nullptr, pNewRect->left, pNewRect->top,
+                 pNewRect->right - pNewRect->left,
+                 pNewRect->bottom - pNewRect->top,
                  SWP_NOZORDER | SWP_NOACTIVATE);
     ScaleControlsAndFonts(newDpi);
     m_currentDpi = newDpi;
