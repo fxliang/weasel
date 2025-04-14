@@ -1,7 +1,7 @@
 #pragma once
 
 #include "resource.h"
-#include "CDialogDpiAware.h"
+#include <CDialogDpiAware.h>
 
 #include <rime_levers_api.h>
 

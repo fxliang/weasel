@@ -2,7 +2,7 @@
 
 #include "resource.h"
 #include <rime_levers_api.h>
-#include "CDialogDpiAware.h"
+#include <CDialogDpiAware.h>
 
 class SwitcherSettingsDialog : public CDialogDpiAware<SwitcherSettingsDialog> {
  public:

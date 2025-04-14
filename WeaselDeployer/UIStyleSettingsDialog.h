@@ -2,7 +2,7 @@
 
 #include "resource.h"
 #include "UIStyleSettings.h"
-#include "CDialogDpiAware.h"
+#include <CDialogDpiAware.h>
 
 class UIStyleSettingsDialog : public CDialogDpiAware<UIStyleSettingsDialog> {
  public:

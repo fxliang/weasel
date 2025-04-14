@@ -186,7 +186,6 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="CDialogDpiAware.h" />
     <ClInclude Include="Configurator.h" />
     <ClInclude Include="DictManagementDialog.h" />
     <ClInclude Include="FontSettingDialog.h" />
