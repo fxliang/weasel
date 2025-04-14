@@ -40,6 +40,7 @@ LRESULT UIStyleSettingsDialog::OnInitDialog(UINT, WPARAM, LPARAM, BOOL&) {
 
   Populate();
 
+  InitCtrlRects();
   CenterWindow();
   BringWindowToTop();
   return TRUE;

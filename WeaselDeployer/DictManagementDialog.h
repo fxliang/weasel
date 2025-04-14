@@ -1,10 +1,11 @@
 #pragma once
 
 #include "resource.h"
+#include "CDialogDpiAware.h"
 
 #include <rime_levers_api.h>
 
-class DictManagementDialog : public CDialogImpl<DictManagementDialog> {
+class DictManagementDialog : public CDialogDpiAware<DictManagementDialog> {
  public:
   enum { IDD = IDD_DICT_MANAGEMENT };
 
