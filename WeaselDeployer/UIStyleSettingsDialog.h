@@ -2,8 +2,9 @@
 
 #include "resource.h"
 #include "UIStyleSettings.h"
+#include "CDialogDpiAware.h"
 
-class UIStyleSettingsDialog : public CDialogImpl<UIStyleSettingsDialog> {
+class UIStyleSettingsDialog : public CDialogDpiAware<UIStyleSettingsDialog> {
  public:
   enum { IDD = IDD_STYLE_SETTING };
 
@@ -12,6 +13,7 @@ class UIStyleSettingsDialog : public CDialogImpl<UIStyleSettingsDialog> {
 
  protected:
   BEGIN_MSG_MAP(UIStyleSettingsDialog)
+  CHAIN_MSG_MAP(CDialogDpiAware<UIStyleSettingsDialog>)
   MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
   MESSAGE_HANDLER(WM_CLOSE, OnClose)
   COMMAND_ID_HANDLER(IDOK, OnOK)
