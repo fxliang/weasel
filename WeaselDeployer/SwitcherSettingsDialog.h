@@ -13,6 +13,7 @@ class SwitcherSettingsDialog : public CDialogDpiAware<SwitcherSettingsDialog> {
 
  protected:
   BEGIN_MSG_MAP(SwitcherSettingsDialog)
+  CHAIN_MSG_MAP(CDialogDpiAware<SwitcherSettingsDialog>)
   MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
   MESSAGE_HANDLER(WM_CLOSE, OnClose)
   COMMAND_HANDLER(IDC_GET_SCHEMATA, BN_CLICKED, OnGetSchemata)

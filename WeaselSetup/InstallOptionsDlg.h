@@ -82,6 +82,7 @@ class InstallOptionsDialog : public CDialogDpiAware<InstallOptionsDialog> {
 
  protected:
   BEGIN_MSG_MAP(InstallOptionsDialog)
+  CHAIN_MSG_MAP(CDialogDpiAware<InstallOptionsDialog>)
   MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
   MESSAGE_HANDLER(WM_CLOSE, OnClose)
   COMMAND_ID_HANDLER(IDOK, OnOK)

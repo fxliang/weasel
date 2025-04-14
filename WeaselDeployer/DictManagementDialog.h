@@ -14,6 +14,7 @@ class DictManagementDialog : public CDialogDpiAware<DictManagementDialog> {
 
  protected:
   BEGIN_MSG_MAP(DictManagementDialog)
+  CHAIN_MSG_MAP(CDialogDpiAware<DictManagementDialog>)
   MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
   MESSAGE_HANDLER(WM_CLOSE, OnClose)
   COMMAND_ID_HANDLER(IDC_BACKUP, OnBackup)
