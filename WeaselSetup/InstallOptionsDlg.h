@@ -2,6 +2,7 @@
 
 #include "resource.h"
 #include <atlstr.h>
+#include <unordered_map>
 
 #define MSG_BY_IDS(idInfo, idCap, uType)           \
   {                                                \
@@ -79,10 +80,20 @@ class InstallOptionsDialog : public CDialogImpl<InstallOptionsDialog> {
   bool old_ime_support;
   std::wstring user_dir;
 
+ private:
+  UINT GetWindowDpi();
+  void ScaleControlsAndFonts(UINT newDpi);
+
+  UINT m_currentDpi = 96;
+  RECT m_rect;
+  std::unordered_map<HWND, RECT> m_controlOriginalRects;  // 控件初始位置和大小
+  HFONT m_currentFont = nullptr;
+
  protected:
   BEGIN_MSG_MAP(InstallOptionsDialog)
   MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
   MESSAGE_HANDLER(WM_CLOSE, OnClose)
+  MESSAGE_HANDLER(WM_DPICHANGED, OnDpiChanged)
   COMMAND_ID_HANDLER(IDOK, OnOK)
   COMMAND_ID_HANDLER(IDC_REMOVE, OnRemove)
   COMMAND_ID_HANDLER(IDC_RADIO_DEFAULT_DIR, OnUseDefaultDir)
@@ -96,6 +107,8 @@ class InstallOptionsDialog : public CDialogImpl<InstallOptionsDialog> {
   LRESULT OnRemove(WORD, WORD code, HWND, BOOL&);
   LRESULT OnUseDefaultDir(WORD, WORD code, HWND, BOOL&);
   LRESULT OnUseCustomDir(WORD, WORD code, HWND, BOOL&);
+
+  LRESULT OnDpiChanged(UINT, WPARAM wParam, LPARAM lParam, BOOL&);
 
   CButton cn_;
   CButton tw_;
