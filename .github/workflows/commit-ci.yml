@@ -64,7 +64,9 @@ jobs:
           fetch-depth: 0
 
       - name: Fetch all tags
-        run: git fetch --tags
+        run: |
+          git remote add rime https://github.com/rime/weasel.git
+          git fetch rime --tags -f
 
       - name: Configure build environment
         shell: bash
@@ -151,7 +153,9 @@ jobs:
           fetch-depth: 0
 
       - name: Fetch all tags
-        run: git fetch --tags
+        run: |
+          git remote add rime https://github.com/rime/weasel.git
+          git fetch rime --tags -f
 
       - name: Configure build environment
         shell: bash
