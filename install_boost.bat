@@ -9,8 +9,8 @@ if not defined BOOST_ROOT set BOOST_ROOT=%RIME_ROOT%\deps\boost_%boost_x_y_z%
 
 if exist "%BOOST_ROOT%\boost" goto boost_found
 for %%I in ("%BOOST_ROOT%\.") do set src_dir=%%~dpI
-rem download boost source
-aria2c https://archives.boost.io/release/%boost_version%/source/boost_%boost_x_y_z%.7z -d %src_dir%
+rem download boost source with powershell
+powershell -Command "Invoke-WebRequest -Uri 'https://archives.boost.io/release/%boost_version%/source/boost_%boost_x_y_z%.7z' -OutFile '%src_dir%\boost_%boost_x_y_z%.7z' -UseBasicParsing"
 pushd %src_dir%
 7z x boost_%boost_x_y_z%.7z
 popd
