@@ -46,8 +46,8 @@ echo WEASEL_BUNDLED_RECIPES=%WEASEL_BUNDLED_RECIPES%
 echo.
 
 if defined GITHUB_ENV (
-	setlocal enabledelayedexpansion
-	echo git_ref_name=%PRODUCT_VERSION%>>!GITHUB_ENV!
+  setlocal enabledelayedexpansion
+  echo git_ref_name=%PRODUCT_VERSION%>>!GITHUB_ENV!
 )
 
 if defined BOOST_ROOT (
@@ -76,9 +76,6 @@ set build_option=/t:Build
 set build_boost=0
 set boost_build_variant=release
 set build_data=0
-set build_opencc=0
-set build_rime=0
-set rime_build_variant=release
 set build_weasel=0
 set build_installer=0
 set build_arm64=0
@@ -89,27 +86,20 @@ rem parse the command line options
   if "%1" == "debug" (
     set build_config=Debug
     set boost_build_variant=debug
-    set rime_build_variant=debug
   )
   if "%1" == "release" (
     set build_config=Release
     set boost_build_variant=release
-    set rime_build_variant=release
   )
   if "%1" == "rebuild" set build_option=/t:Rebuild
   if "%1" == "boost" set build_boost=1
   if "%1" == "data" set build_data=1
-  if "%1" == "opencc" set build_opencc=1
-  if "%1" == "rime" set build_rime=1
-  if "%1" == "librime" set build_rime=1
   if "%1" == "weasel" set build_weasel=1
   if "%1" == "installer" set build_installer=1
   if "%1" == "arm64" set build_arm64=1
   if "%1" == "all" (
     set build_boost=1
     set build_data=1
-    set build_opencc=1
-    set build_rime=1
     set build_weasel=1
     set build_installer=1
     set build_arm64=1
@@ -121,10 +111,8 @@ rem parse the command line options
 if %build_weasel% == 0 (
 if %build_boost% == 0 (
 if %build_data% == 0 (
-if %build_opencc% == 0 (
-if %build_rime% == 0 (
   set build_weasel=1
-)))))
+)))
 
 rem quit WeaselServer.exe before building
 cd /d %WEASEL_ROOT%
@@ -140,45 +128,12 @@ if %build_boost% == 1 (
 )
 
 rem -------------------------------------------------------------------------
-rem build librime x64 and Win32
-if %build_rime% == 1 (
-  if not exist librime\build.bat (
-    git submodule update --init --recursive
-  )
-  cd %WEASEL_ROOT%\librime
-  rem clean cache before building
-  for %%a in ( build dist lib ^
-    deps\glog\build ^
-    deps\googletest\build ^
-    deps\leveldb\build ^
-    deps\marisa-trie\build ^
-    deps\opencc\build ^
-    deps\yaml-cpp\build ) do (
-      if exist %%a rd /s /q %%a
-  )
-
-  rem build x64 librime
-  set ARCH=x64
-  call :build_librime_platform x64 %WEASEL_ROOT%\lib64 %WEASEL_ROOT%\output
-  rem build Win32 librime
-  set ARCH=Win32
-  call :build_librime_platform Win32 %WEASEL_ROOT%\lib %WEASEL_ROOT%\output\Win32
-  rem clean the modified file
-  rem git checkout .
-  rem git submodule foreach git checkout .
-)
-
-rem -------------------------------------------------------------------------
 if %build_weasel% == 1 (
   if not exist output\data\essay.txt (
     set build_data=1
   )
-  if not exist output\data\opencc\TSCharacters.ocd* (
-    set build_opencc=1
-  )
 )
 if %build_data% == 1 call :build_data
-if %build_opencc% == 1 call :build_opencc_data
 
 if %build_weasel% == 0 goto end
 
@@ -296,77 +251,6 @@ rem ---------------------------------------------------------------------------
   if errorlevel 1 goto error
   exit /b
 
-rem ---------------------------------------------------------------------------
-:build_opencc_data
-  if not exist %WEASEL_ROOT%\librime\share\opencc\TSCharacters.ocd2 (
-    cd %WEASEL_ROOT%\librime
-    call build.bat deps %rime_build_variant%
-    if errorlevel 1 goto error
-  )
-  cd %WEASEL_ROOT%
-  if not exist output\data\opencc mkdir output\data\opencc
-  copy %WEASEL_ROOT%\librime\share\opencc\*.* output\data\opencc\
-  if errorlevel 1 goto error
-  exit /b
-
-rem ---------------------------------------------------------------------------
-rem %1 : ARCH
-rem %2 : push | pop , push to backup when pop to restore
-:stash_build
-  pushd %WEASEL_ROOT%\librime
-  for %%a in ( build dist lib ^
-    deps\glog\build ^
-    deps\googletest\build ^
-    deps\leveldb\build ^
-    deps\marisa-trie\build ^
-    deps\opencc\build ^
-    deps\yaml-cpp\build ) do (
-    if "%2"=="push" (
-      if exist %%a  move %%a %%a_%1 
-    )
-    if "%2"=="pop" (
-      if exist %%a_%1  move %%a_%1 %%a 
-    )
-  )
-  popd
-  exit /b
-
-rem ---------------------------------------------------------------------------
-rem %1 : ARCH
-rem %2 : target_path of rime.lib, base %WEASEL_ROOT% or abs path
-rem %3 : target_path of rime.dll, base %WEASEL_ROOT% or abs path
-:build_librime_platform
-  rem restore backuped %1 build
-  call :stash_build %1 pop
-
-  cd %WEASEL_ROOT%\librime
-  if not exist env.bat (
-    copy %WEASEL_ROOT%\env.bat env.bat
-  )
-  if not exist lib\opencc.lib (
-    call build.bat deps %rime_build_variant%
-    if errorlevel 1 (
-      call :stash_build %1 push
-      goto error
-    )
-  )
-  call build.bat %rime_build_variant%
-  if errorlevel 1 (
-    call :stash_build %1 push
-    goto error
-  )
-
-  cd %WEASEL_ROOT%\librime
-  call :stash_build %1 push
-
-  copy /Y %WEASEL_ROOT%\librime\dist_%1\include\rime_*.h %WEASEL_ROOT%\include\
-  if errorlevel 1 goto error
-  copy /Y %WEASEL_ROOT%\librime\dist_%1\lib\rime.lib %2\
-  if errorlevel 1 goto error
-  copy /Y %WEASEL_ROOT%\librime\dist_%1\lib\rime.dll %3\
-  if errorlevel 1 goto error
-
-  exit /b
 rem ---------------------------------------------------------------------------
 
 :error
