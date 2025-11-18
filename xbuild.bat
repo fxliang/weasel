@@ -67,9 +67,6 @@ set build_rebuild=0
 set build_boost=0
 set boost_build_variant=release
 set build_data=0
-set build_opencc=0
-set build_rime=0
-set rime_build_variant=release
 set build_weasel=0
 set build_installer=0
 set build_arm64=0
@@ -80,19 +77,14 @@ set build_commands=0
   if "%1" == "debug" (
     set build_config=debug
     set boost_build_variant=debug
-    set rime_build_variant=debug
   )
   if "%1" == "release" (
     set build_config=release
     set boost_build_variant=release
-    set rime_build_variant=release
   )
   if "%1" == "rebuild" set build_rebuild=1
   if "%1" == "boost" set build_boost=1
   if "%1" == "data" set build_data=1
-  if "%1" == "opencc" set build_opencc=1
-  if "%1" == "rime" set build_rime=1
-  if "%1" == "librime" set build_rime=1
   if "%1" == "weasel" set build_weasel=1
   if "%1" == "installer" set build_installer=1
   if "%1" == "arm64" set build_arm64=1
@@ -101,8 +93,6 @@ set build_commands=0
   if "%1" == "all" (
     set build_boost=1
     set build_data=1
-    set build_opencc=1
-    set build_rime=1
     set build_weasel=1
     set build_installer=1
     set build_arm64=1
@@ -115,11 +105,9 @@ set build_commands=0
 if %build_weasel% == 0 (
 if %build_boost% == 0 (
 if %build_data% == 0 (
-if %build_opencc% == 0 (
-if %build_rime% == 0 (
 if %build_commands% == 0 (
   set build_weasel=1
-))))))
+))))
 rem 
 rem quit WeaselServer.exe before building
 cd /d %WEASEL_ROOT%
@@ -137,18 +125,8 @@ if %build_boost% == 1 (
   if errorlevel 1 exit /b 1
   cd /d %WEASEL_ROOT%
 )
-if %build_rime% == 1 (
-  call build.bat rime
-  if errorlevel 1 exit /b 1
-  cd /d %WEASEL_ROOT%
-)
 if %build_data% == 1 (
   call build.bat data
-  if errorlevel 1 exit /b 1
-  cd /d %WEASEL_ROOT%
-)
-if %build_opencc% == 1 (
-  call build.bat opencc
   if errorlevel 1 exit /b 1
   cd /d %WEASEL_ROOT%
 )

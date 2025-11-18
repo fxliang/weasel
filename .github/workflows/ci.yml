@@ -64,7 +64,7 @@ jobs:
         with:
           path: |
             ${{ env.BOOST_ROOT }}
-          key: ${{ runner.os }}-boost-${{ env.boost_version }}
+          key: ${{ runner.os }}-boost-${{ env.boost_version }}-pb
 
       - name: Install Boost
         if: steps.cache-boost.outputs.cache-hit != 'true'
