@@ -2,18 +2,16 @@
 
 ## Preparation
 
-  - Install **Visual Studio 2017** for *Desktop development in C++*
-    with components *ATL*, *MFC* and *Windows XP support*.
-    Visual Studio 2015 or later versions may work with additional configuration.
+  - Install **Visual Studio 2017** or newer version for *Desktop development in C++*
+    with components *ATL*, *MFC*
 
-  - Install dev tools: `git`, `cmake`， `clang-format(>=17.0.6)`
+  - Install dev tools: `git`, `clang-format(>=18.0.0)`
 
-  - Download third-party libraries: `boost(>=1.60.0)`
+  - Download third-party libraries: `boost(>=1.78.0)`
 
 Optional:
 
   - install `bash` via *Git for Windows*, for installing data files with `plum`;
-  - install `python` for building OpenCC dictionaries;
   - install [NSIS](http://nsis.sourceforge.net/Download) for creating installer.
 
 ## Checkout source code
@@ -45,6 +43,11 @@ variables directly in the console, before invocation of `build.bat`:
 set BOOST_ROOT=X:\path\to\boost_N_NN_N
 ```
 
+Get prebuilt librime files(headers, libs, pdb and opencc files) with `get-rime.ps1` in `weasel` source directory
+```cmd
+powershell .\get-rime.ps1 -use dev
+```
+
 ### Build
 
 ```batch
@@ -74,17 +77,3 @@ cd output
 install.bat
 ```
 
-### Optional: play with Rime command line tools
-
-`librime` comes with a REPL application which can be used to test if the library
-is working.
-
-```batch
-cd librime
-copy /Y build\lib\Release\rime.dll build\bin
-cd build\bin
-echo zhongzhouyunshurufa | Release\rime_api_console.exe > output.txt
-```
-
-Instead of redirecting output to a file, you can set appropriate code page
-(`chcp 65001`) and font in the console to work with the REPL interactively.
