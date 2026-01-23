@@ -38,8 +38,8 @@ jobs:
     needs: lint
     runs-on: windows-2022
     env:
-      boost_version: 1.84.0
-      BOOST_ROOT: ${{ github.workspace }}\deps\boost_1_84_0
+      boost_version: 1.90.0
+      BOOST_ROOT: ${{ github.workspace }}\deps\boost_1_90_0
     steps:
 
       - name: Checkout last commit
@@ -115,8 +115,8 @@ jobs:
     needs: lint
     runs-on: windows-2022
     env:
-      boost_version: 1.84.0
-      BOOST_ROOT: ${{ github.workspace }}\deps\boost_1_84_0
+      boost_version: 1.90.0
+      BOOST_ROOT: ${{ github.workspace }}\deps\boost_1_90_0
     steps:
 
       - name: Checkout last commit
