@@ -171,13 +171,13 @@ jobs:
         run: .\extract_changelog.ps1
 
       - name: Create Nightly release
-        if: ${{ github.repository == 'rime/weasel' && github.ref == 'refs/heads/master' && matrix.variant == 'msbuild' }}
+        if: ${{ github.repository == 'fxliang/weasel' && github.ref == 'refs/heads/pb' && matrix.variant == 'msbuild' }}
         uses: 'marvinpinto/action-automatic-releases@latest'
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          automatic_release_tag: latest
+          automatic_release_tag: pblatest
           prerelease: true
-          title: "Nightly Build"
+          title: "Personal Build"
           files: |
             ./output/archives/weasel*.exe
             ./output/archives/debug_symbols.7z
