@@ -1,92 +1,16 @@
-#include "stdafx.h"
 #include "StandardLayout.h"
+
+#define DPI_SCALE(t) (int)(t * _pD2D->m_dpiScaleLayout)
 
 using namespace weasel;
 
-std::wstring StandardLayout::GetLabelText(const std::vector<Text>& labels,
-                                          int id,
-                                          const wchar_t* format) const {
-  wchar_t buffer[128];
-  swprintf_s<128>(buffer, format, labels.at(id).str.c_str());
-  return std::wstring(buffer);
-}
+const wstring StandardLayout::_pre = L"<";
+const wstring StandardLayout::_next = L">";
 
-void weasel::StandardLayout::GetTextSizeDW(
-    const std::wstring& text,
-    size_t nCount,
-    ComPtr<IDWriteTextFormat1>& pTextFormat,
-    PDWR pDWR,
-    LPSIZE lpSize) const {
-  D2D1_SIZE_F sz;
-  HRESULT hr = S_OK;
-
-  if (pTextFormat == NULL) {
-    lpSize->cx = 0;
-    lpSize->cy = 0;
-    return;
-  }
-  // 创建文本布局
-  if (_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT)
-    HR(pDWR->CreateTextLayout(text.c_str(), (int)nCount, pTextFormat.Get(),
-                              0.0f, (float)_style.max_height));
-  else
-    HR(pDWR->CreateTextLayout(text.c_str(), (int)nCount, pTextFormat.Get(),
-                              (float)_style.max_width, 0));
-
-  if (_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT) {
-    DWRITE_FLOW_DIRECTION flow = _style.vertical_text_left_to_right
-                                     ? DWRITE_FLOW_DIRECTION_LEFT_TO_RIGHT
-                                     : DWRITE_FLOW_DIRECTION_RIGHT_TO_LEFT;
-    HR(pDWR->SetLayoutReadingDirection(DWRITE_READING_DIRECTION_TOP_TO_BOTTOM));
-    HR(pDWR->SetLayoutFlowDirection(flow));
-  }
-  // 获取文本尺寸
-  DWRITE_TEXT_METRICS textMetrics;
-  HR(pDWR->GetLayoutMetrics(&textMetrics));
-  sz = D2D1::SizeF(ceil(textMetrics.widthIncludingTrailingWhitespace),
-                   ceil(textMetrics.height));
-
-  lpSize->cx = (int)sz.width;
-  lpSize->cy = (int)sz.height;
-
-  if (_style.layout_type != UIStyle::LAYOUT_VERTICAL_TEXT) {
-    auto max_width = _style.max_width == 0
-                         ? textMetrics.widthIncludingTrailingWhitespace
-                         : _style.max_width;
-    HR(pDWR->CreateTextLayout(text.c_str(), (int)nCount, pTextFormat.Get(),
-                              max_width, textMetrics.height));
-  } else {
-    auto max_height =
-        _style.max_height == 0 ? textMetrics.height : _style.max_height;
-    HR(pDWR->CreateTextLayout(text.c_str(), (int)nCount, pTextFormat.Get(),
-                              textMetrics.widthIncludingTrailingWhitespace,
-                              max_height));
-  }
-
-  if (_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT) {
-    HR(pDWR->SetLayoutReadingDirection(DWRITE_READING_DIRECTION_TOP_TO_BOTTOM));
-    HR(pDWR->SetLayoutFlowDirection(DWRITE_FLOW_DIRECTION_RIGHT_TO_LEFT));
-  }
-  DWRITE_OVERHANG_METRICS overhangMetrics;
-  HR(pDWR->GetLayoutOverhangMetrics(&overhangMetrics));
-  {
-    if (overhangMetrics.left > 0)
-      lpSize->cx += (LONG)(overhangMetrics.left + 1);
-    if (overhangMetrics.right > 0)
-      lpSize->cx += (LONG)(overhangMetrics.right + 1);
-    if (overhangMetrics.top > 0)
-      lpSize->cy += (LONG)(overhangMetrics.top + 1);
-    if (overhangMetrics.bottom > 0)
-      lpSize->cy += (LONG)(overhangMetrics.bottom + 1);
-  }
-}
-
-CSize StandardLayout::GetPreeditSize(CDCHandle dc,
-                                     const weasel::Text& text,
-                                     ComPtr<IDWriteTextFormat1> pTextFormat,
-                                     PDWR pDWR) {
-  const std::wstring& preedit = text.str;
-  const std::vector<weasel::TextAttribute>& attrs = text.attributes;
+CSize StandardLayout::_GetPreeditSize(const Text &text,
+                                      ComPtr<IDWriteTextFormat1> &pTextFormat) {
+  const wstring &preedit = text.str;
+  const vector<TextAttribute> &attrs = text.attributes;
   CSize size(0, 0);
   if (!preedit.empty()) {
     weasel::TextRange range;
@@ -94,28 +18,24 @@ CSize StandardLayout::GetPreeditSize(CDCHandle dc,
       if (attrs[j].type == weasel::HIGHLIGHTED)
         _range = attrs[j].range;
     if (_range.start < _range.end) {
-      std::wstring before_str = preedit.substr(0, _range.start);
-      std::wstring hilited_str = preedit.substr(_range.start, _range.end);
-      std::wstring after_str = preedit.substr(_range.end);
-      GetTextSizeDW(before_str, before_str.length(), pTextFormat, pDWR,
-                    &_beforesz);
-      GetTextSizeDW(hilited_str, hilited_str.length(), pTextFormat, pDWR,
-                    &_hilitedsz);
-      GetTextSizeDW(after_str, after_str.length(), pTextFormat, pDWR,
-                    &_aftersz);
+      wstring before_str = preedit.substr(0, _range.start);
+      wstring hilited_str = preedit.substr(_range.start, _range.end);
+      wstring after_str = preedit.substr(_range.end);
+      _pD2D->GetTextSize(before_str, before_str.length(), pTextFormat,
+                         &_beforesz);
+      _pD2D->GetTextSize(hilited_str, hilited_str.length(), pTextFormat,
+                         &_hilitedsz);
+      _pD2D->GetTextSize(after_str, after_str.length(), pTextFormat, &_aftersz);
       auto width_max = 0, height_max = 0;
-      if (_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT) {
-        width_max = max(width_max, _beforesz.cx);
-        width_max = max(width_max, _hilitedsz.cx);
-        width_max = max(width_max, _aftersz.cx);
+      if (_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT ||
+          _style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT_FULLSCREEN) {
+        width_max = MAX(width_max, _beforesz.cx, _hilitedsz.cx, _aftersz.cx);
         height_max += _beforesz.cy + (_beforesz.cy > 0) * _style.hilite_spacing;
         height_max +=
             _hilitedsz.cy + (_hilitedsz.cy > 0) * _style.hilite_spacing;
         height_max += _aftersz.cy;
       } else {
-        height_max = max(height_max, _beforesz.cy);
-        height_max = max(height_max, _hilitedsz.cy);
-        height_max = max(height_max, _aftersz.cy);
+        height_max = MAX(height_max, _beforesz.cy, _hilitedsz.cy, _aftersz.cy);
         width_max += _beforesz.cx + (_beforesz.cx > 0) * _style.hilite_spacing;
         width_max +=
             _hilitedsz.cx + (_hilitedsz.cx > 0) * _style.hilite_spacing;
@@ -124,44 +44,204 @@ CSize StandardLayout::GetPreeditSize(CDCHandle dc,
       size.cx = width_max;
       size.cy = height_max;
     } else
-      GetTextSizeDW(preedit, preedit.length(), pTextFormat, pDWR, &size);
+      _pD2D->GetTextSize(preedit, preedit.length(), pTextFormat, &size);
   }
   return size;
 }
 
-// check if a candidate back path over _bgRect path
-bool weasel::StandardLayout::_IsHighlightOverCandidateWindow(CRect& rc,
-                                                             CDCHandle& dc) {
-  GraphicsRoundRectPath bgPath(_bgRect, _style.round_corner_ex);
-  GraphicsRoundRectPath hlPath(rc, _style.round_corner);
+void StandardLayout::RecalculateSizes() {
+  _preeditSize = _GetPreeditSize(_context.preedit, _pD2D->pPreeditFormat);
+  _auxSize = _GetPreeditSize(_context.aux, _pD2D->pPreeditFormat);
+  _pD2D->GetTextSize(_pre, _pre.length(), _pD2D->pPreeditFormat,
+                     &_pagePrevSize);
+  _pD2D->GetTextSize(_next, _next.length(), _pD2D->pPreeditFormat,
+                     &_pageNextSize);
 
-  Gdiplus::Region bgRegion(&bgPath);
-  Gdiplus::Region hlRegion(&hlPath);
-  Gdiplus::Region* tmpRegion = hlRegion.Clone();
+  // Precompute candidate sizes
+  _candidateLabelSizes.clear();
+  _candidateTextSizes.clear();
+  _candidateCommentSizes.clear();
+  for (size_t i = 0; i < candidates.size(); ++i) {
+    CSize labelSize(0, 0), textSize(0, 0), commentSize(0, 0);
+    if (labelFontValid) {
+      _pD2D->GetTextSize(labels.at(i).str, labels.at(i).str.length(),
+                         _pD2D->pLabelFormat, &labelSize);
+    }
+    if (textFontValid) {
+      _pD2D->GetTextSize(candidates.at(i).str, candidates.at(i).str.length(),
+                         _pD2D->pTextFormat, &textSize);
+    }
+    if (cmtFontValid) {
+      _pD2D->GetTextSize(comments.at(i).str, comments.at(i).str.length(),
+                         _pD2D->pCommentFormat, &commentSize);
+    }
+    _candidateLabelSizes.push_back(labelSize);
+    _candidateTextSizes.push_back(textSize);
+    _candidateCommentSizes.push_back(commentSize);
+  }
 
-  if (!tmpRegion)
-    return false;
-  tmpRegion->Xor(&bgRegion);
-  tmpRegion->Exclude(&bgRegion);
-
-  Gdiplus::Graphics g(dc);
-  bool res = !tmpRegion->IsEmpty(&g);
-  delete tmpRegion;
-  tmpRegion = NULL;
-  return res;
+  // Recalculate mark size
+  if (!_style.mark_text.empty()) {
+    _pD2D->GetTextSize(_style.mark_text, _style.mark_text.length(),
+                       _pD2D->pTextFormat, &_markTextSize);
+  } else {
+    _markTextSize = CSize(0, 0);
+  }
 }
 
-// prepare Hemispherical rounding info
-void weasel::StandardLayout::_PrepareRoundInfo(CDCHandle& dc) {
-  const int tmp[5] = {UIStyle::LAYOUT_VERTICAL, UIStyle::LAYOUT_HORIZONTAL,
-                      UIStyle::LAYOUT_VERTICAL_TEXT, UIStyle::LAYOUT_VERTICAL,
-                      UIStyle::LAYOUT_HORIZONTAL};
+void StandardLayout::_UpdateStatusIconLayout(int *width, int *height) {
+  // rule 1. status icon is middle-aligned with preedit text or auxiliary text,
+  // whichever comes first rule 2. there is a spacing between preedit/aux text
+  // and the status icon rule 3. status icon is right aligned in WeaselPanel,
+  // when [margin_x + width(preedit/aux) + spacing + width(icon) + margin_x] <
+  // style.min_width
+  if (ShouldDisplayStatusIcon()) {
+    if (_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT ||
+        _style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT_FULLSCREEN) {
+      int top = 0, middle = 0;
+      if (!_preeditRect.IsRectNull()) {
+        top = _preeditRect.bottom + _style.spacing;
+        middle = (_preeditRect.left + _preeditRect.right) / 2;
+      } else if (!_auxiliaryRect.IsRectNull()) {
+        top = _auxiliaryRect.bottom + _style.spacing;
+        middle = (_auxiliaryRect.left + _auxiliaryRect.right) / 2;
+      }
+      if (top && middle) {
+        int bottom_alignment = *height - real_margin_y - STATUS_ICON_SIZE;
+        if (top > bottom_alignment) {
+          *height = top + STATUS_ICON_SIZE + real_margin_y;
+        } else {
+          top = bottom_alignment;
+        }
+        _statusIconRect.SetRect(middle - STATUS_ICON_SIZE / 2 + 1, top,
+                                middle + STATUS_ICON_SIZE / 2 + 1,
+                                top + STATUS_ICON_SIZE + 1);
+      } else {
+        _statusIconRect.SetRect(0, 0, STATUS_ICON_SIZE, STATUS_ICON_SIZE);
+        _statusIconRect.OffsetRect(offsetX, offsetY);
+        *width = STATUS_ICON_SIZE;
+        *height =
+            (_style.vertical_text_with_wrap ? offsetY : 0) + STATUS_ICON_SIZE;
+      }
+    } else {
+      int left = 0, middle = 0;
+      if (!_preeditRect.IsRectNull()) {
+        left = _preeditRect.right + _style.spacing;
+        middle = (_preeditRect.top + _preeditRect.bottom) / 2;
+      } else if (!_auxiliaryRect.IsRectNull()) {
+        left = _auxiliaryRect.right + _style.spacing;
+        middle = (_auxiliaryRect.top + _auxiliaryRect.bottom) / 2;
+      }
+      if (left && middle) {
+        int right_alignment = *width - real_margin_x - STATUS_ICON_SIZE;
+        if (left > right_alignment) {
+          *width = left + STATUS_ICON_SIZE + real_margin_x;
+        } else {
+          left = right_alignment;
+        }
+        _statusIconRect.SetRect(left, middle - STATUS_ICON_SIZE / 2 + 1,
+                                left + STATUS_ICON_SIZE,
+                                middle + STATUS_ICON_SIZE / 2 + 1);
+      } else {
+        _statusIconRect.SetRect(0, 0, STATUS_ICON_SIZE, STATUS_ICON_SIZE);
+        _statusIconRect.OffsetRect(offsetX, offsetY);
+        *width = *height = STATUS_ICON_SIZE;
+      }
+    }
+  }
+  if (IS_FULLSCREENLAYOUT(_style))
+    _statusIconRect.OffsetRect(-_style.border, -_style.border);
+}
+
+void StandardLayout::_CalcPageIndicator(bool vertical_text_layout, int &pgw,
+                                        int &pgh) {
+  CSize pgszl, pgszr;
+  if (!IsInlinePreedit()) {
+    _pD2D->GetTextSize(_pre, _pre.length(), _pD2D->pPreeditFormat, &pgszl);
+    _pD2D->GetTextSize(_next, _next.length(), _pD2D->pPreeditFormat, &pgszr);
+  }
+  bool page_en = (_style.prevpage_color & 0xff000000) &&
+                 (_style.nextpage_color & 0xff000000);
+  if (!page_en) {
+    pgw = 0;
+    pgh = 0;
+    return;
+  }
+  if (vertical_text_layout) {
+    pgh = pgszl.cy + pgszr.cy + _style.hilite_spacing +
+          _style.hilite_padding_y * 2;
+    pgw = MAX(pgszl.cx, pgszr.cx);
+  } else {
+    pgw = pgszl.cx + pgszr.cx + _style.hilite_spacing +
+          _style.hilite_padding_x * 2;
+    pgh = MAX(pgszl.cy, pgszr.cy);
+  }
+}
+
+bool StandardLayout::IsInlinePreedit() const {
+  return _style.inline_preedit &&
+         (_style.client_caps & weasel::INLINE_PREEDIT_CAPABLE) != 0 &&
+         _style.layout_type != UIStyle::LAYOUT_VERTICAL_FULLSCREEN &&
+         _style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN;
+}
+
+bool StandardLayout::ShouldDisplayStatusIcon() const {
+  // rule 1. emphasis ascii mode
+  // rule 2. show status icon when switching mode
+  // rule 3. always show status icon with tips
+  // rule 4. rule 3 excluding tips FullScreenLayout with strings
+  return ((_status.ascii_mode && !_style.inline_preedit) ||
+          !_status.composing || !_context.aux.empty()) &&
+         !((_style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN ||
+            _style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN ||
+            _style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT_FULLSCREEN) &&
+           !_context.aux.empty());
+}
+
+bool StandardLayout::_IsHighlightOverCandidateWindow(const CRect &rc) {
+  if (!_pD2D || !_pD2D->d2Factory)
+    return false;
+  ComPtr<ID2D1PathGeometry> bgPathGeometry;
+  HR(_pD2D->CreateRoundedRectanglePath(_bgRect, _style.round_corner_ex,
+                                       IsToRoundStruct(), bgPathGeometry));
+  // check if the center of arcs is out of _bgRect
+  auto offset = _style.round_corner * 0.414213562f;
+  D2D1_POINT_2F lt = D2D1::Point2F(rc.left + offset, rc.top + offset);
+  D2D1_POINT_2F lb = D2D1::Point2F(rc.left + offset, rc.bottom - offset);
+  D2D1_POINT_2F rb = D2D1::Point2F(rc.right - offset, rc.bottom - offset);
+  D2D1_POINT_2F rt = D2D1::Point2F(rc.right - offset, rc.top + offset);
+  static const D2D1_MATRIX_3X2_F wtf = D2D1::Matrix3x2F::Identity();
+  static const float flatteningTolerance = 1.0f;
+  BOOL inside = FALSE;
+  bgPathGeometry->FillContainsPoint(lt, &wtf, flatteningTolerance, &inside);
+  if (!inside)
+    return true;
+  bgPathGeometry->FillContainsPoint(lb, &wtf, flatteningTolerance, &inside);
+  if (!inside)
+    return true;
+  bgPathGeometry->FillContainsPoint(rb, &wtf, flatteningTolerance, &inside);
+  if (!inside)
+    return true;
+  bgPathGeometry->FillContainsPoint(rt, &wtf, flatteningTolerance, &inside);
+  if (!inside)
+    return true;
+  // check if the rc out of _bgRect
+  return (rc.left <= _bgRect.left || rc.right >= _bgRect.right ||
+          rc.top <= _bgRect.top || rc.bottom >= _bgRect.bottom);
+}
+
+void StandardLayout::_PrepareRoundInfo() {
+
+  const int tmp[6] = {
+      UIStyle::LAYOUT_VERTICAL,      UIStyle::LAYOUT_HORIZONTAL,
+      UIStyle::LAYOUT_VERTICAL_TEXT, UIStyle::LAYOUT_VERTICAL,
+      UIStyle::LAYOUT_HORIZONTAL,    UIStyle::LAYOUT_VERTICAL_TEXT};
   int layout_type = tmp[_style.layout_type];
   bool textHemispherical = false, cand0Hemispherical = false;
   if (!_style.inline_preedit) {
     CRect textRect(_preeditRect);
     textRect.InflateRect(_style.hilite_padding_x, _style.hilite_padding_y);
-    textHemispherical = _IsHighlightOverCandidateWindow(textRect, dc);
+    textHemispherical = _IsHighlightOverCandidateWindow(textRect);
     const bool hilite_rd_info[3][2][4] = {
         // vertical
         {{textHemispherical, textHemispherical && (!candidates_count), false,
@@ -195,7 +275,7 @@ void weasel::StandardLayout::_PrepareRoundInfo(CDCHandle& dc) {
   if (candidates_count) {
     CRect cand0Rect(_candidateRects[0]);
     cand0Rect.InflateRect(_style.hilite_padding_x, _style.hilite_padding_y);
-    cand0Hemispherical = _IsHighlightOverCandidateWindow(cand0Rect, dc);
+    cand0Hemispherical = _IsHighlightOverCandidateWindow(cand0Rect);
     if (textHemispherical || cand0Hemispherical) {
       // if (current_hemispherical_dome_status) _textRoundInfo.Hemispherical =
       // true;
@@ -208,47 +288,47 @@ void weasel::StandardLayout::_PrepareRoundInfo(CDCHandle& dc) {
           // LAYOUT_VERTICAL
           {// not inline_preedit
            {
-               {false, false, false, false},  // FIRST_CAND
-               {false, false, false, false},  // MID_CAND
-               {false, true, false, true},    // LAST_CAND
-               {false, true, false, true},    // ONLY_CAND
+               {false, false, false, false}, // FIRST_CAND
+               {false, false, false, false}, // MID_CAND
+               {false, true, false, true},   // LAST_CAND
+               {false, true, false, true},   // ONLY_CAND
            },
            // inline_preedit
            {
-               {true, false, true, false},    // FIRST_CAND
-               {false, false, false, false},  // MID_CAND
-               {false, true, false, true},    // LAST_CAND
-               {true, true, true, true},      // ONLY_CAND
+               {true, false, true, false},   // FIRST_CAND
+               {false, false, false, false}, // MID_CAND
+               {false, true, false, true},   // LAST_CAND
+               {true, true, true, true},     // ONLY_CAND
            }},
           // LAYOUT_HORIZONTAL
           {// not inline_preedit
            {
-               {false, true, false, false},   // FIRST_CAND
-               {false, false, false, false},  // MID_CAND
-               {false, false, false, true},   // LAST_CAND
-               {false, true, false, true},    // ONLY_CAND
+               {false, true, false, false},  // FIRST_CAND
+               {false, false, false, false}, // MID_CAND
+               {false, false, false, true},  // LAST_CAND
+               {false, true, false, true},   // ONLY_CAND
            },
            // inline_preedit
            {
-               {true, true, false, false},    // FIRST_CAND
-               {false, false, false, false},  // MID_CAND
-               {false, false, true, true},    // LAST_CAND
-               {true, true, true, true},      // ONLY_CAND
+               {true, true, false, false},   // FIRST_CAND
+               {false, false, false, false}, // MID_CAND
+               {false, false, true, true},   // LAST_CAND
+               {true, true, true, true},     // ONLY_CAND
            }},
           // LAYOUT_VERTICAL_TEXT
           {// not inline_preedit
            {
-               {false, false, false, false},  // FIRST_CAND
-               {false, false, false, false},  // MID_CAND
-               {true, true, false, false},    // LAST_CAND
-               {false, false, true, true},    // ONLY_CAND
+               {false, false, false, false}, // FIRST_CAND
+               {false, false, false, false}, // MID_CAND
+               {true, true, false, false},   // LAST_CAND
+               {false, false, true, true},   // ONLY_CAND
            },
            // inline_preedit
            {
-               {false, false, true, true},    // FIRST_CAND
-               {false, false, false, false},  // MID_CAND
-               {true, true, false, false},    // LAST_CAND
-               {true, true, true, true},      // ONLY_CAND
+               {false, false, true, true},   // FIRST_CAND
+               {false, false, false, false}, // MID_CAND
+               {true, true, false, false},   // LAST_CAND
+               {true, true, true, true},     // ONLY_CAND
            }},
       };
       for (auto i = 0; i < candidates_count; i++) {
@@ -256,13 +336,13 @@ void weasel::StandardLayout::_PrepareRoundInfo(CDCHandle& dc) {
         hilite_rect.InflateRect(_style.hilite_padding_x,
                                 _style.hilite_padding_y);
         bool current_hemispherical_dome_status =
-            _IsHighlightOverCandidateWindow(hilite_rect, dc);
-        int type = 0;               // default FIRST_CAND
-        if (candidates_count == 1)  // ONLY_CAND
+            _IsHighlightOverCandidateWindow(hilite_rect);
+        int type = 0;              // default FIRST_CAND
+        if (candidates_count == 1) // ONLY_CAND
           type = 3;
-        else if (i != 0 && i != candidates_count - 1)  // MID_CAND
+        else if (i != 0 && i != candidates_count - 1) // MID_CAND
           type = 1;
-        else if (i == candidates_count - 1)  // LAST_CAND
+        else if (i == candidates_count - 1) // LAST_CAND
           type = 2;
         _roundInfo[i].IsTopLeftNeedToRound =
             is_to_round_corner[layout_type][_style.inline_preedit][type][0];
@@ -314,84 +394,130 @@ void weasel::StandardLayout::_PrepareRoundInfo(CDCHandle& dc) {
   }
 }
 
-void StandardLayout::UpdateStatusIconLayout(int* width, int* height) {
-  // rule 1. status icon is middle-aligned with preedit text or auxiliary text,
-  // whichever comes first rule 2. there is a spacing between preedit/aux text
-  // and the status icon rule 3. status icon is right aligned in WeaselPanel,
-  // when [margin_x + width(preedit/aux) + spacing + width(icon) + margin_x] <
-  // style.min_width
-  if (ShouldDisplayStatusIcon()) {
-    if (_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT) {
-      int top = 0, middle = 0;
-      if (!_preeditRect.IsRectNull()) {
-        top = _preeditRect.bottom + _style.spacing;
-        middle = (_preeditRect.left + _preeditRect.right) / 2;
-      } else if (!_auxiliaryRect.IsRectNull()) {
-        top = _auxiliaryRect.bottom + _style.spacing;
-        middle = (_auxiliaryRect.left + _auxiliaryRect.right) / 2;
-      }
-      if (top && middle) {
-        int bottom_alignment = *height - real_margin_y - STATUS_ICON_SIZE;
-        if (top > bottom_alignment) {
-          *height = top + STATUS_ICON_SIZE + real_margin_y;
-        } else {
-          top = bottom_alignment;
-        }
-        _statusIconRect.SetRect(middle - STATUS_ICON_SIZE / 2 + 1, top,
-                                middle + STATUS_ICON_SIZE,
-                                top + STATUS_ICON_SIZE / 2 + 1);
-      } else {
-        _statusIconRect.SetRect(0, 0, STATUS_ICON_SIZE, STATUS_ICON_SIZE);
-        _statusIconRect.OffsetRect(offsetX, offsetY);
-        *width = STATUS_ICON_SIZE;
-        *height =
-            (_style.vertical_text_with_wrap ? offsetY : 0) + STATUS_ICON_SIZE;
-      }
+void StandardLayout::_PrecomputePreeditRects(const CRect &baseRect,
+                                             const Text &text,
+                                             CRect &beforeRect,
+                                             CRect &hiliteRect,
+                                             CRect &afterRect) {
+  beforeRect = hiliteRect = afterRect = CRect(0, 0, 0, 0);
+
+  if (baseRect.left >= baseRect.right || baseRect.top >= baseRect.bottom ||
+      text.str.empty() || _range.start >= _range.end)
+    return;
+
+  int x = baseRect.left, y = baseRect.top;
+
+  // Before part
+  if (_range.start > 0 && _beforesz.cx > 0 && _beforesz.cy > 0) {
+    if (_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT ||
+        _style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT_FULLSCREEN)
+      beforeRect = CRect(baseRect.left, y, baseRect.right, y + _beforesz.cy);
+    else
+      beforeRect = CRect(x, baseRect.top, x + _beforesz.cx, baseRect.bottom);
+
+    if (_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT ||
+        _style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT_FULLSCREEN)
+      y += _beforesz.cy + DPI_SCALE(_style.hilite_spacing);
+    else
+      x += _beforesz.cx + DPI_SCALE(_style.hilite_spacing);
+  }
+
+  // Highlighted part
+  if (_hilitedsz.cx > 0 && _hilitedsz.cy > 0) {
+    if (_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT ||
+        _style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT_FULLSCREEN)
+      hiliteRect = CRect(baseRect.left, y, baseRect.right, y + _hilitedsz.cy);
+    else
+      hiliteRect = CRect(x, baseRect.top, x + _hilitedsz.cx, baseRect.bottom);
+
+    if (_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT ||
+        _style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT_FULLSCREEN)
+      y += _hilitedsz.cy + DPI_SCALE(_style.hilite_spacing);
+    else
+      x += _hilitedsz.cx + DPI_SCALE(_style.hilite_spacing);
+  }
+
+  // After part
+  if (_range.end < static_cast<int>(text.str.length()) && _aftersz.cx > 0 &&
+      _aftersz.cy > 0) {
+    if (_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT ||
+        _style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT_FULLSCREEN)
+      afterRect = CRect(baseRect.left, y, baseRect.right, y + _aftersz.cy);
+    else
+      afterRect = CRect(x, baseRect.top, x + _aftersz.cx, baseRect.bottom);
+  }
+}
+
+int StandardLayout::_CalcMarkMetrics(bool vertical_text_layout) {
+  if (!(_style.hilited_mark_color & 0xff000000)) {
+    mark_width = 0;
+    mark_height = 0;
+    mark_gap = 0;
+    return 0;
+  }
+  CSize sg;
+  if (candidates_count) {
+    if (_style.mark_text.empty())
+      _pD2D->GetTextSize(L"|", 1, _pD2D->pTextFormat, &sg);
+    else
+      sg = _markTextSize;
+  }
+  mark_width = sg.cx;
+  mark_height = sg.cy;
+  if (_style.mark_text.empty()) {
+    if (vertical_text_layout) {
+      mark_height = mark_width / 7;
+      if (_style.linespacing && _style.baseline)
+        mark_height =
+            (int)((float)mark_height / ((float)_style.linespacing / 100.0f));
+      mark_height = MAX(mark_height, 6);
     } else {
-      int left = 0, middle = 0;
-      if (!_preeditRect.IsRectNull()) {
-        left = _preeditRect.right + _style.spacing;
-        middle = (_preeditRect.top + _preeditRect.bottom) / 2;
-      } else if (!_auxiliaryRect.IsRectNull()) {
-        left = _auxiliaryRect.right + _style.spacing;
-        middle = (_auxiliaryRect.top + _auxiliaryRect.bottom) / 2;
-      }
-      if (left && middle) {
-        int right_alignment = *width - real_margin_x - STATUS_ICON_SIZE;
-        if (left > right_alignment) {
-          *width = left + STATUS_ICON_SIZE + real_margin_x;
-        } else {
-          left = right_alignment;
-        }
-        _statusIconRect.SetRect(left, middle - STATUS_ICON_SIZE / 2 + 1,
-                                left + STATUS_ICON_SIZE,
-                                middle + STATUS_ICON_SIZE / 2 + 1);
-      } else {
-        _statusIconRect.SetRect(0, 0, STATUS_ICON_SIZE, STATUS_ICON_SIZE);
-        _statusIconRect.OffsetRect(offsetX, offsetY);
-        *width = *height = STATUS_ICON_SIZE;
-      }
+      mark_width = mark_height / 7;
+      if (_style.linespacing && _style.baseline)
+        mark_width =
+            (int)((float)mark_width / ((float)_style.linespacing / 100.0f));
+      mark_width = MAX(mark_width, 6);
     }
   }
-  if (IS_FULLSCREENLAYOUT(_style))
-    _statusIconRect.OffsetRect(-_style.border, -_style.border);
+  mark_gap = (_style.mark_text.empty())
+                 ? (vertical_text_layout ? mark_height : mark_width)
+                 : (vertical_text_layout ? mark_height : mark_width) +
+                       _style.hilite_spacing;
+  return mark_gap;
 }
 
-bool StandardLayout::IsInlinePreedit() const {
-  return _style.inline_preedit &&
-         (_style.client_caps & weasel::INLINE_PREEDIT_CAPABLE) != 0 &&
-         _style.layout_type != UIStyle::LAYOUT_VERTICAL_FULLSCREEN &&
-         _style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN;
+// CalcPageIndicator moved to StandardStandardLayout
+
+int StandardLayout::_CalcStatusIconOffset(int extent) const {
+  if (!ShouldDisplayStatusIcon())
+    return 0;
+  return (STATUS_ICON_SIZE >= extent) ? (STATUS_ICON_SIZE - extent) / 2 : 0;
 }
 
-bool StandardLayout::ShouldDisplayStatusIcon() const {
-  // rule 1. emphasis ascii mode
-  // rule 2. show status icon when switching mode
-  // rule 3. always show status icon with tips
-  // rule 4. rule 3 excluding tips FullScreenLayout with strings
-  return ((_status.ascii_mode && !_style.inline_preedit) ||
-          !_status.composing || !_context.aux.empty()) &&
-         !((_style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN ||
-            _style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN) &&
-           !_context.aux.empty());
+void StandardLayout::_LayoutInlineRect(const CSize &size,
+                                       bool vertical_text_layout,
+                                       bool is_preedit, int pgw, int pgh,
+                                       int base_coord, int &width, int &height,
+                                       CRect &rect) {
+  if (vertical_text_layout) {
+    int szx = is_preedit ? MAX(size.cx, pgw) : size.cx;
+    int szy = is_preedit ? pgh : size.cy;
+    int xoffset = _CalcStatusIconOffset(szx);
+    rect.SetRect(width + xoffset, base_coord, width + xoffset + size.cx,
+                 base_coord + size.cy);
+    width += size.cx + xoffset * 2 + _style.spacing;
+    height = MAX(height, offsetY + real_margin_y + size.cy + szy);
+    if (ShouldDisplayStatusIcon() && is_preedit)
+      height += STATUS_ICON_SIZE;
+  } else {
+    int szx = is_preedit ? pgw : size.cx;
+    int szy = is_preedit ? MAX(size.cy, pgh) : size.cy;
+    int yoffset = _CalcStatusIconOffset(szy);
+    rect.SetRect(base_coord, height + yoffset, base_coord + size.cx,
+                 height + yoffset + size.cy);
+    height += size.cy + 2 * yoffset + _style.spacing;
+    width = MAX(width, real_margin_x * 2 + size.cx + (is_preedit ? szx : 0));
+    if (ShouldDisplayStatusIcon() && is_preedit)
+      width += STATUS_ICON_SIZE;
+  }
 }

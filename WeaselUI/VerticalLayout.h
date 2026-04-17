@@ -4,12 +4,10 @@
 
 namespace weasel {
 class VerticalLayout : public StandardLayout {
- public:
-  VerticalLayout(const UIStyle& style,
-                 const Context& context,
-                 const Status& status,
-                 PDWR pDWR)
-      : StandardLayout(style, context, status, pDWR) {}
-  virtual void DoLayout(CDCHandle dc, PDWR pDWR = NULL);
+public:
+  VerticalLayout(const UIStyle &style, const Context &context,
+                 const Status &status, an<D2D> &pD2D)
+      : StandardLayout(style, context, status, pD2D) {}
+  virtual void DoLayout();
 };
-};  // namespace weasel
+}; // namespace weasel
