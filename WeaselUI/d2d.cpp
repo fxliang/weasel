@@ -466,6 +466,8 @@ void D2D::SetBrushColor(uint32_t color) {
 }
 
 void D2D::InitDpiInfo() {
+  const auto oldDpiScaleFontPoint = m_dpiScaleFontPoint;
+  const auto oldDpiScaleLayout = m_dpiScaleLayout;
   if (m_hWnd && IsWindows8Point1OrGreater()) {
     HMONITOR const mon = MonitorFromWindow(m_hWnd, MONITOR_DEFAULTTONEAREST);
     UINT x = 0, y = 0;
@@ -479,6 +481,15 @@ void D2D::InitDpiInfo() {
   }
   m_dpiScaleFontPoint = m_dpiY / 72.0f;
   m_dpiScaleLayout = m_dpiY / 96.0;
+  if (m_dpiScaleFontPoint != oldDpiScaleFontPoint ||
+      m_dpiScaleLayout != oldDpiScaleLayout) {
+    std::lock_guard<std::mutex> lk(cacheMutex);
+    textFormatCache.clear();
+    pPreeditFormat.Reset();
+    pTextFormat.Reset();
+    pLabelFormat.Reset();
+    pCommentFormat.Reset();
+  }
 }
 
 void D2D::SetFontFallback(PtTextFormat textFormat,

@@ -1029,6 +1029,14 @@ LRESULT WeaselPanel::MsgHandler(HWND hwnd, UINT uMsg, WPARAM wParam,
     return OnLeftClickUp(uMsg, wParam, lParam);
   case WM_LBUTTONDOWN:
     return OnLeftClickDown(uMsg, wParam, lParam);
+  case WM_DPICHANGED:
+    if (m_pD2D) {
+      m_pD2D->InitDpiInfo();
+      if (!m_style.font_face.empty())
+        m_pD2D->InitDirectWriteResources();
+    }
+    Refresh();
+    return 0;
   case WM_TIMER:
     if (wParam == AUTOREV_TIMER) {
       ::KillTimer(m_hWnd, AUTOREV_TIMER);
