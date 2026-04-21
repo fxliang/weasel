@@ -58,13 +58,13 @@ public:
   UIStyle _style;
   an<D2D> &_pD2D;
 
-protected:
-  const Context &_context;
-  const Status &_status;
-  const vector<Text> &candidates;
-  const vector<Text> &labels;
-  const vector<Text> &comments;
-  const int &id;
+  protected:
+  const Context& _context;
+  const Status& _status;
+  const vector<Text>& candidates;
+  const vector<Text>& labels;
+  const vector<Text>& comments;
+  const int id;
   const int candidates_count;
   const int labelFontValid;
   const int textFontValid;

@@ -247,6 +247,13 @@ void D2D::InitDirect2D() {
 }
 
 void D2D::OnResize(UINT width, UINT height) {
+  if (width == 0 || height == 0)
+    return;
+  if (!dc || !swapChain || !visual || !target || !dcompDevice) {
+    InitDirect2D();
+    if (!dc || !swapChain || !visual || !target || !dcompDevice)
+      return;
+  }
   // Release Direct2D resources
   dc->SetTarget(nullptr);
   bitmap.Reset();
@@ -342,11 +349,13 @@ PtTextFormat D2D::GetOrCreateTextFormat(const std::wstring &face, int point,
     DWRITE_FONT_STYLE fontStyle = DWRITE_FONT_STYLE_NORMAL;
     DWRITE_FONT_STRETCH fontStretch = DWRITE_FONT_STRETCH_NORMAL;
     ParseFontFace(face, fontWeight, fontStyle, fontStretch);
-    m_pWriteFactory->CreateTextFormat(_mainFontFace.c_str(), NULL, fontWeight,
-                                      fontStyle, fontStretch,
-                                      point * m_dpiScaleFontPoint, L"",
-                                      reinterpret_cast<IDWriteTextFormat **>(
-                                          pFormat.ReleaseAndGetAddressOf()));
+    HRESULT hr = m_pWriteFactory->CreateTextFormat(
+        _mainFontFace.c_str(), NULL, fontWeight, fontStyle, fontStretch,
+        point * m_dpiScaleFontPoint, L"",
+        reinterpret_cast<IDWriteTextFormat**>(pFormat.ReleaseAndGetAddressOf()));
+    if (FAILED(hr) || !pFormat) {
+      return PtTextFormat();
+    }
     pFormat->SetWordWrapping(wrap);
 
     std::vector<std::wstring> fontFaceStrVector;
@@ -441,6 +450,8 @@ void D2D::InitDirectWriteResources() {
 }
 
 void D2D::SetBrushColor(uint32_t color) {
+  if (!m_pBrush)
+    return;
   float a = ((color >> 24) & 0xFF) / 255.0f;
   float b = ((color >> 16) & 0xFF) / 255.0f;
   float g = ((color >> 8) & 0xFF) / 255.0f;
@@ -466,7 +477,9 @@ void D2D::InitDpiInfo() {
 }
 
 void D2D::SetFontFallback(PtTextFormat textFormat,
-                          const std::vector<std::wstring> &fontVector) {
+                          const std::vector<std::wstring>& fontVector) {
+  if (!m_pWriteFactory || !textFormat)
+    return;
   ComPtr<IDWriteFontFallback> pSysFallback;
   HR(m_pWriteFactory->GetSystemFontFallback(
       pSysFallback.ReleaseAndGetAddressOf()));

@@ -194,7 +194,7 @@ void WeaselPanel::_CreateLayout() {
 void WeaselPanel::_UpdateHideCandidates() {
   bool should_show_icon =
       (m_status.ascii_mode || !m_status.composing || !m_ctx.aux.empty());
-  m_candidateCount = (BYTE)m_ctx.cinfo.candies.size();
+  m_candidateCount = MIN((int)m_ctx.cinfo.candies.size(), MAX_CANDIDATES_COUNT);
   // When candidate list vanishes, release sticky top/bottom placement state.
   if (m_lastCandidateCount > 0 && m_candidateCount == 0) {
     m_sticky = false;
@@ -313,12 +313,16 @@ void WeaselPanel::_UpdateOffsetY(CRect &arc, CRect &prc) {
 }
 
 void WeaselPanel::DoPaint() {
-  if (!m_pD2D || !m_layout)
+  if (!m_pD2D || !m_layout || !m_pD2D->dc || !m_pD2D->swapChain)
     return;
-  auto hr = m_pD2D->direct3dDevice->GetDeviceRemovedReason();
+  auto hr = m_pD2D->direct3dDevice
+                ? m_pD2D->direct3dDevice->GetDeviceRemovedReason()
+                : DXGI_ERROR_DEVICE_REMOVED;
   if (FAILED(hr)) {
     DEBUG << HRESULTToString(hr);
     m_pD2D->InitDirect2D();
+    if (!m_pD2D->dc || !m_pD2D->swapChain)
+      return;
   }
   m_pD2D->dc->BeginDraw();
   m_pD2D->dc->Clear(D2D1::ColorF({0.0f, 0.0f, 0.0f, 0.0f}));
@@ -362,14 +366,16 @@ void WeaselPanel::DoPaint() {
               : (m_status.type == SCHEMA
                      ? m_iconEnabled
                      : (m_status.full_shape ? m_iconFull : m_iconHalf));
-      m_pD2D->GetBmpFromIcon(ico, pBitmap);
+      HRESULT hrIcon = m_pD2D->GetBmpFromIcon(ico, pBitmap);
       // Draw the bitmap
-      auto iconRect = m_layout->GetStatusIconRect();
-      if (m_istorepos)
-        iconRect.OffsetRect(0, m_offsety_preedit);
-      D2D1_RECT_F iconRectf = D2D1::RectF(iconRect.left, iconRect.top,
-                                          iconRect.right, iconRect.bottom);
-      m_pD2D->dc->DrawBitmap(pBitmap.Get(), iconRectf);
+      if (SUCCEEDED(hrIcon) && pBitmap) {
+        auto iconRect = m_layout->GetStatusIconRect();
+        if (m_istorepos)
+          iconRect.OffsetRect(0, m_offsety_preedit);
+        D2D1_RECT_F iconRectf = D2D1::RectF(iconRect.left, iconRect.top,
+                                            iconRect.right, iconRect.bottom);
+        m_pD2D->dc->DrawBitmap(pBitmap.Get(), iconRectf);
+      }
     }
   }
 
@@ -478,7 +484,12 @@ bool WeaselPanel::_DrawPreedit(const Text &text, bool isPreedit) {
 }
 
 CRect WeaselPanel::_GetInflatedCandRect(int i) {
-  CRect rc = m_layout->GetCandidateRect(i);
+  CRect rc;
+  if (!m_layout || i < 0 || i >= m_candidateCount || i >= MAX_CANDIDATES_COUNT) {
+    rc.SetRectEmpty();
+    return rc;
+  }
+  rc = m_layout->GetCandidateRect(i);
   if (m_istorepos)
     rc.OffsetRect(0, m_offsetys[i]);
   const auto padx = DPI_SCALE(m_style.hilite_padding_x);
@@ -489,12 +500,18 @@ CRect WeaselPanel::_GetInflatedCandRect(int i) {
 
 bool WeaselPanel::_DrawCandidates() {
   bool drawn = false;
-  const vector<Text> &candidates(m_ctx.cinfo.candies);
-  const vector<Text> &comments(m_ctx.cinfo.comments);
-  const vector<Text> &labels(m_ctx.cinfo.labels);
-  PtTextFormat &txtFormat = m_pD2D->pTextFormat;
-  PtTextFormat &labeltxtFormat = m_pD2D->pLabelFormat;
-  PtTextFormat &commenttxtFormat = m_pD2D->pCommentFormat;
+  if (m_candidateCount <= 0)
+    return false;
+  const int highlighted =
+      (m_ctx.cinfo.highlighted >= 0 && m_ctx.cinfo.highlighted < m_candidateCount)
+          ? m_ctx.cinfo.highlighted
+          : -1;
+  const vector<Text>& candidates(m_ctx.cinfo.candies);
+  const vector<Text>& comments(m_ctx.cinfo.comments);
+  const vector<Text>& labels(m_ctx.cinfo.labels);
+  PtTextFormat& txtFormat = m_pD2D->pTextFormat;
+  PtTextFormat& labeltxtFormat = m_pD2D->pLabelFormat;
+  PtTextFormat& commenttxtFormat = m_pD2D->pCommentFormat;
   auto padx = DPI_SCALE(m_style.hilite_padding_x);
   auto pady = DPI_SCALE(m_style.hilite_padding_y);
   const auto hilitefunc = [&](int i, uint32_t back_color, uint32_t shadow_color,
@@ -507,23 +524,25 @@ bool WeaselPanel::_DrawCandidates() {
   for (auto i = 0; i < m_candidateCount; i++) {
     if (i == m_hoverIndex)
       continue;
-    bool hilited = (i == m_ctx.cinfo.highlighted);
+    bool hilited = (i == highlighted);
     int shadow_color = hilited ? m_style.hilited_candidate_shadow_color
                                : m_style.candidate_shadow_color;
     if (COLORNOTTRANSPARENT(shadow_color))
       hilitefunc(i, 0, shadow_color, 0);
     drawn = true;
   }
-  if (m_hoverIndex >= 0) {
+  if (m_hoverIndex >= 0 && m_hoverIndex < m_candidateCount) {
     hilitefunc(m_hoverIndex,
                HALF_ALPHA_COLOR(m_style.hilited_candidate_back_color),
                HALF_ALPHA_COLOR(m_style.hilited_candidate_shadow_color),
                HALF_ALPHA_COLOR(m_style.hilited_candidate_border_color));
   }
   // draw highlighted background and text
-  const auto drawText = [&](int i, const vector<Text> &texts, int color,
-                            PtTextFormat &textFormat, CRect rc) {
-    const auto &text = texts.at(i).str;
+  const auto drawText = [&](int i, const vector<Text>& texts, int color,
+                             PtTextFormat& textFormat, CRect rc) {
+    if (i < 0 || i >= (int)texts.size())
+      return;
+    const auto& text = texts[i].str;
     if (COLORTRANSPARENT(color) || rc.IsRectNull() || text.empty() ||
         !textFormat.Get())
       return;
@@ -531,8 +550,8 @@ bool WeaselPanel::_DrawCandidates() {
       rc.OffsetRect(0, m_offsetys[i]);
     _TextOut(rc, text, text.length(), color, textFormat);
   };
-  for (auto i = 0; i < candidates.size(); i++) {
-    bool hilited = (i == m_ctx.cinfo.highlighted);
+  for (auto i = 0; i < m_candidateCount; i++) {
+    bool hilited = (i == highlighted);
     int label_text_color =
         hilited ? m_style.hilited_label_text_color : m_style.label_text_color;
     int candidate_text_color = hilited ? m_style.hilited_candidate_text_color
@@ -553,8 +572,8 @@ bool WeaselPanel::_DrawCandidates() {
     drawn = true;
   }
   // draw highlight mark
-  if (COLORNOTTRANSPARENT(m_style.hilited_mark_color)) {
-    CRect rc = _GetInflatedCandRect(m_ctx.cinfo.highlighted);
+  if (COLORNOTTRANSPARENT(m_style.hilited_mark_color) && highlighted >= 0) {
+    CRect rc = _GetInflatedCandRect(highlighted);
     if (!m_style.mark_text.empty()) {
       int vgap =
           m_layout->mark_height ? (rc.Height() - m_layout->mark_height) / 2 : 0;
@@ -603,16 +622,21 @@ bool WeaselPanel::_DrawCandidates() {
   return drawn;
 }
 
-void WeaselPanel::_TextOut(CRect &rc, const wstring &text, size_t cch,
-                           uint32_t color, PtTextFormat &pTextFormat) {
-  if (!pTextFormat.Get())
+void WeaselPanel::_TextOut(CRect& rc,
+                           const wstring& text,
+                           size_t cch,
+                           uint32_t color,
+                           PtTextFormat& pTextFormat) {
+  if (!pTextFormat.Get() || !m_pD2D || !m_pD2D->m_pWriteFactory)
     return;
   m_pD2D->SetBrushColor(color);
 
   ComPtr<IDWriteTextLayout> pTextLayout;
-  m_pD2D->m_pWriteFactory->CreateTextLayout(
+  HRESULT hr = m_pD2D->m_pWriteFactory->CreateTextLayout(
       text.c_str(), cch, pTextFormat.Get(), rc.Width(), rc.Height(),
-      reinterpret_cast<IDWriteTextLayout **>(pTextLayout.GetAddressOf()));
+      reinterpret_cast<IDWriteTextLayout**>(pTextLayout.GetAddressOf()));
+  if (FAILED(hr) || !pTextLayout)
+    return;
   if (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT ||
       m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT_FULLSCREEN) {
     DWRITE_FLOW_DIRECTION flow = m_style.vertical_text_left_to_right
@@ -774,9 +798,11 @@ void WeaselPanel::_CaptureRect(CRect &rect) {
   if (::OpenClipboard(m_hWnd)) {
     HBITMAP bmp = CopyDCToBitmap(ScreenDC, LPRECT(rect));
     EmptyClipboard();
-    SetClipboardData(CF_BITMAP, bmp);
+    HANDLE result = SetClipboardData(CF_BITMAP, bmp);
     CloseClipboard();
-    DeleteObject(bmp);
+    if (!result && bmp) {
+      DeleteObject(bmp);
+    }
   }
   ::ReleaseDC(m_hWnd, ScreenDC);
 }
@@ -845,7 +871,13 @@ LRESULT WeaselPanel::OnMouseActive(UINT uMsg, WPARAM wParam, LPARAM lParam) {
 }
 
 LRESULT WeaselPanel::OnLeftClickUp(UINT uMsg, WPARAM wParam, LPARAM lParam) {
-  if (hide_candidates)
+  if (hide_candidates || m_candidateCount <= 0)
+    return 0;
+  const int highlighted =
+      (m_ctx.cinfo.highlighted >= 0 && m_ctx.cinfo.highlighted < m_candidateCount)
+          ? m_ctx.cinfo.highlighted
+          : -1;
+  if (highlighted < 0)
     return 0;
   CPoint point(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 
@@ -853,9 +885,9 @@ LRESULT WeaselPanel::OnLeftClickUp(UINT uMsg, WPARAM wParam, LPARAM lParam) {
   m_bar_scale = 1.0;
   m_clickTimer = 0;
 
-  auto rect = _GetInflatedCandRect(m_ctx.cinfo.highlighted);
+  auto rect = _GetInflatedCandRect(highlighted);
   if (rect.PtInRect(point)) {
-    size_t i = m_ctx.cinfo.highlighted;
+    size_t i = (size_t)highlighted;
     if (m_uiCallback) {
       m_uiCallback(&i, nullptr, nullptr, nullptr);
       if (!m_status.composing)
@@ -868,8 +900,12 @@ LRESULT WeaselPanel::OnLeftClickUp(UINT uMsg, WPARAM wParam, LPARAM lParam) {
 }
 
 LRESULT WeaselPanel::OnLeftClickDown(UINT uMsg, WPARAM wParam, LPARAM lParam) {
-  if (hide_candidates)
+  if (hide_candidates || m_candidateCount <= 0)
     return 0;
+  const int highlighted =
+      (m_ctx.cinfo.highlighted >= 0 && m_ctx.cinfo.highlighted < m_candidateCount)
+          ? m_ctx.cinfo.highlighted
+          : -1;
   CPoint point(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
   auto padx = DPI_SCALE(m_style.hilite_padding_x);
   auto pady = DPI_SCALE(m_style.hilite_padding_y);
@@ -877,7 +913,7 @@ LRESULT WeaselPanel::OnLeftClickDown(UINT uMsg, WPARAM wParam, LPARAM lParam) {
   if (m_style.click_to_capture) {
     CRect rcw;
     GetClientRect(m_hWnd, &rcw);
-    auto recth = _GetInflatedCandRect(m_ctx.cinfo.highlighted);
+    auto recth = highlighted >= 0 ? _GetInflatedCandRect(highlighted) : CRect();
     if (recth.PtInRect(point))
       _CaptureRect(recth);
     else {

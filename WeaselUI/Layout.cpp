@@ -1,12 +1,22 @@
 #include "Layout.h"
 using namespace weasel;
 
-Layout::Layout(const UIStyle &style, const Context &context,
-               const Status &status, an<D2D> &pD2D)
-    : _style(style), _context(context), _status(status),
-      candidates(_context.cinfo.candies), comments(_context.cinfo.comments),
-      labels(_context.cinfo.labels), id(_context.cinfo.highlighted),
-      candidates_count((int)candidates.size()),
+Layout::Layout(const UIStyle& style,
+               const Context& context,
+               const Status& status,
+               an<D2D>& pD2D)
+    : _style(style),
+      _context(context),
+      _status(status),
+      candidates(_context.cinfo.candies),
+      comments(_context.cinfo.comments),
+      labels(_context.cinfo.labels),
+      id((_context.cinfo.highlighted >= 0 &&
+          _context.cinfo.highlighted <
+              MIN((int)_context.cinfo.candies.size(), MAX_CANDIDATES_COUNT))
+             ? _context.cinfo.highlighted
+             : 0),
+      candidates_count(MIN((int)candidates.size(), MAX_CANDIDATES_COUNT)),
       labelFontValid(!!(_style.label_font_point > 0)),
       textFontValid(!!(_style.font_point > 0)), _pD2D(pD2D),
       cmtFontValid(!!(_style.comment_font_point > 0)) {

@@ -236,7 +236,12 @@ void StandardLayout::_PrepareRoundInfo() {
       UIStyle::LAYOUT_VERTICAL,      UIStyle::LAYOUT_HORIZONTAL,
       UIStyle::LAYOUT_VERTICAL_TEXT, UIStyle::LAYOUT_VERTICAL,
       UIStyle::LAYOUT_HORIZONTAL,    UIStyle::LAYOUT_VERTICAL_TEXT};
-  int layout_type = tmp[_style.layout_type];
+  int style_layout = _style.layout_type;
+  if (style_layout < UIStyle::LAYOUT_VERTICAL ||
+      style_layout >= UIStyle::LAYOUT_TYPE_LAST) {
+    style_layout = UIStyle::LAYOUT_VERTICAL;
+  }
+  int layout_type = tmp[style_layout];
   bool textHemispherical = false, cand0Hemispherical = false;
   if (!_style.inline_preedit) {
     CRect textRect(_preeditRect);
