@@ -720,9 +720,6 @@ bool RimeWithWeaselHandler::_ShowMessage(Context& ctx, Status& status) {
                         falways != m_show_notifications.end())) ||
       m_message_type == "deploy") {
     m_ui->Update(ctx, status);
-    // For icon-only notifications, status/context may be unchanged and Update()
-    // can early-return; force a refresh before showing timeout tip.
-    m_ui->Refresh();
     if (m_show_notifications_time)
       m_ui->ShowWithTimeout(m_show_notifications_time);
     return true;
