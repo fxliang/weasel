@@ -6,9 +6,11 @@ namespace weasel {
 class UIImpl {
 public:
   WeaselPanel panel;
-  UIImpl(UI &ui) : panel(ui), shown(false) {}
+  UIImpl(UI& ui) : panel(ui) {}
   ~UIImpl() {}
-  bool IsShown() { return shown; }
+  bool IsShown() const {
+    return panel.IsWindow() && ::IsWindowVisible(panel.hwnd());
+  }
   void Refresh() {
     if (!panel.IsWindow())
       return;
@@ -18,18 +20,14 @@ public:
     if (!panel.IsWindow())
       return;
     panel.ShowWindow(SW_SHOWNA);
-    shown = true;
   }
   void Hide() {
     if (!panel.IsWindow())
       return;
     panel.ShowWindow(SW_HIDE);
-    shown = false;
   }
   void ShowWithTimeout(size_t millisec) { panel.ShowWithTimeout(millisec); }
-  bool IsShown() const { return shown; }
   bool IsCountingDown() const { return panel.IsCountingDown(); }
-  bool shown;
 };
 // ----------------------------------------------------------------------------
 BOOL UI::IsCountingDown() const {

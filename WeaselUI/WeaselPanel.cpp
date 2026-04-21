@@ -485,7 +485,8 @@ bool WeaselPanel::_DrawPreedit(const Text &text, bool isPreedit) {
 
 CRect WeaselPanel::_GetInflatedCandRect(int i) {
   CRect rc;
-  if (!m_layout || i < 0 || i >= m_candidateCount || i >= MAX_CANDIDATES_COUNT) {
+  if (!m_layout || i < 0 || i >= m_candidateCount ||
+      i >= MAX_CANDIDATES_COUNT) {
     rc.SetRectEmpty();
     return rc;
   }
@@ -502,10 +503,10 @@ bool WeaselPanel::_DrawCandidates() {
   bool drawn = false;
   if (m_candidateCount <= 0)
     return false;
-  const int highlighted =
-      (m_ctx.cinfo.highlighted >= 0 && m_ctx.cinfo.highlighted < m_candidateCount)
-          ? m_ctx.cinfo.highlighted
-          : -1;
+  const int highlighted = (m_ctx.cinfo.highlighted >= 0 &&
+                           m_ctx.cinfo.highlighted < m_candidateCount)
+                              ? m_ctx.cinfo.highlighted
+                              : -1;
   const vector<Text>& candidates(m_ctx.cinfo.candies);
   const vector<Text>& comments(m_ctx.cinfo.comments);
   const vector<Text>& labels(m_ctx.cinfo.labels);
@@ -539,7 +540,7 @@ bool WeaselPanel::_DrawCandidates() {
   }
   // draw highlighted background and text
   const auto drawText = [&](int i, const vector<Text>& texts, int color,
-                             PtTextFormat& textFormat, CRect rc) {
+                            PtTextFormat& textFormat, CRect rc) {
     if (i < 0 || i >= (int)texts.size())
       return;
     const auto& text = texts[i].str;
@@ -873,10 +874,10 @@ LRESULT WeaselPanel::OnMouseActive(UINT uMsg, WPARAM wParam, LPARAM lParam) {
 LRESULT WeaselPanel::OnLeftClickUp(UINT uMsg, WPARAM wParam, LPARAM lParam) {
   if (hide_candidates || m_candidateCount <= 0)
     return 0;
-  const int highlighted =
-      (m_ctx.cinfo.highlighted >= 0 && m_ctx.cinfo.highlighted < m_candidateCount)
-          ? m_ctx.cinfo.highlighted
-          : -1;
+  const int highlighted = (m_ctx.cinfo.highlighted >= 0 &&
+                           m_ctx.cinfo.highlighted < m_candidateCount)
+                              ? m_ctx.cinfo.highlighted
+                              : -1;
   if (highlighted < 0)
     return 0;
   CPoint point(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
@@ -902,10 +903,10 @@ LRESULT WeaselPanel::OnLeftClickUp(UINT uMsg, WPARAM wParam, LPARAM lParam) {
 LRESULT WeaselPanel::OnLeftClickDown(UINT uMsg, WPARAM wParam, LPARAM lParam) {
   if (hide_candidates || m_candidateCount <= 0)
     return 0;
-  const int highlighted =
-      (m_ctx.cinfo.highlighted >= 0 && m_ctx.cinfo.highlighted < m_candidateCount)
-          ? m_ctx.cinfo.highlighted
-          : -1;
+  const int highlighted = (m_ctx.cinfo.highlighted >= 0 &&
+                           m_ctx.cinfo.highlighted < m_candidateCount)
+                              ? m_ctx.cinfo.highlighted
+                              : -1;
   CPoint point(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
   auto padx = DPI_SCALE(m_style.hilite_padding_x);
   auto pady = DPI_SCALE(m_style.hilite_padding_y);

@@ -119,8 +119,12 @@ D2D::D2D(UIStyle &style)
 }
 
 void D2D::AttachWindow(HWND hwnd) {
-  if (m_hWnd == hwnd && swapChain)
+  if (m_hWnd == hwnd && swapChain) {
+    // Keep DPI scale in sync when window stays the same but monitor DPI
+    // changes.
+    InitDpiInfo();
     return;
+  }
   m_hWnd = hwnd;
   InitDpiInfo();
   InitDirect2D();
@@ -352,7 +356,8 @@ PtTextFormat D2D::GetOrCreateTextFormat(const std::wstring &face, int point,
     HRESULT hr = m_pWriteFactory->CreateTextFormat(
         _mainFontFace.c_str(), NULL, fontWeight, fontStyle, fontStretch,
         point * m_dpiScaleFontPoint, L"",
-        reinterpret_cast<IDWriteTextFormat**>(pFormat.ReleaseAndGetAddressOf()));
+        reinterpret_cast<IDWriteTextFormat**>(
+            pFormat.ReleaseAndGetAddressOf()));
     if (FAILED(hr) || !pFormat) {
       return PtTextFormat();
     }
