@@ -710,6 +710,8 @@ bool RimeWithWeaselHandler::_ShowMessage(Context& ctx, Status& status) {
 
     if (m_message_value == "full_shape" || m_message_value == "!full_shape")
       status.type = FULL_SHAPE;
+  } else if (m_message_type == "property") {
+    return false;
   }
   auto counter = m_ui->IsCountingDown();
   if (!show_icon && counter)
