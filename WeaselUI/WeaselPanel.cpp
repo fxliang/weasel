@@ -159,7 +159,7 @@ void WeaselPanel::MoveTo(RECT rc) {
   m_redraw_by_monitor_change = false;
   bool should_reset_sticky =
       (m_ctx.empty() || (abs(rc.left - m_inputPos.left) > 50) ||
-       (abs(rc.bottom - m_inputPos.bottom) > 50));
+       (abs(rc.top - m_inputPos.top) > 50));
   if (should_reset_sticky && m_sticky) {
     m_sticky = false;
     m_inputPos = rc;
