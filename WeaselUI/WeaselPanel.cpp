@@ -20,7 +20,37 @@ using namespace weasel;
 #define HALF_ALPHA_COLOR(color)                                                \
   ((((color & 0xff000000) >> 25) & 0xff) << 24) | (color & 0x00ffffff)
 
-void LoadIconIfNeed(wstring &oicofile, const wstring &icofile, HICON &hIcon,
+namespace {
+class ThreadDpiAwarenessScope {
+ public:
+  ThreadDpiAwarenessScope() {
+    using SetThreadDpiAwarenessContextFunc =
+        DPI_AWARENESS_CONTEXT(WINAPI*)(DPI_AWARENESS_CONTEXT);
+    const auto pSetThreadDpiAwarenessContext =
+        reinterpret_cast<SetThreadDpiAwarenessContextFunc>(GetProcAddress(
+            GetModuleHandleW(L"user32.dll"), "SetThreadDpiAwarenessContext"));
+    if (pSetThreadDpiAwarenessContext) {
+      old_context_ = pSetThreadDpiAwarenessContext(
+          DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
+      setter_ = pSetThreadDpiAwarenessContext;
+    }
+  }
+
+  ~ThreadDpiAwarenessScope() {
+    if (setter_ && old_context_) {
+      setter_(old_context_);
+    }
+  }
+
+ private:
+  DPI_AWARENESS_CONTEXT old_context_ = nullptr;
+  DPI_AWARENESS_CONTEXT(WINAPI* setter_)(DPI_AWARENESS_CONTEXT) = nullptr;
+};
+}  // namespace
+
+void LoadIconIfNeed(wstring& oicofile,
+                    const wstring& icofile,
+                    HICON& hIcon,
                     UINT id) {
   if (oicofile == icofile)
     return;
@@ -153,8 +183,12 @@ void WeaselPanel::MoveTo(RECT rc) {
     m_inputPos.bottom += 6;
     bool m_istorepos_buf = m_istorepos;
     _Reposition(true);
+    if (m_redraw_by_monitor_change) {
+      Refresh();
+      return;
+    }
     if (m_istorepos != m_istorepos_buf || !m_ctx.aux.empty() ||
-        m_layout->ShouldDisplayStatusIcon() || m_redraw_by_monitor_change) {
+        m_layout->ShouldDisplayStatusIcon()) {
       RedrawWindow();
     }
   }
@@ -266,6 +300,7 @@ BOOL WeaselPanel::Create(HWND parent) {
   wc.hCursor = LoadCursor(NULL, IDC_ARROW);
   wc.lpszClassName = L"WeaselPanel";
   RegisterClass(&wc);
+  ThreadDpiAwarenessScope dpi_scope;
   m_hWnd = CreateWindowEx(
       WS_EX_TOOLWINDOW | WS_EX_TOPMOST | WS_EX_NOACTIVATE |
           WS_EX_NOREDIRECTIONBITMAP,
@@ -791,13 +826,12 @@ static HBITMAP CopyDCToBitmap(HDC hDC, LPRECT lpRect) {
 
 void WeaselPanel::_CaptureRect(CRect &rect) {
   HDC ScreenDC = ::GetDC(NULL);
-  CRect rc;
-  GetWindowRect(m_hWnd, &rc);
-  POINT WindowPosAtScreen = {rc.left, rc.top};
-  rect.OffsetRect(WindowPosAtScreen);
+  RECT rc_screen = rect;
+  ::MapWindowPoints(m_hWnd, HWND_DESKTOP, reinterpret_cast<LPPOINT>(&rc_screen),
+                    2);
   // capture input window
   if (::OpenClipboard(m_hWnd)) {
-    HBITMAP bmp = CopyDCToBitmap(ScreenDC, LPRECT(rect));
+    HBITMAP bmp = CopyDCToBitmap(ScreenDC, &rc_screen);
     EmptyClipboard();
     HANDLE result = SetClipboardData(CF_BITMAP, bmp);
     CloseClipboard();
@@ -1030,6 +1064,12 @@ LRESULT WeaselPanel::MsgHandler(HWND hwnd, UINT uMsg, WPARAM wParam,
   case WM_LBUTTONDOWN:
     return OnLeftClickDown(uMsg, wParam, lParam);
   case WM_DPICHANGED:
+    if (lParam) {
+      const auto* rc = reinterpret_cast<const RECT*>(lParam);
+      ::SetWindowPos(hwnd, nullptr, rc->left, rc->top, rc->right - rc->left,
+                     rc->bottom - rc->top,
+                     SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOREDRAW);
+    }
     if (m_pD2D) {
       m_pD2D->InitDpiInfo();
       if (!m_style.font_face.empty())

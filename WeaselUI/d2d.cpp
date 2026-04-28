@@ -9,6 +9,16 @@
 #pragma comment(lib, "dxguid.lib")
 
 namespace weasel {
+namespace {
+UINT GetDpiForWindowCompat(HWND hwnd) {
+  if (!hwnd)
+    return 0;
+  using GetDpiForWindowFunc = UINT(WINAPI*)(HWND);
+  static auto const pGetDpiForWindow = reinterpret_cast<GetDpiForWindowFunc>(
+      GetProcAddress(GetModuleHandleW(L"user32.dll"), "GetDpiForWindow"));
+  return pGetDpiForWindow ? pGetDpiForWindow(hwnd) : 0;
+}
+}  // namespace
 
 // DeviceResources implementation moved from cpp to header; provide definitions
 // here
@@ -468,14 +478,22 @@ void D2D::SetBrushColor(uint32_t color) {
 void D2D::InitDpiInfo() {
   const auto oldDpiScaleFontPoint = m_dpiScaleFontPoint;
   const auto oldDpiScaleLayout = m_dpiScaleLayout;
-  if (m_hWnd && IsWindows8Point1OrGreater()) {
-    HMONITOR const mon = MonitorFromWindow(m_hWnd, MONITOR_DEFAULTTONEAREST);
-    UINT x = 0, y = 0;
-    HR(GetDpiForMonitor(mon, MDT_EFFECTIVE_DPI, &x, &y));
-    m_dpiX = static_cast<float>(x);
-    m_dpiY = static_cast<float>(y);
-    if (m_dpiY == 0)
-      m_dpiX = m_dpiY = 96.0f;
+  if (m_hWnd) {
+    const UINT dpi = GetDpiForWindowCompat(m_hWnd);
+    if (dpi > 0) {
+      m_dpiX = static_cast<float>(dpi);
+      m_dpiY = static_cast<float>(dpi);
+    } else if (IsWindows8Point1OrGreater()) {
+      HMONITOR const mon = MonitorFromWindow(m_hWnd, MONITOR_DEFAULTTONEAREST);
+      UINT x = 0, y = 0;
+      HR(GetDpiForMonitor(mon, MDT_EFFECTIVE_DPI, &x, &y));
+      m_dpiX = static_cast<float>(x);
+      m_dpiY = static_cast<float>(y);
+      if (m_dpiY == 0)
+        m_dpiX = m_dpiY = 96.0f;
+    } else {
+      m_dpiY = m_dpiX = 96.0f;
+    }
   } else {
     m_dpiY = m_dpiX = 96.0f;
   }
