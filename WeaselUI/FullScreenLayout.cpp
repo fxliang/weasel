@@ -6,7 +6,7 @@ void weasel::FullScreenLayout::DoLayout() {
   if (_context.empty()) {
     int width = 0, height = 0;
     _UpdateStatusIconLayout(&width, &height);
-    _contentSize.SetSize(width, height);
+    _contentSize.SetSize(_statusIconRect.right, _statusIconRect.bottom);
     return;
   }
 
