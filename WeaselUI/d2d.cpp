@@ -721,13 +721,13 @@ ConvertWicBitmapToSupportedFormat(IWICBitmap *pWicBitmap,
   // Convert the bitmap to a format supported by Direct2D (e.g.,
   // DXGI_FORMAT_B8G8R8A8_UNORM)
   hr = pWicFormatConverter->Initialize(
-      pWicBitmap,                    // Source bitmap
-      GUID_WICPixelFormat32bppPBGRA, // Supported pixel format for Direct2D
-                                     // (BGRA, 32bpp)
-      WICBitmapDitherTypeNone,       // No dithering
-      nullptr,                       // No palette
-      0.0f,                          // No alpha threshold
-      WICBitmapPaletteTypeCustom);   // Custom palette (none in this case)
+      pWicBitmap,                      // Source bitmap
+      GUID_WICPixelFormat32bppPBGRA,   // Supported pixel format for Direct2D
+                                       // (BGRA, 32bpp)
+      WICBitmapDitherTypeNone,         // No dithering
+      nullptr,                         // No palette
+      0.0f,                            // No alpha threshold
+      WICBitmapPaletteTypeMedianCut);  // Robust default palette type
 
   if (FAILED(hr))
     return hr;
@@ -737,30 +737,60 @@ ConvertWicBitmapToSupportedFormat(IWICBitmap *pWicBitmap,
 
 HRESULT D2D::GetBmpFromIcon(HICON hIcon, ComPtr<ID2D1Bitmap1> &pBitmap) {
   if (!hIcon)
-    return S_FALSE; // Failed to load icon
+    return S_FALSE;  // Failed to load icon
+  pBitmap.Reset();
   // Get icon info and HBITMAP
-  ICONINFO iconInfo;
+  ICONINFO iconInfo{};
   if (!GetIconInfo(hIcon, &iconInfo))
-    return S_FALSE; // Failed to get icon info
-  HBITMAP hBitmap = iconInfo.hbmColor;
-  if (!hBitmap)
-    return S_FALSE; // Failed to get bitmap from icon
+    return S_FALSE;  // Failed to get icon info
+
+  auto cleanupIconInfo = [&]() {
+    if (iconInfo.hbmColor) {
+      DeleteObject(iconInfo.hbmColor);
+      iconInfo.hbmColor = nullptr;
+    }
+    if (iconInfo.hbmMask) {
+      DeleteObject(iconInfo.hbmMask);
+      iconInfo.hbmMask = nullptr;
+    }
+  };
+
+  HBITMAP hBitmap = iconInfo.hbmColor ? iconInfo.hbmColor : iconInfo.hbmMask;
+  if (!hBitmap) {
+    cleanupIconInfo();
+    return E_INVALIDARG;  // Failed to get bitmap from icon
+  }
+
   // Create a WIC factory
   ComPtr<IWICImagingFactory> pWicFactory;
-  HR(CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER,
-                      IID_PPV_ARGS(pWicFactory.ReleaseAndGetAddressOf())));
+  HRESULT hr =
+      CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER,
+                       IID_PPV_ARGS(pWicFactory.ReleaseAndGetAddressOf()));
+  if (FAILED(hr)) {
+    cleanupIconInfo();
+    return hr;
+  }
   // Create WIC Bitmap from HBITMAP
   ComPtr<IWICBitmap> pWicBitmap;
-  HR(pWicFactory->CreateBitmapFromHBITMAP(hBitmap, nullptr, WICBitmapUseAlpha,
-                                          pWicBitmap.ReleaseAndGetAddressOf()));
+  hr = pWicFactory->CreateBitmapFromHBITMAP(
+      hBitmap, nullptr, WICBitmapUseAlpha, pWicBitmap.ReleaseAndGetAddressOf());
+  if (FAILED(hr)) {
+    cleanupIconInfo();
+    return hr;
+  }
   // Convert the bitmap to a Direct2D compatible format
   ComPtr<IWICFormatConverter> pConvertedBitmap;
-  HR(ConvertWicBitmapToSupportedFormat(
+  hr = ConvertWicBitmapToSupportedFormat(
       pWicBitmap.Get(), pWicFactory.Get(),
-      pConvertedBitmap.ReleaseAndGetAddressOf()));
-  HR(dc->CreateBitmapFromWicBitmap(pConvertedBitmap.Get(), nullptr,
-                                   pBitmap.ReleaseAndGetAddressOf()));
-  return S_OK;
+      pConvertedBitmap.ReleaseAndGetAddressOf());
+  if (FAILED(hr)) {
+    cleanupIconInfo();
+    return hr;
+  }
+  hr = dc->CreateBitmapFromWicBitmap(pConvertedBitmap.Get(), nullptr,
+                                     pBitmap.ReleaseAndGetAddressOf());
+  cleanupIconInfo();
+  return hr;
 }
 
 HRESULT D2D::GetIconFromFile(const wstring &iconPath,

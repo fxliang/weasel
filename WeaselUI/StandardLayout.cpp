@@ -19,19 +19,6 @@ CSize StandardLayout::_GetPreeditSize(const Text &text,
                                       ComPtr<IDWriteTextFormat1> &pTextFormat) {
   const wstring &preedit = text.str;
   const vector<TextAttribute> &attrs = text.attributes;
-=======
-namespace {
-wstring FormatCandidateLabel(const wstring& label, const wchar_t* format) {
-  wchar_t buffer[128];
-  swprintf_s<128>(buffer, format, label.c_str());
-  return wstring(buffer);
-}
-}  // namespace
-
-CSize StandardLayout::_GetPreeditSize(const Text& text,
-                                      ComPtr<IDWriteTextFormat1>& pTextFormat) {
-  const wstring& preedit = text.str;
-  const vector<TextAttribute>& attrs = text.attributes;
   CSize size(0, 0);
   if (!preedit.empty()) {
     weasel::TextRange range;
