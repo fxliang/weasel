@@ -172,9 +172,7 @@ void StandardLayout::_CalcPageIndicator(bool vertical_text_layout, int &pgw,
     _pD2D->GetTextSize(_pre, _pre.length(), _pD2D->pPreeditFormat, &pgszl);
     _pD2D->GetTextSize(_next, _next.length(), _pD2D->pPreeditFormat, &pgszr);
   }
-  bool page_en = (_style.prevpage_color & 0xff000000) &&
-                 (_style.nextpage_color & 0xff000000);
-  if (!page_en) {
+  if (!_pageEnabled) {
     pgw = 0;
     pgh = 0;
     return;

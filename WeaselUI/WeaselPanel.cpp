@@ -74,11 +74,20 @@ void LoadIconIfNeed(wstring& oicofile,
                              STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_SHARED);
 }
 
-WeaselPanel::WeaselPanel(UI &ui)
-    : m_hWnd(nullptr), m_ctx(ui.ctx()), m_octx(ui.octx()), m_layout(nullptr),
-      m_pD2D(nullptr), m_status(ui.status()), m_in_server(ui.InServer()),
-      m_style(ui.style()), m_uiCallback(ui.uiCallback()), m_ostyle(ui.ostyle()),
-      m_candidateCount(0), m_lastCandidateCount(0), hide_candidates(false) {
+WeaselPanel::WeaselPanel(UI& ui)
+    : m_hWnd(nullptr),
+      m_ctx(ui.ctx()),
+      m_octx(ui.octx()),
+      m_layout(nullptr),
+      m_pD2D(nullptr),
+      m_status(ui.status()),
+      m_in_server(ui.InServer()),
+      m_style(ui.style()),
+      m_uiCallback(ui.uiCallback()),
+      m_ostyle(ui.ostyle()),
+      m_candidateCount(0),
+      m_lastCandidateCount(0),
+      hide_candidates(false) {
   // Prepare shared graphics resources early to reduce first paint latency.
   m_pD2D = std::make_shared<D2D>(m_style);
   auto hInstance = GetModuleHandle(nullptr);
@@ -315,7 +324,10 @@ BOOL WeaselPanel::Create(HWND parent) {
   wc.hInstance = hInstance;
   wc.hCursor = LoadCursor(NULL, IDC_ARROW);
   wc.lpszClassName = L"WeaselPanel";
-  RegisterClass(&wc);
+  ATOM atom = RegisterClass(&wc);
+  if (!atom && GetLastError() != ERROR_CLASS_ALREADY_EXISTS) {
+    return FALSE;
+  }
   ThreadDpiAwarenessScope dpi_scope;
   m_hWnd = CreateWindowEx(
       WS_EX_TOOLWINDOW | WS_EX_TOPMOST | WS_EX_NOACTIVATE |
@@ -350,9 +362,9 @@ void WeaselPanel::_UpdateOffsetY(CRect &arc, CRect &prc) {
                         : 0;
     int base_gap =
         !m_ctx.aux.str.empty()
-            ? arc.Height() + m_style.spacing
+            ? arc.Height() + DPI_SCALE(m_style.spacing)
             : (!m_layout->IsInlinePreedit() && !m_ctx.preedit.str.empty()
-                   ? prc.Height() + m_style.spacing
+                   ? prc.Height() + DPI_SCALE(m_style.spacing)
                    : 0);
     for (int i = 0; i < m_candidateCount && i < MAX_CANDIDATES_COUNT; ++i) {
       m_offsetys[i] = i == 0 ? btmys.back() - base_gap - rects[i].bottom
@@ -430,7 +442,13 @@ void WeaselPanel::DoPaint() {
     }
   }
 
-  HR(m_pD2D->dc->EndDraw());
+  auto hrEnd = m_pD2D->dc->EndDraw();
+  if (FAILED(hrEnd)) {
+    DEBUG << "EndDraw failed: " << HRESULTToString(hrEnd);
+    DeviceResources::Get().Reset();
+    m_pD2D->InitDirect2D();
+    return;
+  }
   // Make the swap chain available to the composition engine
   HRESULT hrPresent = m_pD2D->swapChain->Present(1, 0); // sync
   if (hrPresent == DXGI_ERROR_DEVICE_REMOVED ||
@@ -438,8 +456,10 @@ void WeaselPanel::DoPaint() {
     DEBUG << "Device lost during Present: " << HRESULTToString(hrPresent);
     DeviceResources::Get().Reset();
     m_pD2D->InitDirect2D();
-  } else {
-    HR(hrPresent);
+  } else if (FAILED(hrPresent)) {
+    DEBUG << "Present failed: " << HRESULTToString(hrPresent);
+    DeviceResources::Get().Reset();
+    m_pD2D->InitDirect2D();
   }
 }
 
@@ -738,7 +758,7 @@ void WeaselPanel::_HighlightRect(const RECT &rect, float radius,
   if (roundInfo.Hemispherical)
     radius = DPI_SCALE(m_style.round_corner_ex) - DPI_SCALE(border) / 2.0f;
   // draw shadow
-  if (COLORNOTTRANSPARENT(shadow_color) && m_style.shadow_radius)
+  if (COLORNOTTRANSPARENT(shadow_color) && DPI_SCALE(m_style.shadow_radius))
     m_pD2D->FillGeometry(rect, shadow_color, radius, roundInfo, true);
   // draw back color
   if (COLORNOTTRANSPARENT(back_color))

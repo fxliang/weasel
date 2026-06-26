@@ -87,11 +87,6 @@ HRESULT DeviceResources::EnsureInitialized() {
                         IID_PPV_ARGS(wicFactory.ReleaseAndGetAddressOf()));
   if (FAILED(hr))
     return hr;
-  hr = CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER,
-                        IID_PPV_ARGS(wicFactory.ReleaseAndGetAddressOf()));
-  if (FAILED(hr))
-    return hr;
-
   initialized = true;
   return S_OK;
 }
@@ -371,14 +366,14 @@ PtTextFormat D2D::GetOrCreateTextFormat(const std::wstring &face, int point,
     DWRITE_FONT_STYLE fontStyle = DWRITE_FONT_STYLE_NORMAL;
     DWRITE_FONT_STRETCH fontStretch = DWRITE_FONT_STRETCH_NORMAL;
     ParseFontFace(face, fontWeight, fontStyle, fontStretch);
+    ComPtr<IDWriteTextFormat> pFormatBase;
     HRESULT hr = m_pWriteFactory->CreateTextFormat(
         _mainFontFace.c_str(), NULL, fontWeight, fontStyle, fontStretch,
-        point * m_dpiScaleFontPoint, L"",
-        reinterpret_cast<IDWriteTextFormat**>(
-            pFormat.ReleaseAndGetAddressOf()));
-    if (FAILED(hr) || !pFormat) {
+        point * m_dpiScaleFontPoint, L"", pFormatBase.ReleaseAndGetAddressOf());
+    if (FAILED(hr) || !pFormatBase) {
       return PtTextFormat();
     }
+    pFormatBase.As(&pFormat);
     pFormat->SetWordWrapping(wrap);
 
     std::vector<std::wstring> fontFaceStrVector;
@@ -971,30 +966,47 @@ HRESULT D2D::FillGeometry(const CRect &rect, uint32_t color, uint32_t radius,
   }
   SetBrushColor(color);
   ComPtr<ID2D1PathGeometry> pGeometry;
+  HRESULT hr;
   if (to_blur) {
     CRect rc = rect;
     rc.OffsetRect(m_dpiScaleLayout * m_style.shadow_offset_x,
                   m_dpiScaleLayout * m_style.shadow_offset_y);
     CreateRoundedRectanglePath(rc, radius, roundInfo, pGeometry);
     ComPtr<ID2D1BitmapRenderTarget> bitmapRenderTarget;
-    HR(dc->CreateCompatibleRenderTarget(&bitmapRenderTarget));
+    hr = dc->CreateCompatibleRenderTarget(&bitmapRenderTarget);
+    if (FAILED(hr)) {
+      DEBUG << "CreateCompatibleRenderTarget failed: " << HRESULTToString(hr);
+      return hr;
+    }
     bitmapRenderTarget->BeginDraw();
     bitmapRenderTarget->Clear(D2D1::ColorF(0, 0.0f));
     bitmapRenderTarget->FillGeometry(pGeometry.Get(), m_pBrush.Get());
     bitmapRenderTarget->EndDraw();
     // Get the bitmap from the bitmap render target
     ComPtr<ID2D1Bitmap> bitmap;
-    HR(bitmapRenderTarget->GetBitmap(&bitmap));
+    hr = bitmapRenderTarget->GetBitmap(&bitmap);
+    if (FAILED(hr)) {
+      DEBUG << "GetBitmap failed: " << HRESULTToString(hr);
+      return hr;
+    }
     //// Create a Gaussian blur effect
     ComPtr<ID2D1Effect> blurEffect;
-    HR(dc->CreateEffect(CLSID_D2D1GaussianBlur, &blurEffect));
+    hr = dc->CreateEffect(CLSID_D2D1GaussianBlur, &blurEffect);
+    if (FAILED(hr)) {
+      DEBUG << "CreateEffect(GaussianBlur) failed: " << HRESULTToString(hr);
+      return hr;
+    }
     blurEffect->SetInput(0, bitmap.Get());
     blurEffect->SetValue(D2D1_GAUSSIANBLUR_PROP_STANDARD_DEVIATION,
-                         (float)m_style.shadow_radius);
+                         (float)(m_dpiScaleLayout * m_style.shadow_radius));
     // Draw the blurred rounded rectangle onto the main render target
     dc->DrawImage(blurEffect.Get());
   } else {
-    HR(CreateRoundedRectanglePath(rect, radius, roundInfo, pGeometry));
+    hr = CreateRoundedRectanglePath(rect, radius, roundInfo, pGeometry);
+    if (FAILED(hr)) {
+      DEBUG << "CreateRoundedRectanglePath failed: " << HRESULTToString(hr);
+      return hr;
+    }
     dc->FillGeometry(pGeometry.Get(), m_pBrush.Get());
   }
   return S_OK;

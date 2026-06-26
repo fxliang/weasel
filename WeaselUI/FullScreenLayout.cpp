@@ -135,6 +135,12 @@ bool FullScreenLayout::AdjustFontPoint(const CRect &workArea, int &step) {
       fontPoint += step;
       fontPointLabel += step;
       fontPointComment += step;
+      if (fontPoint < 1)
+        fontPoint = 1;
+      if (fontPointLabel < 1)
+        fontPointLabel = 1;
+      if (fontPointComment < 1)
+        fontPointComment = 1;
       _pD2D->InitFontFormats(_style.label_font_face, fontPointLabel,
                              _style.font_face, fontPoint,
                              _style.comment_font_face, fontPointComment);
@@ -147,6 +153,12 @@ bool FullScreenLayout::AdjustFontPoint(const CRect &workArea, int &step) {
       fontPoint += step;
       fontPointLabel += step;
       fontPointComment += step;
+      if (fontPoint < 1)
+        fontPoint = 1;
+      if (fontPointLabel < 1)
+        fontPointLabel = 1;
+      if (fontPointComment < 1)
+        fontPointComment = 1;
       _pD2D->InitFontFormats(_style.label_font_face, fontPointLabel,
                              _style.font_face, fontPoint,
                              _style.comment_font_face, fontPointComment);

@@ -1,4 +1,5 @@
 #include "VHorizontalLayout.h"
+#include <vector>
 
 using namespace weasel;
 
@@ -29,7 +30,7 @@ void VHorizontalLayout::DoLayout() {
                       _auxiliaryRect);
   }
   /* Candidates */
-  int wids[MAX_CANDIDATES_COUNT] = {0};
+  std::vector<int> wids(candidates_count);
   int w = width;
   int max_comment_heihgt = 0, max_content_height = 0;
   if (candidates_count) {
@@ -269,9 +270,9 @@ void VHorizontalLayout::DoLayoutWithWrap() {
   // candidates
   int col_cnt = 0;
   int max_height_of_cols = 0;
-  int width_of_cols[MAX_CANDIDATES_COUNT] = {0};
-  int col_of_candidate[MAX_CANDIDATES_COUNT] = {0};
-  int minleft_of_cols[MAX_CANDIDATES_COUNT] = {0};
+  std::vector<int> width_of_cols(candidates_count);
+  std::vector<int> col_of_candidate(candidates_count);
+  std::vector<int> minleft_of_cols(candidates_count);
   if (candidates_count) {
     h = offsetY + real_margin_y;
     for (auto i = 0; i < candidates_count && i < MAX_CANDIDATES_COUNT; i++) {
@@ -387,8 +388,8 @@ void VHorizontalLayout::DoLayoutWithWrap() {
   } else
     width -= _style.spacing + offsetX;
   // reposition if not left to right
-  int first_cand_of_cols[MAX_CANDIDATES_COUNT] = {0};
-  int offset_of_cols[MAX_CANDIDATES_COUNT] = {0};
+  std::vector<int> first_cand_of_cols(candidates_count);
+  std::vector<int> offset_of_cols(candidates_count);
   if (!_style.vertical_text_left_to_right) {
     // re position right to left
     int base_left;

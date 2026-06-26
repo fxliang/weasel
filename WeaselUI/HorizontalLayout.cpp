@@ -1,4 +1,5 @@
 #include "HorizontalLayout.h"
+#include <vector>
 
 using namespace weasel;
 
@@ -27,9 +28,9 @@ void HorizontalLayout::DoLayout() {
 
   int row_cnt = 0;
   int max_width_of_rows = 0;
-  int height_of_rows[MAX_CANDIDATES_COUNT] = {0};   // height of every row
-  int row_of_candidate[MAX_CANDIDATES_COUNT] = {0}; // row info of every cand
-  int mintop_of_rows[MAX_CANDIDATES_COUNT] = {0};
+  std::vector<int> height_of_rows(candidates_count);
+  std::vector<int> row_of_candidate(candidates_count);
+  std::vector<int> mintop_of_rows(candidates_count);
   // only when there are candidates
   if (candidates_count) {
     w = offsetX + real_margin_x;
