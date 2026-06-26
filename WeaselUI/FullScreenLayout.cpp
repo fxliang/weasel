@@ -77,7 +77,10 @@ void weasel::FullScreenLayout::DoLayout() {
     _candidateRects[i].OffsetRect(offsetx, offsety);
   }
   _statusIconRect = m_layout->GetStatusIconRect();
-  _statusIconRect.OffsetRect(offsetx, offsety);
+  // VERTICAL_TEXT_FULLSCREEN with non-empty aux hides the icon;
+  // only offset if it wasn't hidden.
+  if (!_statusIconRect.IsRectNull())
+    _statusIconRect.OffsetRect(offsetx, offsety);
 
   // Get precomputed preedit sub-rectangles from m_layout and apply offset
   _preeditBeforeRect = m_layout->GetPreeditBeforeRect();

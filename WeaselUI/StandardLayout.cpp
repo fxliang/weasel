@@ -487,19 +487,17 @@ void StandardLayout::_PrecomputePreeditRects(const CRect &baseRect,
 }
 
 int StandardLayout::_CalcMarkMetrics(bool vertical_text_layout) {
-  if (!(_style.hilited_mark_color & 0xff000000)) {
+  if (!(_style.hilited_mark_color & 0xff000000) || !candidates_count) {
     mark_width = 0;
     mark_height = 0;
     mark_gap = 0;
     return 0;
   }
   CSize sg;
-  if (candidates_count) {
-    if (_style.mark_text.empty())
-      _pD2D->GetTextSize(L"|", 1, _pD2D->pTextFormat, &sg);
-    else
-      sg = _markTextSize;
-  }
+  if (_style.mark_text.empty())
+    _pD2D->GetTextSize(L"|", 1, _pD2D->pTextFormat, &sg);
+  else
+    sg = _markTextSize;
   mark_width = sg.cx;
   mark_height = sg.cy;
   if (_style.mark_text.empty()) {

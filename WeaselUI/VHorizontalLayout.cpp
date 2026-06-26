@@ -211,15 +211,13 @@ void VHorizontalLayout::DoLayoutWithWrap() {
   int height = offsetY, width = offsetX + real_margin_x;
   int h = offsetY + real_margin_y;
 
-  if ((_style.hilited_mark_color & 0xff000000)) {
+  if ((_style.hilited_mark_color & 0xff000000) && candidates_count) {
     CSize sg;
-    if (candidates_count) {
-      if (_style.mark_text.empty())
-        _pD2D->GetTextSize(L"|", 1, _pD2D->pTextFormat, &sg);
-      else
-        _pD2D->GetTextSize(_style.mark_text, _style.mark_text.length(),
-                           _pD2D->pTextFormat, &sg);
-    }
+    if (_style.mark_text.empty())
+      _pD2D->GetTextSize(L"|", 1, _pD2D->pTextFormat, &sg);
+    else
+      _pD2D->GetTextSize(_style.mark_text, _style.mark_text.length(),
+                         _pD2D->pTextFormat, &sg);
 
     mark_width = sg.cx;
     mark_height = sg.cy;
@@ -497,11 +495,11 @@ void VHorizontalLayout::DoLayoutWithWrap() {
             _roundInfo[i].IsBottomLeftNeedToRound = _style.inline_preedit;
         }
 
-        if (col_of_candidate[i] == col_cnt && col_cnt > 0 &&
+        if (col_of_candidate[i] == col_cnt && col_cnt > 0 && i > 0 &&
             col_of_candidate[i - 1] == (col_cnt - 1))
           _roundInfo[i].IsTopRightNeedToRound = true;
         if (col_of_candidate[i] == 0 && col_cnt > 0 &&
-            col_of_candidate[i + 1] == 1)
+            i + 1 < candidates_count && col_of_candidate[i + 1] == 1)
           _roundInfo[i].IsBottomLeftNeedToRound = _style.inline_preedit;
       }
     }
@@ -527,11 +525,11 @@ void VHorizontalLayout::DoLayoutWithWrap() {
           if (col_cnt == 0)
             _roundInfo[i].IsBottomRightNeedToRound = _style.inline_preedit;
         }
-        if (col_of_candidate[i] == col_cnt && col_cnt > 0 &&
+        if (col_of_candidate[i] == col_cnt && col_cnt > 0 && i > 0 &&
             col_of_candidate[i - 1] == (col_cnt - 1))
           _roundInfo[i].IsTopLeftNeedToRound = true;
         if (col_of_candidate[i] == 0 && col_cnt > 0 &&
-            col_of_candidate[i + 1] == 1)
+            i + 1 < candidates_count && col_of_candidate[i + 1] == 1)
           _roundInfo[i].IsBottomRightNeedToRound = _style.inline_preedit;
       }
     }
