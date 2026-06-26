@@ -83,6 +83,14 @@ HRESULT DeviceResources::EnsureInitialized() {
       reinterpret_cast<IUnknown **>(m_pWriteFactory.ReleaseAndGetAddressOf()));
   if (FAILED(hr))
     return hr;
+  hr = CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER,
+                        IID_PPV_ARGS(wicFactory.ReleaseAndGetAddressOf()));
+  if (FAILED(hr))
+    return hr;
+  hr = CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER,
+                        IID_PPV_ARGS(wicFactory.ReleaseAndGetAddressOf()));
+  if (FAILED(hr))
+    return hr;
 
   initialized = true;
   return S_OK;
@@ -91,7 +99,7 @@ HRESULT DeviceResources::EnsureInitialized() {
 void DeviceResources::Reset() {
   // release shared device resources so they can be recreated
   SafeReleaseAll(direct3dDevice, dxgiDevice, dxFactory, d2Factory, d2Device,
-                 dcompDevice, m_pWriteFactory);
+                 dcompDevice, m_pWriteFactory, wicFactory);
   initialized = false;
 }
 
@@ -649,13 +657,13 @@ void D2D::GetTextSize(const wstring &text, size_t nCount,
   bool vertical_text_layout =
       (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT ||
        m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT_FULLSCREEN);
+  DWRITE_FLOW_DIRECTION flow = m_style.vertical_text_left_to_right
+                                   ? DWRITE_FLOW_DIRECTION_LEFT_TO_RIGHT
+                                   : DWRITE_FLOW_DIRECTION_RIGHT_TO_LEFT;
   if (vertical_text_layout) {
     HR(m_pWriteFactory->CreateTextLayout(
         text.c_str(), (int)nCount, pTextFormat.Get(), 0.0f,
         (float)m_style.max_height, pTextLayout.ReleaseAndGetAddressOf()));
-    DWRITE_FLOW_DIRECTION flow = m_style.vertical_text_left_to_right
-                                     ? DWRITE_FLOW_DIRECTION_LEFT_TO_RIGHT
-                                     : DWRITE_FLOW_DIRECTION_RIGHT_TO_LEFT;
     HR(pTextLayout->SetReadingDirection(
         DWRITE_READING_DIRECTION_TOP_TO_BOTTOM));
     HR(pTextLayout->SetFlowDirection(flow));
@@ -680,7 +688,7 @@ void D2D::GetTextSize(const wstring &text, size_t nCount,
         pTextLayout.ReleaseAndGetAddressOf()));
     HR(pTextLayout->SetReadingDirection(
         DWRITE_READING_DIRECTION_TOP_TO_BOTTOM));
-    HR(pTextLayout->SetFlowDirection(DWRITE_FLOW_DIRECTION_RIGHT_TO_LEFT));
+    HR(pTextLayout->SetFlowDirection(flow));
   } else {
     auto max_width = m_style.max_width == 0
                          ? textMetrics.widthIncludingTrailingWhitespace
@@ -761,18 +769,15 @@ HRESULT D2D::GetBmpFromIcon(HICON hIcon, ComPtr<ID2D1Bitmap1> &pBitmap) {
     return E_INVALIDARG;  // Failed to get bitmap from icon
   }
 
-  // Create a WIC factory
-  ComPtr<IWICImagingFactory> pWicFactory;
-  HRESULT hr =
-      CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER,
-                       IID_PPV_ARGS(pWicFactory.ReleaseAndGetAddressOf()));
-  if (FAILED(hr)) {
+  // Use cached WIC factory
+  IWICImagingFactory* pWicFactory = DeviceResources::Get().wicFactory.Get();
+  if (!pWicFactory) {
     cleanupIconInfo();
-    return hr;
+    return E_POINTER;
   }
   // Create WIC Bitmap from HBITMAP
   ComPtr<IWICBitmap> pWicBitmap;
-  hr = pWicFactory->CreateBitmapFromHBITMAP(
+  HRESULT hr = pWicFactory->CreateBitmapFromHBITMAP(
       hBitmap, nullptr, WICBitmapUseAlpha, pWicBitmap.ReleaseAndGetAddressOf());
   if (FAILED(hr)) {
     cleanupIconInfo();
@@ -781,8 +786,7 @@ HRESULT D2D::GetBmpFromIcon(HICON hIcon, ComPtr<ID2D1Bitmap1> &pBitmap) {
   // Convert the bitmap to a Direct2D compatible format
   ComPtr<IWICFormatConverter> pConvertedBitmap;
   hr = ConvertWicBitmapToSupportedFormat(
-      pWicBitmap.Get(), pWicFactory.Get(),
-      pConvertedBitmap.ReleaseAndGetAddressOf());
+      pWicBitmap.Get(), pWicFactory, pConvertedBitmap.ReleaseAndGetAddressOf());
   if (FAILED(hr)) {
     cleanupIconInfo();
     return hr;
@@ -793,19 +797,14 @@ HRESULT D2D::GetBmpFromIcon(HICON hIcon, ComPtr<ID2D1Bitmap1> &pBitmap) {
   return hr;
 }
 
-HRESULT D2D::GetIconFromFile(const wstring &iconPath,
-                             ComPtr<ID2D1Bitmap1> &pD2DBitmap) {
-  // Step 1: Create a WIC factory
-  ComPtr<IWICImagingFactory> pWicFactory;
-  HRESULT hr =
-      CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER,
-                       IID_PPV_ARGS(pWicFactory.ReleaseAndGetAddressOf()));
-  if (FAILED(hr)) {
-    DEBUG << "Failed to create WIC imaging factory, HRESULT: " << std::hex
-          << hr;
-    return hr;
+HRESULT D2D::GetIconFromFile(const wstring& iconPath,
+                             ComPtr<ID2D1Bitmap1>& pD2DBitmap) {
+  IWICImagingFactory* pWicFactory = DeviceResources::Get().wicFactory.Get();
+  if (!pWicFactory) {
+    return E_POINTER;
   }
 
+  HRESULT hr;
   // Step 2: Load the image from file into a WICBitmapDecoder
   ComPtr<IWICBitmapDecoder> pDecoder;
   hr = pWicFactory->CreateDecoderFromFilename(
@@ -994,40 +993,11 @@ HRESULT D2D::FillGeometry(const CRect &rect, uint32_t color, uint32_t radius,
   return S_OK;
 }
 
-static uint32_t revert_color(uint32_t &color) {
-  // Revert color to D2D1 format
-  uint32_t a = (color >> 24) & 0xFF;
-  uint32_t b = (color >> 16) & 0xFF;
-  uint32_t g = (color >> 8) & 0xFF;
-  uint32_t r = color & 0xFF;
-  uint32_t color_ret =
-      ((255 - r) << 16) | ((255 - g) << 8) | ((255 - b) << 0) | (a << 24);
-  return color_ret;
-}
-
-HRESULT D2D::DrawTextLayout(ComPtr<IDWriteTextLayout> pTextLayout, float x,
-                            float y, uint32_t color, bool shadow) {
-  if (shadow) {
-    SetBrushColor(revert_color(color));
-    ComPtr<ID2D1BitmapRenderTarget> bitmapRenderTarget;
-    HR(dc->CreateCompatibleRenderTarget(&bitmapRenderTarget));
-    bitmapRenderTarget->BeginDraw();
-    bitmapRenderTarget->Clear(D2D1::ColorF(0, 0.0f));
-    bitmapRenderTarget->DrawTextLayout(
-        {x, y}, pTextLayout.Get(), m_pBrush.Get(),
-        D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT);
-    bitmapRenderTarget->EndDraw();
-    ComPtr<ID2D1Bitmap> bitmap;
-    HR(bitmapRenderTarget->GetBitmap(&bitmap));
-    //// Create a Gaussian blur effect
-    ComPtr<ID2D1Effect> blurEffect;
-    HR(dc->CreateEffect(CLSID_D2D1GaussianBlur, &blurEffect));
-    blurEffect->SetInput(0, bitmap.Get());
-    blurEffect->SetValue(D2D1_GAUSSIANBLUR_PROP_STANDARD_DEVIATION, 4.0f);
-    // Draw the blurred rounded rectangle onto the main render target
-    dc->DrawImage(blurEffect.Get());
-    SetBrushColor(color);
-  }
+HRESULT D2D::DrawTextLayout(ComPtr<IDWriteTextLayout> pTextLayout,
+                            float x,
+                            float y,
+                            uint32_t color) {
+  SetBrushColor(color);
   dc->DrawTextLayout({x, y}, pTextLayout.Get(), m_pBrush.Get(),
                      D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT);
   return S_OK;

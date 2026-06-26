@@ -711,7 +711,7 @@ void WeaselPanel::_TextOut(CRect& rc,
       omt.top > 0)
     offsety += omt.top;
 
-  m_pD2D->DrawTextLayout(pTextLayout, offsetx, offsety, color, false);
+  m_pD2D->DrawTextLayout(pTextLayout, offsetx, offsety, color);
   // draw rectangle for debug
   // m_pD2D->dc->DrawRectangle(
   //     D2D1::RectF((float)rc.left, (float)rc.top, (float)rc.right,
@@ -815,27 +815,21 @@ void WeaselPanel::_Reposition(bool adj) {
 static HBITMAP CopyDCToBitmap(HDC hDC, LPRECT lpRect) {
   if (!hDC || !lpRect || IsRectEmpty(lpRect))
     return NULL;
-  HDC hMemDC;
-  HBITMAP hBitmap, hOldBitmap;
-  int nX, nY, nX2, nY2;
-  int nWidth, nHeight;
-
-  nX = lpRect->left;
-  nY = lpRect->top;
-  nX2 = lpRect->right;
-  nY2 = lpRect->bottom;
-  nWidth = nX2 - nX;
-  nHeight = nY2 - nY;
-
-  hMemDC = CreateCompatibleDC(hDC);
-  hBitmap = CreateCompatibleBitmap(hDC, nWidth, nHeight);
-  hOldBitmap = (HBITMAP)SelectObject(hMemDC, hBitmap);
-  StretchBlt(hMemDC, 0, 0, nWidth, nHeight, hDC, nX, nY, nWidth, nHeight,
-             SRCCOPY);
-  hBitmap = (HBITMAP)SelectObject(hMemDC, hOldBitmap);
-
+  int nWidth = lpRect->right - lpRect->left;
+  int nHeight = lpRect->bottom - lpRect->top;
+  HDC hMemDC = CreateCompatibleDC(hDC);
+  if (!hMemDC)
+    return NULL;
+  HBITMAP hBitmap = CreateCompatibleBitmap(hDC, nWidth, nHeight);
+  if (!hBitmap) {
+    DeleteDC(hMemDC);
+    return NULL;
+  }
+  HBITMAP hOldBitmap = (HBITMAP)SelectObject(hMemDC, hBitmap);
+  StretchBlt(hMemDC, 0, 0, nWidth, nHeight, hDC, lpRect->left, lpRect->top,
+             nWidth, nHeight, SRCCOPY);
+  SelectObject(hMemDC, hOldBitmap);
   DeleteDC(hMemDC);
-  DeleteObject(hOldBitmap);
   return hBitmap;
 }
 
@@ -854,7 +848,7 @@ void WeaselPanel::_CaptureRect(CRect &rect) {
       DeleteObject(bmp);
     }
   }
-  ::ReleaseDC(m_hWnd, ScreenDC);
+  ::ReleaseDC(NULL, ScreenDC);
 }
 
 void WeaselPanel::OnDestroy() {

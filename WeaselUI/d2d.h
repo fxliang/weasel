@@ -60,6 +60,7 @@ public:
   ComPtr<ID2D1Device1> d2Device;
   ComPtr<IDCompositionDevice> dcompDevice;
   ComPtr<IDWriteFactory2> m_pWriteFactory;
+  ComPtr<IWICImagingFactory> wicFactory;
 
 private:
   DeviceResources();
@@ -110,13 +111,19 @@ struct D2D {
   HRESULT GetIconFromFile(const wstring &iconPath,
                           ComPtr<ID2D1Bitmap1> &pD2DBitmap);
 
-  HRESULT CreateRoundedRectanglePath(const RECT &rc, float radius,
-                                     const IsToRoundStruct &roundInfo,
-                                     ComPtr<ID2D1PathGeometry> &pPathGeometry);
-  HRESULT FillGeometry(const CRect &rect, uint32_t color, uint32_t radius,
-                       IsToRoundStruct roundInfo, bool to_blur = false);
-  HRESULT DrawTextLayout(ComPtr<IDWriteTextLayout> pTextLayout, float x,
-                         float y, uint32_t color, bool shadow = false);
+  HRESULT CreateRoundedRectanglePath(const RECT& rc,
+                                     float radius,
+                                     const IsToRoundStruct& roundInfo,
+                                     ComPtr<ID2D1PathGeometry>& pPathGeometry);
+  HRESULT FillGeometry(const CRect& rect,
+                       uint32_t color,
+                       uint32_t radius,
+                       IsToRoundStruct roundInfo,
+                       bool to_blur = false);
+  HRESULT DrawTextLayout(ComPtr<IDWriteTextLayout> pTextLayout,
+                          float x,
+                          float y,
+                          uint32_t color);
   ComPtr<ID3D11Device> direct3dDevice;
   ComPtr<IDXGIDevice> dxgiDevice;
   ComPtr<IDXGIFactory2> dxFactory;
