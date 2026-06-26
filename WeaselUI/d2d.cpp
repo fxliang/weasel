@@ -639,7 +639,7 @@ void D2D::ParseFontFace(const std::wstring &fontFaceStr,
   const auto it3 = _mapStretch.find(stretch);
   fontStretch =
       (it3 != _mapStretch.end()) ? it3->second : DWRITE_FONT_STRETCH_NORMAL;
-  if (DWRITE_FONT_STRETCH_UNDEFINED)
+  if (fontStretch == DWRITE_FONT_STRETCH_UNDEFINED)
     fontStretch = DWRITE_FONT_STRETCH_NORMAL;
 }
 
@@ -791,6 +791,10 @@ HRESULT D2D::GetBmpFromIcon(HICON hIcon, ComPtr<ID2D1Bitmap1> &pBitmap) {
     cleanupIconInfo();
     return hr;
   }
+  if (!dc) {
+    cleanupIconInfo();
+    return E_POINTER;
+  }
   hr = dc->CreateBitmapFromWicBitmap(pConvertedBitmap.Get(), nullptr,
                                      pBitmap.ReleaseAndGetAddressOf());
   cleanupIconInfo();
@@ -801,6 +805,9 @@ HRESULT D2D::GetIconFromFile(const wstring& iconPath,
                              ComPtr<ID2D1Bitmap1>& pD2DBitmap) {
   IWICImagingFactory* pWicFactory = DeviceResources::Get().wicFactory.Get();
   if (!pWicFactory) {
+    return E_POINTER;
+  }
+  if (!dc) {
     return E_POINTER;
   }
 

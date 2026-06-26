@@ -66,7 +66,6 @@ protected:
                          bool is_preedit, int pgw, int pgh, int base_coord,
                          int &width, int &height, CRect &rect);
 
-  CSize _beforesz, _hilitedsz, _aftersz;
   TextRange _range;
   CSize _contentSize;
   CRect _preeditRect, _auxiliaryRect, _highlightRect;

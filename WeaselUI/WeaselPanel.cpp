@@ -37,7 +37,7 @@ class ThreadDpiAwarenessScope {
   }
 
   ~ThreadDpiAwarenessScope() {
-    if (setter_ && old_context_) {
+    if (setter_) {
       setter_(old_context_);
     }
   }
@@ -60,6 +60,8 @@ void LoadIconIfNeed(wstring& oicofile,
                     UINT id) {
   if (oicofile == icofile)
     return;
+  if (!oicofile.empty() && hIcon)
+    DestroyIcon(hIcon);
   oicofile = icofile;
   const int STATUS_ICON_SIZE = GetSystemMetrics(SM_CXICON);
   HINSTANCE hInstance = GetModuleHandle(NULL);
@@ -68,9 +70,8 @@ void LoadIconIfNeed(wstring& oicofile,
         (HICON)LoadImage(hInstance, icofile.c_str(), IMAGE_ICON,
                          STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_LOADFROMFILE);
   else
-    hIcon =
-        (HICON)LoadImage(hInstance, MAKEINTRESOURCE(id), IMAGE_ICON,
-                         STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_DEFAULTCOLOR);
+    hIcon = (HICON)LoadImage(hInstance, MAKEINTRESOURCE(id), IMAGE_ICON,
+                             STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_SHARED);
 }
 
 WeaselPanel::WeaselPanel(UI &ui)
@@ -81,11 +82,20 @@ WeaselPanel::WeaselPanel(UI &ui)
   // Prepare shared graphics resources early to reduce first paint latency.
   m_pD2D = std::make_shared<D2D>(m_style);
   auto hInstance = GetModuleHandle(nullptr);
-  m_iconAlpha = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_EN));
-  m_iconEnabled = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ZH));
-  m_iconFull = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_FULL_SHAPE));
-  m_iconHalf = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_HALF_SHAPE));
-  m_iconDisabled = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_RELOAD));
+  m_iconAlpha = (HICON)LoadImage(hInstance, MAKEINTRESOURCE(IDI_EN), IMAGE_ICON,
+                                 STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_SHARED);
+  m_iconEnabled =
+      (HICON)LoadImage(hInstance, MAKEINTRESOURCE(IDI_ZH), IMAGE_ICON,
+                       STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_SHARED);
+  m_iconFull =
+      (HICON)LoadImage(hInstance, MAKEINTRESOURCE(IDI_FULL_SHAPE), IMAGE_ICON,
+                       STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_SHARED);
+  m_iconHalf =
+      (HICON)LoadImage(hInstance, MAKEINTRESOURCE(IDI_HALF_SHAPE), IMAGE_ICON,
+                       STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_SHARED);
+  m_iconDisabled =
+      (HICON)LoadImage(hInstance, MAKEINTRESOURCE(IDI_RELOAD), IMAGE_ICON,
+                       STATUS_ICON_SIZE, STATUS_ICON_SIZE, LR_SHARED);
 }
 
 BOOL WeaselPanel::IsWindow() const { return ::IsWindow(m_hWnd); }
@@ -704,7 +714,9 @@ void WeaselPanel::_TextOut(CRect& rc,
 
   DWRITE_OVERHANG_METRICS omt;
   pTextLayout->GetOverhangMetrics(&omt);
-  if (m_style.layout_type != UIStyle::LAYOUT_VERTICAL_TEXT && omt.left > 0)
+  if (m_style.layout_type != UIStyle::LAYOUT_VERTICAL_TEXT &&
+      m_style.layout_type != UIStyle::LAYOUT_VERTICAL_TEXT_FULLSCREEN &&
+      omt.left > 0)
     offsetx += omt.left;
   if ((m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT ||
        m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT_FULLSCREEN) &&
@@ -966,7 +978,7 @@ LRESULT WeaselPanel::OnLeftClickDown(UINT uMsg, WPARAM wParam, LPARAM lParam) {
       if (COLORTRANSPARENT(m_style.shadow_color) &&
           DPI_SCALE(m_style.shadow_radius) != 0) {
         int shadow_gap =
-            (m_style.shadow_offset_x == m_style.shadow_offset_y == 0)
+            (m_style.shadow_offset_x == 0 && m_style.shadow_offset_y == 0)
                 ? 2 * DPI_SCALE(m_style.shadow_radius)
                 : DPI_SCALE(m_style.shadow_radius) +
                       DPI_SCALE(m_style.shadow_radius) / 2;
