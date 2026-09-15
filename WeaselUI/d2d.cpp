@@ -33,26 +33,26 @@ HRESULT DeviceResources::EnsureInitialized() {
   if (initialized)
     return S_OK;
   HRESULT hr = S_OK;
-  // Try hardware first, then WARP fallback
+  // Prefer WARP to avoid loading the host process's hardware graphics driver.
   static const D3D_FEATURE_LEVEL featureLevels[] = {
       D3D_FEATURE_LEVEL_11_1, D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_1,
       D3D_FEATURE_LEVEL_10_0, D3D_FEATURE_LEVEL_9_3,  D3D_FEATURE_LEVEL_9_2,
       D3D_FEATURE_LEVEL_9_1};
-  hr = D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr,
-                         D3D11_CREATE_DEVICE_BGRA_SUPPORT, featureLevels,
-                         _countof(featureLevels), D3D11_SDK_VERSION,
-                         direct3dDevice.ReleaseAndGetAddressOf(), nullptr,
-                         nullptr);
+  hr = D3D11CreateDevice(
+      nullptr, D3D_DRIVER_TYPE_WARP, nullptr, D3D11_CREATE_DEVICE_BGRA_SUPPORT,
+      featureLevels, _countof(featureLevels), D3D11_SDK_VERSION,
+      direct3dDevice.ReleaseAndGetAddressOf(), nullptr, nullptr);
   if (FAILED(hr)) {
-    DEBUG << "D3D11CreateDevice hardware failed: " << HRESULTToString(hr)
-          << ", retrying WARP";
-    hr = D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_WARP, nullptr,
+    DEBUG << "D3D11CreateDevice WARP failed: " << HRESULTToString(hr)
+          << ", retrying hardware";
+    hr = D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr,
                            D3D11_CREATE_DEVICE_BGRA_SUPPORT, featureLevels,
                            _countof(featureLevels), D3D11_SDK_VERSION,
                            direct3dDevice.ReleaseAndGetAddressOf(), nullptr,
                            nullptr);
     if (FAILED(hr)) {
-      DEBUG << "D3D11CreateDevice WARP failed: " << HRESULTToString(hr);
+      DEBUG << "D3D11CreateDevice hardware fallback failed: "
+            << HRESULTToString(hr);
       return hr;
     }
   }
