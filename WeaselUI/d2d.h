@@ -4,6 +4,7 @@
 
 #include <atltypes.h>
 #include <WeaselIPCData.h>
+#include <cstdint>
 #include <d2d1.h>
 #include <d2d1_2.h>
 #include <d2d1_2helper.h>
@@ -158,8 +159,14 @@ struct D2D {
   PtTextFormat pCommentFormat;
   ComPtr<IDWriteFactory2> m_pWriteFactory;
   ComPtr<ID2D1SolidColorBrush> m_pBrush;
-  // caches
-  std::map<std::wstring, PtTextFormat> textFormatCache;  // key = face|size|wrap
+  struct CachedTextFormat {
+    PtTextFormat format;
+    uint64_t last_used;
+  };
+
+  static constexpr size_t kMaxTextFormatCacheEntries = 32;
+  std::map<std::wstring, CachedTextFormat> textFormatCache;
+  uint64_t textFormatCacheClock = 0;
   std::mutex cacheMutex;
   // clear caches that depend on device/context
   void ClearDeviceDependentCaches();

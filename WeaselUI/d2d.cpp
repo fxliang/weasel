@@ -105,9 +105,10 @@ void D2D::ClearDeviceDependentCaches() {
   // survive device reset; however if DWriteFactory is reset, clear cache
   if (!m_pWriteFactory) {
     for (auto& kv : textFormatCache) {
-      kv.second.Reset();
+      kv.second.format.Reset();
     }
     textFormatCache.clear();
+    textFormatCacheClock = 0;
   }
 }
 
@@ -357,7 +358,8 @@ PtTextFormat D2D::GetOrCreateTextFormat(const std::wstring& face,
     std::lock_guard<std::mutex> lk(cacheMutex);
     auto it = textFormatCache.find(key);
     if (it != textFormatCache.end()) {
-      pFormat = it->second;
+      it->second.last_used = ++textFormatCacheClock;
+      pFormat = it->second.format;
     }
   }
 
@@ -388,7 +390,15 @@ PtTextFormat D2D::GetOrCreateTextFormat(const std::wstring& face,
 
     {
       std::lock_guard<std::mutex> lk(cacheMutex);
-      textFormatCache.emplace(key, pFormat);
+      if (textFormatCache.size() >= kMaxTextFormatCacheEntries) {
+        auto oldest = std::min_element(
+            textFormatCache.begin(), textFormatCache.end(),
+            [](const auto& lhs, const auto& rhs) {
+              return lhs.second.last_used < rhs.second.last_used;
+            });
+        textFormatCache.erase(oldest);
+      }
+      textFormatCache[key] = {pFormat, ++textFormatCacheClock};
     }
   }
 
@@ -508,6 +518,7 @@ void D2D::InitDpiInfo() {
       m_dpiScaleLayout != oldDpiScaleLayout) {
     std::lock_guard<std::mutex> lk(cacheMutex);
     textFormatCache.clear();
+    textFormatCacheClock = 0;
     pPreeditFormat.Reset();
     pTextFormat.Reset();
     pLabelFormat.Reset();
