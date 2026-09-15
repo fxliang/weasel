@@ -1,4 +1,13 @@
-﻿【小狼毫】輸入法
+﻿小狼毫自用分支，不定期可能rebase reset force push
+
+如果觉得我瞎整的还不错，可以请我喝冰阔落🥤 :)
+
+微信赞赏码
+
+<img width="600" height="600" src="https://github.com/user-attachments/assets/503063b1-4951-4d88-aaa3-463585135233" />
+
+
+【小狼毫】輸入法
 ================
 
 基於 中州韻輸入法引擎／Rime Input Method Engine 等開源技術
