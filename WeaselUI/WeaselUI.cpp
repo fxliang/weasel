@@ -4,7 +4,7 @@
 namespace weasel {
 // ----------------------------------------------------------------------------
 class UIImpl {
-public:
+ public:
   WeaselPanel panel;
   UIImpl(UI& ui) : panel(ui) {}
   ~UIImpl() {}
@@ -40,19 +40,21 @@ UI::~UI() {
   if (pimpl_)
     Destroy(true);
 }
-BOOL UI::IsShown() const { return pimpl_ && pimpl_->IsShown(); }
-void UI::UpdateInputPosition(RECT const &rc) {
+BOOL UI::IsShown() const {
+  return pimpl_ && pimpl_->IsShown();
+}
+void UI::UpdateInputPosition(RECT const& rc) {
   if (pimpl_ && pimpl_->panel.IsWindow()) {
     pimpl_->panel.MoveTo(rc);
   }
 }
-void UI::Update(const Context &ctx, const Status &status) {
+void UI::Update(const Context& ctx, const Status& status) {
   if (ctx_ == ctx && status_ == status)
     return;
   ctx_ = ctx;
   status_ = status;
   if (style_.candidate_abbreviate_length > 0) {
-    for (auto &c : ctx_.cinfo.candies) {
+    for (auto& c : ctx_.cinfo.candies) {
       if (c.str.length() > (size_t)style_.candidate_abbreviate_length) {
         c.str =
             c.str.substr(0, (size_t)style_.candidate_abbreviate_length - 1) +
@@ -103,11 +105,13 @@ bool UI::Create(HWND parent) {
     return false;
   return pimpl_->panel.Create(parent);
 }
-bool UI::GetIsReposition() { return pimpl_ && pimpl_->panel.GetIsReposition(); }
+bool UI::GetIsReposition() {
+  return pimpl_ && pimpl_->panel.GetIsReposition();
+}
 
 HWND UI::hwnd() {
   if (pimpl_ && pimpl_->panel.IsWindow())
     return pimpl_->panel.hwnd();
   return nullptr;
 }
-} // namespace weasel
+}  // namespace weasel

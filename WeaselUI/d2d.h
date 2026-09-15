@@ -22,32 +22,42 @@ namespace weasel {
 
 typedef ComPtr<IDWriteTextFormat1> PtTextFormat;
 
-template <typename T> void SafeRelease(ComPtr<T> &t) {
+template <typename T>
+void SafeRelease(ComPtr<T>& t) {
   if (t) {
     t.Reset();
     t = nullptr;
   }
 }
 
-template <typename... Ts> void SafeReleaseAll(Ts &&...args) {
+template <typename... Ts>
+void SafeReleaseAll(Ts&&... args) {
   (SafeRelease(std::forward<Ts>(args)), ...);
 }
 
-template <typename T> T MAX(T a) { return a; }
-template <typename T, typename... Args> T MAX(T a, Args... args) {
+template <typename T>
+T MAX(T a) {
+  return a;
+}
+template <typename T, typename... Args>
+T MAX(T a, Args... args) {
   T max_rest = MAX(args...);
   return a > max_rest ? a : max_rest;
 }
-template <typename T> T MIN(T a) { return a; }
-template <typename T, typename... Args> T MIN(T a, Args... args) {
+template <typename T>
+T MIN(T a) {
+  return a;
+}
+template <typename T, typename... Args>
+T MIN(T a, Args... args) {
   T min_rest = MIN(args...);
   return a < min_rest ? a : min_rest;
 }
 
 // Shared device resources for Direct2D/Direct3D/DComposition/DWrite
 class DeviceResources {
-public:
-  static DeviceResources &Get();
+ public:
+  static DeviceResources& Get();
 
   HRESULT EnsureInitialized();
   // release and reinitialize device resources (used on device lost)
@@ -62,7 +72,7 @@ public:
   ComPtr<IDWriteFactory2> m_pWriteFactory;
   ComPtr<IWICImagingFactory> wicFactory;
 
-private:
+ private:
   DeviceResources();
   bool initialized;
 };
@@ -74,15 +84,16 @@ struct IsToRoundStruct {
   bool IsBottomRightNeedToRound;
   bool Hemispherical;
   IsToRoundStruct()
-      : IsTopLeftNeedToRound(true), IsTopRightNeedToRound(true),
-        IsBottomLeftNeedToRound(true), IsBottomRightNeedToRound(true),
+      : IsTopLeftNeedToRound(true),
+        IsTopRightNeedToRound(true),
+        IsBottomLeftNeedToRound(true),
+        IsBottomRightNeedToRound(true),
         Hemispherical(false) {}
 };
 
 struct D2D {
-
   // Construct without window; call AttachWindow when HWND is ready.
-  D2D(UIStyle &style);
+  D2D(UIStyle& style);
   // Allow constructing before window exists; attach window later to finish
   // init.
   void AttachWindow(HWND hwnd);
@@ -91,25 +102,30 @@ struct D2D {
   void InitDirectWriteResources();
   void InitDpiInfo();
   void InitFontFormats();
-  PtTextFormat GetOrCreateTextFormat(const std::wstring &face, int point,
+  PtTextFormat GetOrCreateTextFormat(const std::wstring& face,
+                                     int point,
                                      DWRITE_WORD_WRAPPING wrap);
-  void InitFontFormats(const wstring &label_font_face,
-                       const int label_font_point, const wstring &font_face,
-                       const int font_point, const wstring &comment_font_face,
+  void InitFontFormats(const wstring& label_font_face,
+                       const int label_font_point,
+                       const wstring& font_face,
+                       const int font_point,
+                       const wstring& comment_font_face,
                        const int comment_font_point);
   void OnResize(UINT width, UINT height);
   void SetBrushColor(uint32_t color);
-  void GetTextSize(const wstring &text, size_t nCount,
-                   PtTextFormat &pTextFormat, LPSIZE lpSize);
+  void GetTextSize(const wstring& text,
+                   size_t nCount,
+                   PtTextFormat& pTextFormat,
+                   LPSIZE lpSize);
   void SetFontFallback(PtTextFormat textFormat,
-                       const std::vector<std::wstring> &fontVector);
-  void ParseFontFace(const std::wstring &fontFaceStr,
-                     DWRITE_FONT_WEIGHT &fontWeight,
-                     DWRITE_FONT_STYLE &fontStyle,
-                     DWRITE_FONT_STRETCH &fontStretch);
-  HRESULT GetBmpFromIcon(HICON hIcon, ComPtr<ID2D1Bitmap1> &pBitmap);
-  HRESULT GetIconFromFile(const wstring &iconPath,
-                          ComPtr<ID2D1Bitmap1> &pD2DBitmap);
+                       const std::vector<std::wstring>& fontVector);
+  void ParseFontFace(const std::wstring& fontFaceStr,
+                     DWRITE_FONT_WEIGHT& fontWeight,
+                     DWRITE_FONT_STYLE& fontStyle,
+                     DWRITE_FONT_STRETCH& fontStretch);
+  HRESULT GetBmpFromIcon(HICON hIcon, ComPtr<ID2D1Bitmap1>& pBitmap);
+  HRESULT GetIconFromFile(const wstring& iconPath,
+                          ComPtr<ID2D1Bitmap1>& pD2DBitmap);
 
   HRESULT CreateRoundedRectanglePath(const RECT& rc,
                                      float radius,
@@ -121,9 +137,9 @@ struct D2D {
                        IsToRoundStruct roundInfo,
                        bool to_blur = false);
   HRESULT DrawTextLayout(ComPtr<IDWriteTextLayout> pTextLayout,
-                          float x,
-                          float y,
-                          uint32_t color);
+                         float x,
+                         float y,
+                         uint32_t color);
   ComPtr<ID3D11Device> direct3dDevice;
   ComPtr<IDXGIDevice> dxgiDevice;
   ComPtr<IDXGIFactory2> dxFactory;
@@ -143,7 +159,7 @@ struct D2D {
   ComPtr<IDWriteFactory2> m_pWriteFactory;
   ComPtr<ID2D1SolidColorBrush> m_pBrush;
   // caches
-  std::map<std::wstring, PtTextFormat> textFormatCache; // key = face|size|wrap
+  std::map<std::wstring, PtTextFormat> textFormatCache;  // key = face|size|wrap
   std::mutex cacheMutex;
   // clear caches that depend on device/context
   void ClearDeviceDependentCaches();
@@ -151,12 +167,12 @@ struct D2D {
   // shared devices if keepResourcesOnHide is true, ReleaseWindowResources will
   // be a no-op
   void ReleaseWindowResources();
-  UIStyle &m_style;
+  UIStyle& m_style;
   HWND m_hWnd;
   float m_dpiX;
   float m_dpiY;
   float m_dpiScaleFontPoint;
   float m_dpiScaleLayout;
 };
-} // namespace weasel
+}  // namespace weasel
 #endif

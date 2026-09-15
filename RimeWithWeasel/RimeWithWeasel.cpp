@@ -123,9 +123,9 @@ void RimeWithWeaselHandler::Initialize() {
       _UpdateUIStyle(&config, m_ui, true);
       _UpdateShowNotifications(&config, true);
       m_current_dark_mode = IsUserDarkMode();
-    if (m_current_dark_mode) {
-      const int BUF_SIZE = 255;
-      char buffer[BUF_SIZE + 1] = {0};
+      if (m_current_dark_mode) {
+        const int BUF_SIZE = 255;
+        char buffer[BUF_SIZE + 1] = {0};
         if (rime_api->config_get_string(&config, "style/color_scheme_dark",
                                         buffer, BUF_SIZE)) {
           std::string color_name(buffer);
@@ -1237,7 +1237,7 @@ static void _UpdateUIStyle(RimeConfig* config, UI* ui, bool initialize) {
   _RimeGetBool(config, "style/paging_on_scroll", initialize,
                style.paging_on_scroll);
   _RimeGetBool(config, "style/click_to_capture", initialize,
-                style.click_to_capture, true, false);
+               style.click_to_capture, true, false);
   bool fullscreen = false;
   _RimeGetBool(config, "style/fullscreen", false, fullscreen);
   bool vertical_text = false;
@@ -1296,9 +1296,10 @@ static void _UpdateUIStyle(RimeConfig* config, UI* ui, bool initialize) {
   _RimeParseStringOptWithFallback(config, "style/layout/type",
                                   style.layout_type, _layoutArr,
                                   style.layout_type);
-  // Keep fullscreen vertical-text mode stable even when layout/type is also set.
-  // Otherwise layout/type can override the earlier fullscreen+vertical_text
-  // combination and cause unintended column wrapping behavior.
+  // Keep fullscreen vertical-text mode stable even when layout/type is also
+  // set. Otherwise layout/type can override the earlier
+  // fullscreen+vertical_text combination and cause unintended column wrapping
+  // behavior.
   if (fullscreen && (vertical_text || _text_orientation_bool)) {
     style.layout_type = UIStyle::LAYOUT_VERTICAL_TEXT_FULLSCREEN;
   }

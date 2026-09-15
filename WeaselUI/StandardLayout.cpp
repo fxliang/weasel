@@ -13,10 +13,10 @@ wstring FormatCandidateLabel(const wstring& label, const wchar_t* format) {
 }
 }  // namespace
 
-CSize StandardLayout::_GetPreeditSize(const Text &text,
-                                      ComPtr<IDWriteTextFormat1> &pTextFormat) {
-  const wstring &preedit = text.str;
-  const vector<TextAttribute> &attrs = text.attributes;
+CSize StandardLayout::_GetPreeditSize(const Text& text,
+                                      ComPtr<IDWriteTextFormat1>& pTextFormat) {
+  const wstring& preedit = text.str;
+  const vector<TextAttribute>& attrs = text.attributes;
   CSize size(0, 0);
   if (!preedit.empty()) {
     weasel::TextRange range;
@@ -101,7 +101,7 @@ void StandardLayout::RecalculateSizes() {
   }
 }
 
-void StandardLayout::_UpdateStatusIconLayout(int *width, int *height) {
+void StandardLayout::_UpdateStatusIconLayout(int* width, int* height) {
   // rule 1. status icon is middle-aligned with preedit text or auxiliary text,
   // whichever comes first rule 2. there is a spacing between preedit/aux text
   // and the status icon rule 3. status icon is right aligned in WeaselPanel,
@@ -165,8 +165,9 @@ void StandardLayout::_UpdateStatusIconLayout(int *width, int *height) {
     _statusIconRect.OffsetRect(-_style.border, -_style.border);
 }
 
-void StandardLayout::_CalcPageIndicator(bool vertical_text_layout, int &pgw,
-                                        int &pgh) {
+void StandardLayout::_CalcPageIndicator(bool vertical_text_layout,
+                                        int& pgw,
+                                        int& pgh) {
   CSize pgszl, pgszr;
   if (!IsInlinePreedit()) {
     _pD2D->GetTextSize(_pre, _pre.length(), _pD2D->pPreeditFormat, &pgszl);
@@ -208,7 +209,7 @@ bool StandardLayout::ShouldDisplayStatusIcon() const {
            !_context.aux.empty());
 }
 
-bool StandardLayout::_IsHighlightOverCandidateWindow(const CRect &rc) {
+bool StandardLayout::_IsHighlightOverCandidateWindow(const CRect& rc) {
   if (!_pD2D || !_pD2D->d2Factory)
     return false;
   ComPtr<ID2D1PathGeometry> bgPathGeometry;
@@ -241,7 +242,6 @@ bool StandardLayout::_IsHighlightOverCandidateWindow(const CRect &rc) {
 }
 
 void StandardLayout::_PrepareRoundInfo() {
-
   const int tmp[6] = {
       UIStyle::LAYOUT_VERTICAL,      UIStyle::LAYOUT_HORIZONTAL,
       UIStyle::LAYOUT_VERTICAL_TEXT, UIStyle::LAYOUT_VERTICAL,
@@ -303,47 +303,47 @@ void StandardLayout::_PrepareRoundInfo() {
           // LAYOUT_VERTICAL
           {// not inline_preedit
            {
-               {false, false, false, false}, // FIRST_CAND
-               {false, false, false, false}, // MID_CAND
-               {false, true, false, true},   // LAST_CAND
-               {false, true, false, true},   // ONLY_CAND
+               {false, false, false, false},  // FIRST_CAND
+               {false, false, false, false},  // MID_CAND
+               {false, true, false, true},    // LAST_CAND
+               {false, true, false, true},    // ONLY_CAND
            },
            // inline_preedit
            {
-               {true, false, true, false},   // FIRST_CAND
-               {false, false, false, false}, // MID_CAND
-               {false, true, false, true},   // LAST_CAND
-               {true, true, true, true},     // ONLY_CAND
+               {true, false, true, false},    // FIRST_CAND
+               {false, false, false, false},  // MID_CAND
+               {false, true, false, true},    // LAST_CAND
+               {true, true, true, true},      // ONLY_CAND
            }},
           // LAYOUT_HORIZONTAL
           {// not inline_preedit
            {
-               {false, true, false, false},  // FIRST_CAND
-               {false, false, false, false}, // MID_CAND
-               {false, false, false, true},  // LAST_CAND
-               {false, true, false, true},   // ONLY_CAND
+               {false, true, false, false},   // FIRST_CAND
+               {false, false, false, false},  // MID_CAND
+               {false, false, false, true},   // LAST_CAND
+               {false, true, false, true},    // ONLY_CAND
            },
            // inline_preedit
            {
-               {true, true, false, false},   // FIRST_CAND
-               {false, false, false, false}, // MID_CAND
-               {false, false, true, true},   // LAST_CAND
-               {true, true, true, true},     // ONLY_CAND
+               {true, true, false, false},    // FIRST_CAND
+               {false, false, false, false},  // MID_CAND
+               {false, false, true, true},    // LAST_CAND
+               {true, true, true, true},      // ONLY_CAND
            }},
           // LAYOUT_VERTICAL_TEXT
           {// not inline_preedit
            {
-               {false, false, false, false}, // FIRST_CAND
-               {false, false, false, false}, // MID_CAND
-               {true, true, false, false},   // LAST_CAND
-               {false, false, true, true},   // ONLY_CAND
+               {false, false, false, false},  // FIRST_CAND
+               {false, false, false, false},  // MID_CAND
+               {true, true, false, false},    // LAST_CAND
+               {false, false, true, true},    // ONLY_CAND
            },
            // inline_preedit
            {
-               {false, false, true, true},   // FIRST_CAND
-               {false, false, false, false}, // MID_CAND
-               {true, true, false, false},   // LAST_CAND
-               {true, true, true, true},     // ONLY_CAND
+               {false, false, true, true},    // FIRST_CAND
+               {false, false, false, false},  // MID_CAND
+               {true, true, false, false},    // LAST_CAND
+               {true, true, true, true},      // ONLY_CAND
            }},
       };
       for (auto i = 0; i < candidates_count; i++) {
@@ -352,12 +352,12 @@ void StandardLayout::_PrepareRoundInfo() {
                                 _style.hilite_padding_y);
         bool current_hemispherical_dome_status =
             _IsHighlightOverCandidateWindow(hilite_rect);
-        int type = 0;              // default FIRST_CAND
-        if (candidates_count == 1) // ONLY_CAND
+        int type = 0;               // default FIRST_CAND
+        if (candidates_count == 1)  // ONLY_CAND
           type = 3;
-        else if (i != 0 && i != candidates_count - 1) // MID_CAND
+        else if (i != 0 && i != candidates_count - 1)  // MID_CAND
           type = 1;
-        else if (i == candidates_count - 1) // LAST_CAND
+        else if (i == candidates_count - 1)  // LAST_CAND
           type = 2;
         _roundInfo[i].IsTopLeftNeedToRound =
             is_to_round_corner[layout_type][_style.inline_preedit][type][0];
@@ -409,11 +409,11 @@ void StandardLayout::_PrepareRoundInfo() {
   }
 }
 
-void StandardLayout::_PrecomputePreeditRects(const CRect &baseRect,
-                                             const Text &text,
-                                             CRect &beforeRect,
-                                             CRect &hiliteRect,
-                                             CRect &afterRect) {
+void StandardLayout::_PrecomputePreeditRects(const CRect& baseRect,
+                                             const Text& text,
+                                             CRect& beforeRect,
+                                             CRect& hiliteRect,
+                                             CRect& afterRect) {
   beforeRect = hiliteRect = afterRect = CRect(0, 0, 0, 0);
 
   if (baseRect.left >= baseRect.right || baseRect.top >= baseRect.bottom ||
@@ -528,11 +528,15 @@ int StandardLayout::_CalcStatusIconOffset(int extent) const {
   return (STATUS_ICON_SIZE >= extent) ? (STATUS_ICON_SIZE - extent) / 2 : 0;
 }
 
-void StandardLayout::_LayoutInlineRect(const CSize &size,
+void StandardLayout::_LayoutInlineRect(const CSize& size,
                                        bool vertical_text_layout,
-                                       bool is_preedit, int pgw, int pgh,
-                                       int base_coord, int &width, int &height,
-                                       CRect &rect) {
+                                       bool is_preedit,
+                                       int pgw,
+                                       int pgh,
+                                       int base_coord,
+                                       int& width,
+                                       int& height,
+                                       CRect& rect) {
   if (vertical_text_layout) {
     int szx = is_preedit ? MAX(size.cx, pgw) : size.cx;
     int szy = is_preedit ? pgh : size.cy;

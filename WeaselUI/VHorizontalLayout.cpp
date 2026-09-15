@@ -38,7 +38,7 @@ void VHorizontalLayout::DoLayout() {
       int wid = 0;
       h = offsetY + real_margin_y + base_offset;
       /* Label */
-      const auto &labelSize = _candidateLabelSizes[i];
+      const auto& labelSize = _candidateLabelSizes[i];
       _candidateLabelRects[i].SetRect(w, h, w + labelSize.cx, h + labelSize.cy);
       h += labelSize.cy * labelFontValid;
       max_content_height = MAX(max_content_height, h);
@@ -46,7 +46,7 @@ void VHorizontalLayout::DoLayout() {
 
       /* Text */
       h += _style.hilite_spacing * labelFontValid;
-      const auto &textSize = _candidateTextSizes[i];
+      const auto& textSize = _candidateTextSizes[i];
       _candidateTextRects[i].SetRect(w, h, w + textSize.cx, h + textSize.cy);
       h += textSize.cy * textFontValid;
       max_content_height = MAX(max_content_height, h);
@@ -58,7 +58,7 @@ void VHorizontalLayout::DoLayout() {
           (i != id && (_style.comment_text_color & 0xff000000));
       if (!comments.at(i).str.empty() && cmtFontValid && cmtFontNotTrans) {
         h += _style.hilite_spacing;
-        const auto &commentSize = _candidateCommentSizes[i];
+        const auto& commentSize = _candidateCommentSizes[i];
         _candidateCommentRects[i].SetRect(w, 0, w + commentSize.cx,
                                           commentSize.cy);
         h += commentSize.cy * cmtFontValid;
@@ -101,8 +101,8 @@ void VHorizontalLayout::DoLayout() {
       // offset rects
       _candidateLabelRects[i].OffsetRect(ol, 0);
       _candidateTextRects[i].OffsetRect(ot, 0);
-      _candidateCommentRects[i].OffsetRect(oc, max_content_height +
-                                                   _style.hilite_spacing);
+      _candidateCommentRects[i].OffsetRect(
+          oc, max_content_height + _style.hilite_spacing);
       // define  _candidateRects
       _candidateRects[i].left =
           MIN(_candidateLabelRects[i].left, _candidateTextRects[i].left,
@@ -178,10 +178,10 @@ void VHorizontalLayout::DoLayout() {
         (_preeditRect.left + _preeditRect.right) / 2 - _pagePrevSize.cx / 2;
     _prePageRect.SetRect(_prex, _prey, _prex + _pagePrevSize.cx,
                          _prey + _pagePrevSize.cy);
-    _nextPageRect.SetRect(_prex, _prePageRect.bottom + _style.hilite_spacing,
-                          _prex + _pageNextSize.cx,
-                          _prePageRect.bottom + _style.hilite_spacing +
-                              _pageNextSize.cy);
+    _nextPageRect.SetRect(
+        _prex, _prePageRect.bottom + _style.hilite_spacing,
+        _prex + _pageNextSize.cx,
+        _prePageRect.bottom + _style.hilite_spacing + _pageNextSize.cy);
     if (ShouldDisplayStatusIcon()) {
       _prePageRect.OffsetRect(0, -STATUS_ICON_SIZE);
       _nextPageRect.OffsetRect(0, -STATUS_ICON_SIZE);
@@ -282,7 +282,7 @@ void VHorizontalLayout::DoLayoutWithWrap() {
       if (id == i)
         h += base_offset;
       /* Label */
-      const auto &labelSize = _candidateLabelSizes[i];
+      const auto& labelSize = _candidateLabelSizes[i];
       _candidateLabelRects[i].SetRect(width, h, width + labelSize.cx,
                                       h + labelSize.cy * labelFontValid);
       h += labelSize.cy * labelFontValid;
@@ -290,7 +290,7 @@ void VHorizontalLayout::DoLayoutWithWrap() {
 
       /* Text */
       h += _style.hilite_spacing;
-      const auto &textSize = _candidateTextSizes[i];
+      const auto& textSize = _candidateTextSizes[i];
       _candidateTextRects[i].SetRect(width, h, width + textSize.cx,
                                      h + textSize.cy * textFontValid);
       h += textSize.cy * textFontValid;
@@ -302,7 +302,7 @@ void VHorizontalLayout::DoLayoutWithWrap() {
           (i == id && (_style.hilited_comment_text_color & 0xff000000)) ||
           (i != id && (_style.comment_text_color & 0xff000000));
       if (!comments.at(i).str.empty() && cmtFontValid && cmtFontNotTrans) {
-        const auto &commentSize = _candidateCommentSizes[i];
+        const auto& commentSize = _candidateCommentSizes[i];
         h += _style.hilite_spacing;
         _candidateCommentRects[i].SetRect(width, h, width + commentSize.cx,
                                           h + commentSize.cy * cmtFontValid);
@@ -459,10 +459,10 @@ void VHorizontalLayout::DoLayoutWithWrap() {
         (_preeditRect.left + _preeditRect.right) / 2 - _pagePrevSize.cx / 2;
     _prePageRect.SetRect(_prex, _prey, _prex + _pagePrevSize.cx,
                          _prey + _pagePrevSize.cy);
-    _nextPageRect.SetRect(_prex, _prePageRect.bottom + _style.hilite_spacing,
-                          _prex + _pageNextSize.cx,
-                          _prePageRect.bottom + _style.hilite_spacing +
-                              _pageNextSize.cy);
+    _nextPageRect.SetRect(
+        _prex, _prePageRect.bottom + _style.hilite_spacing,
+        _prex + _pageNextSize.cx,
+        _prePageRect.bottom + _style.hilite_spacing + _pageNextSize.cy);
     if (ShouldDisplayStatusIcon()) {
       _prePageRect.OffsetRect(0, -STATUS_ICON_SIZE);
       _nextPageRect.OffsetRect(0, -STATUS_ICON_SIZE);

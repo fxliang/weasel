@@ -25,7 +25,7 @@ void weasel::FullScreenLayout::DoLayout() {
   do {
     if (adjusted) {
       // Font changed, recalculate cached sizes
-      static_cast<StandardLayout *>(m_layout.get())->RecalculateSizes();
+      static_cast<StandardLayout*>(m_layout.get())->RecalculateSizes();
     }
     m_layout->DoLayout();
     adjusted = AdjustFontPoint(workArea, step);
@@ -54,7 +54,7 @@ void weasel::FullScreenLayout::DoLayout() {
     _auxBeforeRect.OffsetRect(delta_x, delta_y);
     _auxHiliteRect.OffsetRect(delta_x, delta_y);
     _auxAfterRect.OffsetRect(delta_x, delta_y);
-    _statusIconRect.SetRect(0, 0, 0, 0); // hide status icon
+    _statusIconRect.SetRect(0, 0, 0, 0);  // hide status icon
   }
   _highlightRect = m_layout->GetHighlightRect();
   _highlightRect.OffsetRect(offsetx, offsety);
@@ -103,7 +103,7 @@ void weasel::FullScreenLayout::DoLayout() {
   _contentRect.DeflateRect(offsetX, offsetY);
 }
 
-bool FullScreenLayout::AdjustFontPoint(const CRect &workArea, int &step) {
+bool FullScreenLayout::AdjustFontPoint(const CRect& workArea, int& step) {
   if (_context.empty() || step == 0)
     return false;
   {

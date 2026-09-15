@@ -9,44 +9,46 @@ namespace weasel {
 const int MAX_CANDIDATES_COUNT = 100;
 const int STATUS_ICON_SIZE = GetSystemMetrics(SM_CXICON);
 
-#define IS_FULLSCREENLAYOUT(style)                                             \
-  (style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN ||                 \
-   style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN ||               \
+#define IS_FULLSCREENLAYOUT(style)                               \
+  (style.layout_type == UIStyle::LAYOUT_VERTICAL_FULLSCREEN ||   \
+   style.layout_type == UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN || \
    style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT_FULLSCREEN)
-#define NOT_FULLSCREENLAYOUT(style)                                            \
-  (style.layout_type != UIStyle::LAYOUT_VERTICAL_FULLSCREEN &&                 \
-   style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN &&               \
+#define NOT_FULLSCREENLAYOUT(style)                              \
+  (style.layout_type != UIStyle::LAYOUT_VERTICAL_FULLSCREEN &&   \
+   style.layout_type != UIStyle::LAYOUT_HORIZONTAL_FULLSCREEN && \
    style.layout_type != UIStyle::LAYOUT_VERTICAL_TEXT_FULLSCREEN)
 
 class Layout {
-public:
-  Layout(const UIStyle &style, const Context &context, const Status &status,
-         an<D2D> &pD2D);
+ public:
+  Layout(const UIStyle& style,
+         const Context& context,
+         const Status& status,
+         an<D2D>& pD2D);
   virtual void DoLayout() = 0;
-  virtual CSize &GetContentSize() = 0;
-  virtual CRect &GetPreeditRect() = 0;
-  virtual CRect &GetAuxiliaryRect() = 0;
-  virtual CRect &GetHighlightRect() = 0;
-  virtual CRect &GetCandidateLabelRect(int id) = 0;
-  virtual CRect &GetCandidateTextRect(int id) = 0;
-  virtual CRect &GetCandidateCommentRect(int id) = 0;
-  virtual CRect &GetCandidateRect(int id) = 0;
-  virtual CRect &GetStatusIconRect() = 0;
-  virtual CRect &GetContentRect() = 0;
-  virtual CRect &GetPrepageRect() = 0;
-  virtual CRect &GetNextpageRect() = 0;
-  virtual const TextRange &GetPreeditRange() const = 0;
+  virtual CSize& GetContentSize() = 0;
+  virtual CRect& GetPreeditRect() = 0;
+  virtual CRect& GetAuxiliaryRect() = 0;
+  virtual CRect& GetHighlightRect() = 0;
+  virtual CRect& GetCandidateLabelRect(int id) = 0;
+  virtual CRect& GetCandidateTextRect(int id) = 0;
+  virtual CRect& GetCandidateCommentRect(int id) = 0;
+  virtual CRect& GetCandidateRect(int id) = 0;
+  virtual CRect& GetStatusIconRect() = 0;
+  virtual CRect& GetContentRect() = 0;
+  virtual CRect& GetPrepageRect() = 0;
+  virtual CRect& GetNextpageRect() = 0;
+  virtual const TextRange& GetPreeditRange() const = 0;
   virtual bool IsInlinePreedit() const = 0;
   virtual bool ShouldDisplayStatusIcon() const = 0;
-  virtual const IsToRoundStruct &GetRoundInfo(int id) = 0;
-  virtual const IsToRoundStruct &GetTextRoundInfo() = 0;
+  virtual const IsToRoundStruct& GetRoundInfo(int id) = 0;
+  virtual const IsToRoundStruct& GetTextRoundInfo() = 0;
   // Precomputed preedit sub-rectangles for optimization
-  virtual CRect &GetPreeditBeforeRect() = 0;
-  virtual CRect &GetPreeditHiliteRect() = 0;
-  virtual CRect &GetPreeditAfterRect() = 0;
-  virtual CRect &GetAuxBeforeRect() = 0;
-  virtual CRect &GetAuxHiliteRect() = 0;
-  virtual CRect &GetAuxAfterRect() = 0;
+  virtual CRect& GetPreeditBeforeRect() = 0;
+  virtual CRect& GetPreeditHiliteRect() = 0;
+  virtual CRect& GetPreeditAfterRect() = 0;
+  virtual CRect& GetAuxBeforeRect() = 0;
+  virtual CRect& GetAuxHiliteRect() = 0;
+  virtual CRect& GetAuxAfterRect() = 0;
 
   int offsetX = 0;
   int offsetY = 0;
@@ -56,9 +58,9 @@ public:
   int real_margin_x;
   int real_margin_y;
   UIStyle _style;
-  an<D2D> &_pD2D;
+  an<D2D>& _pD2D;
 
-  protected:
+ protected:
   const Context& _context;
   const Status& _status;
   const vector<Text>& candidates;
@@ -71,4 +73,4 @@ public:
   const int cmtFontValid;
 };
 
-} // namespace weasel
+}  // namespace weasel

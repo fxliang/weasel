@@ -22,7 +22,7 @@ UINT GetDpiForWindowCompat(HWND hwnd) {
 
 // DeviceResources implementation moved from cpp to header; provide definitions
 // here
-DeviceResources &DeviceResources::Get() {
+DeviceResources& DeviceResources::Get() {
   static DeviceResources instance;
   return instance;
 }
@@ -61,7 +61,7 @@ HRESULT DeviceResources::EnsureInitialized() {
     return hr;
   hr = CreateDXGIFactory2(
       0, __uuidof(dxFactory.Get()),
-      reinterpret_cast<void **>(dxFactory.ReleaseAndGetAddressOf()));
+      reinterpret_cast<void**>(dxFactory.ReleaseAndGetAddressOf()));
   if (FAILED(hr))
     return hr;
   D2D1_FACTORY_OPTIONS const options = {D2D1_DEBUG_LEVEL_INFORMATION};
@@ -75,12 +75,12 @@ HRESULT DeviceResources::EnsureInitialized() {
     return hr;
   hr = DCompositionCreateDevice(
       dxgiDevice.Get(), __uuidof(dcompDevice.Get()),
-      reinterpret_cast<void **>(dcompDevice.ReleaseAndGetAddressOf()));
+      reinterpret_cast<void**>(dcompDevice.ReleaseAndGetAddressOf()));
   if (FAILED(hr))
     return hr;
   hr = DWriteCreateFactory(
       DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory2),
-      reinterpret_cast<IUnknown **>(m_pWriteFactory.ReleaseAndGetAddressOf()));
+      reinterpret_cast<IUnknown**>(m_pWriteFactory.ReleaseAndGetAddressOf()));
   if (FAILED(hr))
     return hr;
   hr = CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER,
@@ -104,7 +104,7 @@ void D2D::ClearDeviceDependentCaches() {
   // text formats created from IDWriteFactory are generally immutable and can
   // survive device reset; however if DWriteFactory is reset, clear cache
   if (!m_pWriteFactory) {
-    for (auto &kv : textFormatCache) {
+    for (auto& kv : textFormatCache) {
       kv.second.Reset();
     }
     textFormatCache.clear();
@@ -123,7 +123,7 @@ void D2D::ReleaseWindowResources() {
   m_hWnd = nullptr;
 }
 
-D2D::D2D(UIStyle &style)
+D2D::D2D(UIStyle& style)
     : m_style(style), m_hWnd(nullptr), m_dpiX(96.0f), m_dpiY(96.0f) {
   // Prepare shared device resources early so formats can be built before window
   DeviceResources::Get().EnsureInitialized();
@@ -206,7 +206,7 @@ void D2D::InitDirect2D() {
   // Retrieve the swap chain's back buffer
   hr = swapChain->GetBuffer(
       0, __uuidof(surface.Get()),
-      reinterpret_cast<void **>(surface.ReleaseAndGetAddressOf()));
+      reinterpret_cast<void**>(surface.ReleaseAndGetAddressOf()));
   if (FAILED(hr)) {
     DEBUG << "GetBuffer failed: " << HRESULTToString(hr);
     return;
@@ -228,7 +228,7 @@ void D2D::InitDirect2D() {
 
   target.Reset();
   hr = dcompDevice->CreateTargetForHwnd(m_hWnd,
-                                        true, // Top most
+                                        true,  // Top most
                                         target.ReleaseAndGetAddressOf());
   if (FAILED(hr)) {
     DEBUG << "CreateTargetForHwnd failed: " << HRESULTToString(hr);
@@ -290,7 +290,7 @@ void D2D::OnResize(UINT width, UINT height) {
   // Retrieve the new swap chain's back buffer
   HR(swapChain->GetBuffer(
       0, __uuidof(surface.Get()),
-      reinterpret_cast<void **>(surface.ReleaseAndGetAddressOf())));
+      reinterpret_cast<void**>(surface.ReleaseAndGetAddressOf())));
   // Create a new Direct2D bitmap pointing to the new swap chain surface
   D2D1_BITMAP_PROPERTIES1 properties = {};
   properties.pixelFormat.alphaMode = D2D1_ALPHA_MODE_PREMULTIPLIED;
@@ -307,23 +307,24 @@ void D2D::OnResize(UINT width, UINT height) {
   HR(dcompDevice->Commit());
 }
 
-std::vector<std::wstring> ws_split(const std::wstring &in,
-                                   const std::wstring &delim) {
+std::vector<std::wstring> ws_split(const std::wstring& in,
+                                   const std::wstring& delim) {
   std::basic_regex<wchar_t> re{delim};
   return std::vector<std::wstring>{
       std::regex_token_iterator<std::wstring::const_iterator>(in.begin(),
-                                                               in.end(), re, -1),
+                                                              in.end(), re, -1),
       std::regex_token_iterator<std::wstring::const_iterator>()};
 }
 
-static std::wstring MatchWordsOutLowerCaseTrim1st(const std::wstring &wstr,
-                                                  const std::basic_regex<wchar_t> &pattern) {
+static std::wstring MatchWordsOutLowerCaseTrim1st(
+    const std::wstring& wstr,
+    const std::basic_regex<wchar_t>& pattern) {
   std::wstring mat = L"";
   std::match_results<std::wstring::const_iterator> mc;
   std::wstring::const_iterator iter = wstr.cbegin();
   std::wstring::const_iterator end = wstr.cend();
   while (std::regex_search(iter, end, mc, pattern)) {
-    for (const auto &m : mc) {
+    for (const auto& m : mc) {
       mat = m;
       mat = mat.substr(1);
       break;
@@ -335,7 +336,8 @@ static std::wstring MatchWordsOutLowerCaseTrim1st(const std::wstring &wstr,
   return res;
 }
 
-PtTextFormat D2D::GetOrCreateTextFormat(const std::wstring &face, int point,
+PtTextFormat D2D::GetOrCreateTextFormat(const std::wstring& face,
+                                        int point,
                                         DWRITE_WORD_WRAPPING wrap) {
   // safety checks: require write factory and valid point
   if (!m_pWriteFactory || point <= 0 || face.empty()) {
@@ -379,8 +381,7 @@ PtTextFormat D2D::GetOrCreateTextFormat(const std::wstring &face, int point,
     std::vector<std::wstring> fontFaceStrVector;
     fontFaceStrVector = ws_split(face, L",");
     static const std::basic_regex<wchar_t> styleorweight(
-        (L":[^:]*[^a-f0-9:]+[^:]*"),
-        std::basic_regex<wchar_t>::icase);
+        (L":[^:]*[^a-f0-9:]+[^:]*"), std::basic_regex<wchar_t>::icase);
     fontFaceStrVector[0] =
         std::regex_replace(fontFaceStrVector[0], styleorweight, L"");
     SetFontFallback(pFormat, fontFaceStrVector);
@@ -428,10 +429,11 @@ void D2D::InitFontFormats() {
                   m_style.comment_font_face, m_style.comment_font_point);
 }
 
-void D2D::InitFontFormats(const wstring &label_font_face,
-                          const int label_font_point, const wstring &font_face,
+void D2D::InitFontFormats(const wstring& label_font_face,
+                          const int label_font_point,
+                          const wstring& font_face,
                           const int font_point,
-                          const wstring &comment_font_face,
+                          const wstring& comment_font_face,
                           const int comment_font_point) {
   bool vertical_text_layout =
       (m_style.layout_type == UIStyle::LAYOUT_VERTICAL_TEXT ||
@@ -536,7 +538,7 @@ void D2D::SetFontFallback(PtTextFormat textFormat,
         lastWstr = L"10ffff";
       if (firstWstr.empty())
         firstWstr = L"0";
-    } else if (fallbackFontsVector.size() == 2) // fontName : codepoint
+    } else if (fallbackFontsVector.size() == 2)  // fontName : codepoint
     {
       _fontFaceWstr = fallbackFontsVector[0];
       firstWstr = fallbackFontsVector[1];
@@ -544,7 +546,7 @@ void D2D::SetFontFallback(PtTextFormat textFormat,
         firstWstr = L"0";
       lastWstr = L"10ffff";
     } else if (fallbackFontsVector.size() ==
-               1) // if only font defined, use all range
+               1)  // if only font defined, use all range
     {
       _fontFaceWstr = fallbackFontsVector[0];
       firstWstr = L"0";
@@ -559,7 +561,7 @@ void D2D::SetFontFallback(PtTextFormat textFormat,
     };
     UINT first = func(firstWstr, 0), last = func(lastWstr, 0x10ffff);
     DWRITE_UNICODE_RANGE range = {first, last};
-    const WCHAR *familys = {_fontFaceWstr.c_str()};
+    const WCHAR* familys = {_fontFaceWstr.c_str()};
     HR(pFontFallbackBuilder->AddMapping(&range, 1, &familys, 1));
   }
   // add system defalt font fallback
@@ -569,10 +571,10 @@ void D2D::SetFontFallback(PtTextFormat textFormat,
   HR(textFormat->SetFontFallback(pFontFallback.Get()));
 }
 
-void D2D::ParseFontFace(const std::wstring &fontFaceStr,
-                        DWRITE_FONT_WEIGHT &fontWeight,
-                        DWRITE_FONT_STYLE &fontStyle,
-                        DWRITE_FONT_STRETCH &fontStretch) {
+void D2D::ParseFontFace(const std::wstring& fontFaceStr,
+                        DWRITE_FONT_WEIGHT& fontWeight,
+                        DWRITE_FONT_STYLE& fontStyle,
+                        DWRITE_FONT_STRETCH& fontStretch) {
   static const std::basic_regex<wchar_t> patWeight(
       L"(:thin|:extra_light|:ultra_light|:light|:semi_light|:medium|:demi_bold|"
       L":semi_bold|:bold|:extra_bold|:ultra_bold|:black|:heavy|:extra_black|:"
@@ -638,9 +640,10 @@ void D2D::ParseFontFace(const std::wstring &fontFaceStr,
     fontStretch = DWRITE_FONT_STRETCH_NORMAL;
 }
 
-void D2D::GetTextSize(const wstring &text, size_t nCount,
-                      PtTextFormat &pTextFormat, LPSIZE lpSize) {
-
+void D2D::GetTextSize(const wstring& text,
+                      size_t nCount,
+                      PtTextFormat& pTextFormat,
+                      LPSIZE lpSize) {
   D2D1_SIZE_F sz;
 
   if (!pTextFormat) {
@@ -708,10 +711,10 @@ void D2D::GetTextSize(const wstring &text, size_t nCount,
 }
 
 // Helper function to convert IWICBitmap to a format compatible with Direct2D
-static HRESULT
-ConvertWicBitmapToSupportedFormat(IWICBitmap *pWicBitmap,
-                                  IWICImagingFactory *pWicFactory,
-                                  IWICFormatConverter **ppConvertedBitmap) {
+static HRESULT ConvertWicBitmapToSupportedFormat(
+    IWICBitmap* pWicBitmap,
+    IWICImagingFactory* pWicFactory,
+    IWICFormatConverter** ppConvertedBitmap) {
   if (!pWicBitmap || !pWicFactory || !ppConvertedBitmap)
     return E_POINTER;
 
@@ -738,7 +741,7 @@ ConvertWicBitmapToSupportedFormat(IWICBitmap *pWicBitmap,
   return S_OK;
 }
 
-HRESULT D2D::GetBmpFromIcon(HICON hIcon, ComPtr<ID2D1Bitmap1> &pBitmap) {
+HRESULT D2D::GetBmpFromIcon(HICON hIcon, ComPtr<ID2D1Bitmap1>& pBitmap) {
   if (!hIcon)
     return S_FALSE;  // Failed to load icon
   pBitmap.Reset();
@@ -838,13 +841,13 @@ HRESULT D2D::GetIconFromFile(const wstring& iconPath,
 
   // Initialize the format converter
   hr = pConvertedBitmap->Initialize(
-      pFrame.Get(), // The source bitmap (IWICBitmapFrameDecode)
-      GUID_WICPixelFormat32bppPBGRA, // Target format (Direct2D supported
-                                     // format)
-      WICBitmapDitherTypeNone,       // Dithering type
-      nullptr,                       // Palette (nullptr to use default)
-      0.0f,                      // Alpha threshold (0.0 for no transparency)
-      WICBitmapPaletteTypeCustom // Palette type (Custom)
+      pFrame.Get(),  // The source bitmap (IWICBitmapFrameDecode)
+      GUID_WICPixelFormat32bppPBGRA,  // Target format (Direct2D supported
+                                      // format)
+      WICBitmapDitherTypeNone,        // Dithering type
+      nullptr,                        // Palette (nullptr to use default)
+      0.0f,                       // Alpha threshold (0.0 for no transparency)
+      WICBitmapPaletteTypeCustom  // Palette type (Custom)
   );
   if (FAILED(hr)) {
     DEBUG << "Failed to initialize IWICFormatConverter, HRESULT: " << std::hex
@@ -865,9 +868,10 @@ HRESULT D2D::GetIconFromFile(const wstring& iconPath,
 }
 
 HRESULT
-D2D::CreateRoundedRectanglePath(const RECT &rc, float radius,
-                                const IsToRoundStruct &roundInfo,
-                                ComPtr<ID2D1PathGeometry> &pPathGeometry) {
+D2D::CreateRoundedRectanglePath(const RECT& rc,
+                                float radius,
+                                const IsToRoundStruct& roundInfo,
+                                ComPtr<ID2D1PathGeometry>& pPathGeometry) {
 #define PT2F(x, y) D2D1::Point2F((float)x, (float)y)
   if (!d2Factory)
     return E_POINTER;
@@ -950,8 +954,11 @@ D2D::CreateRoundedRectanglePath(const RECT &rc, float radius,
   return hr;
 }
 
-HRESULT D2D::FillGeometry(const CRect &rect, uint32_t color, uint32_t radius,
-                          IsToRoundStruct roundInfo, bool to_blur) {
+HRESULT D2D::FillGeometry(const CRect& rect,
+                          uint32_t color,
+                          uint32_t radius,
+                          IsToRoundStruct roundInfo,
+                          bool to_blur) {
   if (!dc || !d2Factory)
     return E_POINTER;
   if (((color >> 24) & 0xFF) == 0)
@@ -1021,4 +1028,4 @@ HRESULT D2D::DrawTextLayout(ComPtr<IDWriteTextLayout> pTextLayout,
                      D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT);
   return S_OK;
 }
-} // namespace weasel
+}  // namespace weasel

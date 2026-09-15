@@ -9,10 +9,12 @@
 namespace weasel {
 using namespace Microsoft::WRL;
 
-template <typename T> using an = std::shared_ptr<T>;
-template <typename T> using the = std::unique_ptr<T>;
-typedef std::function<void(size_t *const, size_t *const, bool *const,
-                           bool *const)>
+template <typename T>
+using an = std::shared_ptr<T>;
+template <typename T>
+using the = std::unique_ptr<T>;
+typedef std::function<
+    void(size_t* const, size_t* const, bool* const, bool* const)>
     UICallbackFunc;
 
 enum ClientCapabilities {
@@ -21,7 +23,7 @@ enum ClientCapabilities {
 
 class UIImpl;
 class UI {
-public:
+ public:
   UI();
   virtual ~UI();
   // 创建输入法界面
@@ -37,23 +39,23 @@ public:
   // 重绘界面
   void Refresh();
   // 置输入焦点位置（光标跟随时移动候选窗）但不重绘
-  void UpdateInputPosition(RECT const &rc);
+  void UpdateInputPosition(RECT const& rc);
   // 更新界面显示内容
-  void Update(Context const &ctx, Status const &status);
-  Context &ctx() { return ctx_; }
-  Context &octx() { return octx_; }
-  Status &status() { return status_; }
-  UIStyle &style() { return style_; }
-  UIStyle &ostyle() { return ostyle_; }
+  void Update(Context const& ctx, Status const& status);
+  Context& ctx() { return ctx_; }
+  Context& octx() { return octx_; }
+  Status& status() { return status_; }
+  UIStyle& style() { return style_; }
+  UIStyle& ostyle() { return ostyle_; }
   bool GetIsReposition();
-  UICallbackFunc &uiCallback() { return _uiCallback; }
+  UICallbackFunc& uiCallback() { return _uiCallback; }
   // compatibility shim for existing call sites
-  void SetUICallBack(const UICallbackFunc &func) { _uiCallback = func; }
-  void SetCallback(const UICallbackFunc &func) { _uiCallback = func; }
-  bool &InServer() { return in_server_; }
+  void SetUICallBack(const UICallbackFunc& func) { _uiCallback = func; }
+  void SetCallback(const UICallbackFunc& func) { _uiCallback = func; }
+  bool& InServer() { return in_server_; }
   HWND hwnd();
 
-private:
+ private:
   the<UIImpl> pimpl_;
   Context ctx_;
   Context octx_;
@@ -63,4 +65,4 @@ private:
   bool in_server_;
   UICallbackFunc _uiCallback;
 };
-} // namespace weasel
+}  // namespace weasel

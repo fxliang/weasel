@@ -41,7 +41,7 @@ void HorizontalLayout::DoLayout() {
       if (id == i)
         w += base_offset;
       /* Label */
-      const auto &labelSize = _candidateLabelSizes[i];
+      const auto& labelSize = _candidateLabelSizes[i];
       _candidateLabelRects[i].SetRect(w, height, w + labelSize.cx,
                                       height + labelSize.cy);
       w += labelSize.cx;
@@ -49,7 +49,7 @@ void HorizontalLayout::DoLayout() {
 
       /* Text */
       w += _style.hilite_spacing;
-      const auto &textSize = _candidateTextSizes[i];
+      const auto& textSize = _candidateTextSizes[i];
       _candidateTextRects[i].SetRect(w, height, w + textSize.cx,
                                      height + textSize.cy);
       w += textSize.cx;
@@ -60,7 +60,7 @@ void HorizontalLayout::DoLayout() {
           (i == id && (_style.hilited_comment_text_color & 0xff000000)) ||
           (i != id && (_style.comment_text_color & 0xff000000));
       if (!comments.at(i).str.empty() && cmtFontValid && cmtFontNotTrans) {
-        const auto &commentSize = _candidateCommentSizes[i];
+        const auto& commentSize = _candidateCommentSizes[i];
         w += _style.hilite_spacing;
         _candidateCommentRects[i].SetRect(w, height, w + commentSize.cx,
                                           height + commentSize.cy);
@@ -112,10 +112,10 @@ void HorizontalLayout::DoLayout() {
       int base_left = (i == id) ? _candidateLabelRects[i].left - base_offset
                                 : _candidateLabelRects[i].left;
       const int height_of_current_raw = height_of_rows[row_of_candidate[i]];
-      _candidateRects[i].SetRect(base_left, mintop_of_rows[row_of_candidate[i]],
-                                 _candidateCommentRects[i].right,
-                                 mintop_of_rows[row_of_candidate[i]] +
-                                     height_of_current_raw);
+      _candidateRects[i].SetRect(
+          base_left, mintop_of_rows[row_of_candidate[i]],
+          _candidateCommentRects[i].right,
+          mintop_of_rows[row_of_candidate[i]] + height_of_current_raw);
       if (_style.align_type != UIStyle::ALIGN_TOP) {
         int ol = 0, ot = 0, oc = 0;
         if (_style.align_type == UIStyle::ALIGN_CENTER) {
@@ -168,10 +168,10 @@ void HorizontalLayout::DoLayout() {
         (_preeditRect.top + _preeditRect.bottom) / 2 - _pagePrevSize.cy / 2;
     _prePageRect.SetRect(_prex, _prey, _prex + _pagePrevSize.cx,
                          _prey + _pagePrevSize.cy);
-    _nextPageRect.SetRect(_prePageRect.right + _style.hilite_spacing, _prey,
-                          _prePageRect.right + _style.hilite_spacing +
-                              _pageNextSize.cx,
-                          _prey + _pageNextSize.cy);
+    _nextPageRect.SetRect(
+        _prePageRect.right + _style.hilite_spacing, _prey,
+        _prePageRect.right + _style.hilite_spacing + _pageNextSize.cx,
+        _prey + _pageNextSize.cy);
     if (ShouldDisplayStatusIcon()) {
       _prePageRect.OffsetRect(-STATUS_ICON_SIZE, 0);
       _nextPageRect.OffsetRect(-STATUS_ICON_SIZE, 0);
@@ -184,7 +184,7 @@ void HorizontalLayout::DoLayout() {
   // prepare round info for single row status, only for single row situation
   _PrepareRoundInfo();
   // readjust for multi rows
-  if (row_cnt) // row_cnt > 0, at least 2 candidates
+  if (row_cnt)  // row_cnt > 0, at least 2 candidates
   {
     _roundInfo[0].IsBottomLeftNeedToRound = !_roundInfo[0].Hemispherical;
     _roundInfo[candidates_count - 1].IsTopRightNeedToRound =

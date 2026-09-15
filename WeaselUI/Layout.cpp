@@ -18,7 +18,8 @@ Layout::Layout(const UIStyle& style,
              : 0),
       candidates_count(MIN((int)candidates.size(), MAX_CANDIDATES_COUNT)),
       labelFontValid(!!(_style.label_font_point > 0)),
-      textFontValid(!!(_style.font_point > 0)), _pD2D(pD2D),
+      textFontValid(!!(_style.font_point > 0)),
+      _pD2D(pD2D),
       cmtFontValid(!!(_style.comment_font_point > 0)) {
   if (pD2D) {
     float scale = pD2D->m_dpiScaleLayout;

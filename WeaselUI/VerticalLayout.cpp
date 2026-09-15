@@ -40,7 +40,7 @@ void weasel::VerticalLayout::DoLayout() {
     int w = real_margin_x + base_offset, h = 0;
     int candidate_width = base_offset, comment_width = 0;
     /* Label */
-    const auto &labelSize = _candidateLabelSizes[i];
+    const auto& labelSize = _candidateLabelSizes[i];
     _candidateLabelRects[i].SetRect(w, height, w + labelSize.cx,
                                     height + labelSize.cy);
     _candidateLabelRects[i].OffsetRect(offsetX, offsetY);
@@ -49,7 +49,7 @@ void weasel::VerticalLayout::DoLayout() {
     candidate_width += (labelSize.cx + space) * labelFontValid;
 
     /* Text */
-    const auto &textSize = _candidateTextSizes[i];
+    const auto& textSize = _candidateTextSizes[i];
     _candidateTextRects[i].SetRect(w, height, w + textSize.cx,
                                    height + textSize.cy);
     _candidateTextRects[i].OffsetRect(offsetX, offsetY);
@@ -66,7 +66,7 @@ void weasel::VerticalLayout::DoLayout() {
       w += space;
       comment_shift_width = MAX(comment_shift_width, w);
 
-      const auto &commentSize = _candidateCommentSizes[i];
+      const auto& commentSize = _candidateCommentSizes[i];
       _candidateCommentRects[i].SetRect(0, height, commentSize.cx,
                                         height + commentSize.cy);
       _candidateCommentRects[i].OffsetRect(offsetX, offsetY);
@@ -167,10 +167,10 @@ void weasel::VerticalLayout::DoLayout() {
         (_preeditRect.top + _preeditRect.bottom) / 2 - _pagePrevSize.cy / 2;
     _prePageRect.SetRect(_prex, _prey, _prex + _pagePrevSize.cx,
                          _prey + _pagePrevSize.cy);
-    _nextPageRect.SetRect(_prePageRect.right + _style.hilite_spacing, _prey,
-                          _prePageRect.right + _style.hilite_spacing +
-                              _pageNextSize.cx,
-                          _prey + _pageNextSize.cy);
+    _nextPageRect.SetRect(
+        _prePageRect.right + _style.hilite_spacing, _prey,
+        _prePageRect.right + _style.hilite_spacing + _pageNextSize.cx,
+        _prey + _pageNextSize.cy);
     if (ShouldDisplayStatusIcon()) {
       _prePageRect.OffsetRect(-STATUS_ICON_SIZE, 0);
       _nextPageRect.OffsetRect(-STATUS_ICON_SIZE, 0);
@@ -189,9 +189,9 @@ void weasel::VerticalLayout::DoLayout() {
     for (auto i = 0; i < candidates_count && i < MAX_CANDIDATES_COUNT; ++i) {
       size_t left = _candidateRects[i].left;
       size_t right = _candidateRects[i].right;
-      auto &labelRect = _candidateLabelRects[i];
-      auto &textRect = _candidateTextRects[i];
-      auto &commentRect = _candidateCommentRects[i];
+      auto& labelRect = _candidateLabelRects[i];
+      auto& textRect = _candidateTextRects[i];
+      auto& commentRect = _candidateCommentRects[i];
       labelRect.OffsetRect(right - labelRect.right, 0);
       textRect.OffsetRect(labelRect.left - _style.spacing - textRect.right, 0);
       commentRect.OffsetRect(left - commentRect.left, 0);
