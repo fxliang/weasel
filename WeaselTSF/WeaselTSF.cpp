@@ -133,6 +133,7 @@ static void fake_key() {
 STDMETHODIMP WeaselTSF::ActivateEx(ITfThreadMgr* pThreadMgr,
                                    TfClientId tfClientId,
                                    DWORD dwFlags) {
+  LoadWeaselLogLevelFromRegistry();
   com_ptr<ITfDocumentMgr> pDocMgrFocus;
   _activateFlags = dwFlags;
 
